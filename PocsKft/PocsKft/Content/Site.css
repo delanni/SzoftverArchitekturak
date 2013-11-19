@@ -73,6 +73,7 @@ aside{
 	left:0;
 	top: 45px;
 	width: 5%;
+    display: none;
 }
 
 .browserView{
