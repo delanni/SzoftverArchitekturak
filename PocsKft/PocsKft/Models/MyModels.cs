@@ -1,29 +1,55 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Web;
 
 namespace PocsKft.Models
 {
+    [Table("Folder")]
     public class Folder
     {
+        [Key]
+        [DatabaseGeneratedAttribute(DatabaseGeneratedOption.Identity)]
         public int FolderId { get; set; }
         public string FolderName { get; set; }
-        public HashSet<Folder> children { get; set; }
+        public HashSet<Folder> Children { get; set; }
+        public HashSet<Document> Documents { get; set; }
         public int parentFolderId { get; set; }
         public bool rootFolder { get; set; }
         public Metadata Metadata { get; set; }
         public Folder() { }
     }
 
+    [Table("Group")]
     public class Group
     {
+        [Key]
+        [DatabaseGeneratedAttribute(DatabaseGeneratedOption.Identity)]
         public int GroupId { get; set; }
         public string GroupName { get; set; }
         public Metadata Metadata { get; set; }
+        public List<UserProfile> Users { get; set; }
         public Group() { }
     }
 
+    [Table("Document")]
+    public class Document
+    {
+        [Key]
+        [DatabaseGeneratedAttribute(DatabaseGeneratedOption.Identity)]
+        public int DocumentId { get; set; }
+        public int DocumentName { get; set; }
+        public int CreatorId { get; set; }
+        public int VersionNumber { get; set; }
+        public bool IsLocked { get; set; }
+        public int LockedByUserId { get; set; }
+        public Status Status { get; set; }
+        public DocumentType DocumentType { get; set; }
+    }
+
+    [Table("MetaData")]
     public class Metadata
     {
         public string description { get; set; }
@@ -32,45 +58,17 @@ namespace PocsKft.Models
         public DateTime lastModifiedDate { get; set; }
     }
 
-    //Singleton
-    public class GroupManagerClass
+    public enum Status
     {
-        private static volatile GroupManagerClass instance;
-        private static object syncRoot = new Object();
-        private GroupManagerClass() { }
-        public HashSet<Group> Groups { get; set; }
-
-        public static GroupManagerClass GroupManager
-        {
-            get
-            {
-                lock (syncRoot)
-                {
-                    if (instance == null) 
-                        instance = new GroupManagerClass();
-                }
-                return instance;
-            }
-        }
-
-        public bool DeleteUserFromGroup(Group g, UserProfile)
-        {
-            return Groups.Remove(g);
-        }
-
-        public bool DeleteUserFromGroup(int id)
-        {
-            Group g = Groups.Where(i => i.GroupId == id).FirstOrDefault();
-            if (g != null)
-                return Groups.Remove(g);
-            else
-                return false;
-        }
-
-        public bool AddUserToGroup(Group g)
-        {
-            return Groups.Add(g);
-        }
+        Active = 1,
+        Archive = 2
     }
 
+    public enum DocumentType
+    {
+        Excel = 1,
+        Word = 2,
+        PDF = 3,
+        Other = 4
+    }
 }

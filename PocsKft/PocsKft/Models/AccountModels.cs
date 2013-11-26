@@ -16,6 +16,10 @@ namespace PocsKft.Models
         }
 
         public DbSet<UserProfile> UserProfiles { get; set; }
+        public DbSet<Group> Groups { get; set; }
+        public DbSet<Folder> Folders { get; set; }
+        public DbSet<Document> Documents { get; set; }
+        public DbSet<Metadata> Metadatas { get; set; }
     }
 
     [Table("UserProfile")]
