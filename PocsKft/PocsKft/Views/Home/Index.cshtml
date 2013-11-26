@@ -2,5 +2,9 @@
     ViewBag.Title = "Home Page";
 }
 <aside class="leftActionBarAcceptor">O</aside>
-<section class="browserView">content</section>
+<section class="browserView" ng-controller="BrowserController">
+    <div id="itemsContainer" ng-repeat="file in files">
+        <file filename="{{file.fileName}}" filepath="{{file.filePath}}" lastmodified="{{file.lastModified}}"></file>
+    </div>
+</section>
 <aside class="propsView">props</aside>

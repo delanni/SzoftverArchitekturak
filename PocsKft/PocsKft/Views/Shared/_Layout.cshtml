@@ -7,9 +7,11 @@
     <meta name="viewport" content="width=device-width, user-scalable=no" />
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/modernizr")
+    @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/angular")
+    @Scripts.Render("~/bundles/heribolz")
 </head>
-<body>
+<body ng-app="heribolz">
     <header>
         <nav class="topNavBar">
             <div class="wellPadded">
@@ -31,8 +33,6 @@
         </nav>
 
     </footer>
-
-    @Scripts.Render("~/bundles/jquery")
     @RenderSection("scripts", required: false)
 </body>
 </html>
