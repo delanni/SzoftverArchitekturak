@@ -53,7 +53,7 @@ namespace PocsKft.Models
             }
         }
 
-        public bool DeleteUserFromGroup(Group g)
+        public bool DeleteUserFromGroup(Group g, UserProfile)
         {
             return Groups.Remove(g);
         }
