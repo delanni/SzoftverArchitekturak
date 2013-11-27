@@ -3500,7 +3500,7 @@
 <XPD:REF name="Owner">qVaJD9l1D0qHZUwwQ8vMbgAA</XPD:REF>
 </XPD:OBJ>
 <XPD:OBJ name="Operations[1]" type="UMLOperation" guid="YS9fH3LHCEaI41lZUc2V0QAA">
-<XPD:ATTR name="Name" type="string">EditFolder</XPD:ATTR>
+<XPD:ATTR name="Name" type="string">ModifyFolder</XPD:ATTR>
 <XPD:REF name="Owner">qVaJD9l1D0qHZUwwQ8vMbgAA</XPD:REF>
 </XPD:OBJ>
 <XPD:OBJ name="Operations[2]" type="UMLOperation" guid="NwZdglbm10yFGNV3hDDnsAAA">
@@ -3512,7 +3512,7 @@
 <XPD:REF name="Owner">qVaJD9l1D0qHZUwwQ8vMbgAA</XPD:REF>
 </XPD:OBJ>
 <XPD:OBJ name="Operations[4]" type="UMLOperation" guid="KWdRLzZf9EqRIb8aRvCFiQAA">
-<XPD:ATTR name="Name" type="string">DescriptionOnFolder</XPD:ATTR>
+<XPD:ATTR name="Name" type="string">CommentOnFolder</XPD:ATTR>
 <XPD:REF name="Owner">qVaJD9l1D0qHZUwwQ8vMbgAA</XPD:REF>
 </XPD:OBJ>
 <XPD:OBJ name="Operations[5]" type="UMLOperation" guid="VOKGuz0eAUmzd+UbyIlgwwAA">
