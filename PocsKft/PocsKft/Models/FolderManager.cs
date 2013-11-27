@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Web;
 
@@ -11,9 +12,8 @@ namespace PocsKft.Models
         private static volatile FolderManager instance;
         private static object syncRoot = new Object();
         private FolderManager() { }
-        //public List<Group> Groups { get; set; }
 
-        public static FolderManager FolderManager
+        public static FolderManager FolderManagerInstance
         {
             get
             {
@@ -23,6 +23,14 @@ namespace PocsKft.Models
                         instance = new FolderManager();
                 }
                 return instance;
+            }
+        }
+
+        public Folder GetFolderById(int id)
+        {
+            using (UsersContext ct = new UsersContext())
+            {
+                return ct.Folders.Where(i => i.Id == id).FirstOrDefault();
             }
         }
 
@@ -37,9 +45,9 @@ namespace PocsKft.Models
 
         public bool DeleteFolderById(int id)
         {
+            Folder g = GetFolderById(id);
             using (UsersContext ct = new UsersContext())
             {
-                Folder g = ct.Folders.Where(i => i.FolderId == id).FirstOrDefault();
                 if (g != null)
                 {
                     ct.Folders.Remove(g);
@@ -50,27 +58,64 @@ namespace PocsKft.Models
             return false;
         }
 
-        public bool CreateGroup(Group g)
+        public List<CommonAncestor> ListFolderItems(int id)
+        {
+            Folder g = GetFolderById(id);
+            List<CommonAncestor> list = null;
+            using (UsersContext ct = new UsersContext())
+            {
+                list = new  List<CommonAncestor>();
+                foreach (CommonAncestor c in g.Children)
+                {
+                    list.Add(c);
+                }
+                foreach (CommonAncestor c in g.Documents)
+                {
+                    list.Add(c);
+                }
+            }
+            return list;
+        }
+
+        public List<Folder> SearchFoldersByName(string name)
         {
             using (UsersContext ct = new UsersContext())
             {
-                Group temp = ct.Groups.Add(g);
+                var folders = ct.Folders.Where(i => i.Name.Contains(name));
+                return  folders.ToList();
+            }
+        }
+
+        public void CreateFolder(Folder f, int parentfolderId)
+        {
+            using (UsersContext ct = new UsersContext())
+            {
+                Folder parent = ct.Folders.Where(i => i.Id == parentfolderId).FirstOrDefault();
+                parent.Children.Add(f);
                 ct.SaveChanges();
-                if (temp != null)
-                    return true;
-                else
-                    return false;
             }
         }
 
-        public bool DeleteUserFromGroup(Group g, UserProfile user)
+        public void EditFolder(int id)
         {
+            Folder g = GetFolderById(id);
+            using (UsersContext ct = new UsersContext())
+            {
+                ct.Entry(g).State = EntityState.Modified;
+                ct.SaveChanges();
+            }
+        }
+
+        public bool AddDocumentToFolder(int folderId, Document document)
+        {
+            Folder g = GetFolderById(folderId);
             using (UsersContext ct = new UsersContext())
             {
                 if (g != null)
                 {
-                    UserProfile u = g.Users.Where(i => i.UserId == user.UserId).FirstOrDefault();
-                    g.Users.Remove(u);
+                    if (g.Documents == null)
+                        g.Documents = new List<Document>();
+                    g.Documents.Add(document);
                     ct.SaveChanges();
                     return true;
                 }
@@ -78,31 +123,16 @@ namespace PocsKft.Models
             return false;
         }
 
-        public bool DeleteUserFromGroupById(int id, UserProfile user)
+        public bool RemoveDocumentFromFolder(int folderId, Document document)
         {
-            using (UsersContext ct = new UsersContext())
-            {
-                Group g = ct.Groups.Where(i => i.GroupId == id).FirstOrDefault();
-                if (g != null)
-                {
-                    UserProfile u = g.Users.Where(i => i.UserId == user.UserId).FirstOrDefault();
-                    g.Users.Remove(u);
-                    ct.SaveChanges();
-                    return true;
-                }
-                else
-                    return false;
-            }
-        }
-
-        public bool AddUserToGroup(Group g, UserProfile user)
-        {
+            Folder g = GetFolderById(folderId);
             using (UsersContext ct = new UsersContext())
             {
                 if (g != null)
                 {
-                    UserProfile u = g.Users.Where(i => i.UserId == user.UserId).FirstOrDefault();
-                    g.Users.Add(u);
+                    if (g.Documents == null)
+                        g.Documents = new List<Document>();
+                    g.Documents.Remove(document);
                     ct.SaveChanges();
                     return true;
                 }
@@ -110,21 +140,20 @@ namespace PocsKft.Models
             return false;
         }
 
-        public bool AddUserToGroupById(int id, UserProfile user)
+        public bool AddDescriptionToFolder(int folderId, string description)
         {
+            Folder g = GetFolderById(folderId);
             using (UsersContext ct = new UsersContext())
             {
-                Group g = ct.Groups.Where(i => i.GroupId == id).FirstOrDefault();
                 if (g != null)
                 {
-                    UserProfile u = g.Users.Where(i => i.UserId == user.UserId).FirstOrDefault();
-                    g.Users.Add(u);
+                    g.Description = description;
                     ct.SaveChanges();
                     return true;
                 }
-                else
-                    return false;
             }
+            return false;
         }
+
     }
 }
