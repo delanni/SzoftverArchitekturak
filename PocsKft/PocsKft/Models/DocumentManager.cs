@@ -19,7 +19,7 @@ namespace PocsKft.Models
             private static object syncRoot = new Object();
             private DocumentManager() { }
 
-            public static DocumentManager DocumentManager
+            public static DocumentManager DocumentManagerInstance
             {
                 get
                 {
@@ -29,6 +29,14 @@ namespace PocsKft.Models
                             instance = new DocumentManager();
                     }
                     return instance;
+                }
+            }
+
+            public Document GetDocumentById(int id)
+            {
+                using (UsersContext ct = new UsersContext())
+                {
+                    return ct.Documents.Where(i => i.Id == id).FirstOrDefault();
                 }
             }
 
@@ -43,9 +51,9 @@ namespace PocsKft.Models
 
             public bool DeleteDocumentById(int id)
             {
+                Document g = GetDocumentById(id);
                 using (UsersContext ct = new UsersContext())
                 {
-                    Document g = ct.Documents.Where(i => i.DocumentId == id).FirstOrDefault();
                     if (g != null)
                     {
                         ct.Documents.Remove(g);
@@ -56,81 +64,34 @@ namespace PocsKft.Models
                 return false;
             }
 
-            public bool CreateDocument(Group g)
+            public void AddDocument(Document g)
             {
                 using (UsersContext ct = new UsersContext())
                 {
-                    Group temp = ct.Groups.Add(g);
+                    ct.Documents.Add(g);
                     ct.SaveChanges();
-                    if (temp != null)
-                        return true;
-                    else
-                        return false;
                 }
             }
 
-            public bool DeleteUserFromGroup(Group g, UserProfile user)
+            public List<Document> SearchDocumentsByName(string name)
             {
                 using (UsersContext ct = new UsersContext())
                 {
-                    if (g != null)
-                    {
-                        UserProfile u = g.Users.Where(i => i.UserId == user.UserId).FirstOrDefault();
-                        g.Users.Remove(u);
-                        ct.SaveChanges();
-                        return true;
-                    }
-                }
-                return false;
-            }
-
-            public bool DeleteUserFromGroupById(int id, UserProfile user)
-            {
-                using (UsersContext ct = new UsersContext())
-                {
-                    Group g = ct.Groups.Where(i => i.GroupId == id).FirstOrDefault();
-                    if (g != null)
-                    {
-                        UserProfile u = g.Users.Where(i => i.UserId == user.UserId).FirstOrDefault();
-                        g.Users.Remove(u);
-                        ct.SaveChanges();
-                        return true;
-                    }
-                    else
-                        return false;
+                    var docs = ct.Documents.Where(i => i.Name.Contains(name));
+                    return docs.ToList();
                 }
             }
 
-            public bool AddUserToGroup(Group g, UserProfile user)
+            public bool LockDocument(int id)
             {
-                using (UsersContext ct = new UsersContext())
+                Document g = GetDocumentById(id);
+                if (g.Locked == false)
                 {
-                    if (g != null)
-                    {
-                        UserProfile u = g.Users.Where(i => i.UserId == user.UserId).FirstOrDefault();
-                        g.Users.Add(u);
-                        ct.SaveChanges();
-                        return true;
-                    }
+                    g.Locked = true;
+                    return true;
                 }
-                return false;
-            }
-
-            public bool AddUserToGroupById(int id, UserProfile user)
-            {
-                using (UsersContext ct = new UsersContext())
-                {
-                    Group g = ct.Groups.Where(i => i.GroupId == id).FirstOrDefault();
-                    if (g != null)
-                    {
-                        UserProfile u = g.Users.Where(i => i.UserId == user.UserId).FirstOrDefault();
-                        g.Users.Add(u);
-                        ct.SaveChanges();
-                        return true;
-                    }
-                    else
-                        return false;
-                }
+                else
+                    return false;
             }
         }
     }
