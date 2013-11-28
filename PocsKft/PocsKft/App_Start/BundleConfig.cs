@@ -43,6 +43,8 @@ namespace PocsKft
                 .Include("~/Scripts/appMain.js")
                 .Include("~/Scripts/User.js")
                 .Include("~/Scripts/File.js")
+                //.Include("~/Scripts/Folder.js")
+                .Include("~/Scripts/Property.js")
                 .Include("~/Scripts/bootstrap.js")
                 );
 

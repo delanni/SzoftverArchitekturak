@@ -98,3 +98,7 @@ aside{
 #homeLink {
     float:left;
 }
+
+.selected div{
+    font-weight:bold;
+}

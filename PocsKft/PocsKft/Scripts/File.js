@@ -22,8 +22,6 @@ var File = (function () {
 
     _File.__defineGetter__("state", function () { return this.state; });
 
-    _File.__defineGetter__("projectName", function () { return this.projectName; });
-
     _File.__defineGetter__("fileName", function () { return this.fileName; });
     _File.__defineSetter__("fileName", function (value) { this.fileName = value; });
 
@@ -33,6 +31,7 @@ var File = (function () {
     _File.__defineGetter__("lastModifierName", function () { return this.lastModifierName; });
     _File.__defineSetter__("lastModifierName", function (value) { this.lastModifierName = value; });
 
+    _File.__defineGetter__("projectName", function () { return this.projectName; });
     _File.__defineGetter__("creationDate", function () { return this.creationDate; });
 
     return _File;
