@@ -1,30 +1,45 @@
 ﻿@{
     ViewBag.Title = "Home Page";
 }
-<aside class="leftActionBarAcceptor">
-    <div ng-controller="ActionBarController"></div>
+<aside class="leftActionBarAcceptor" ng-controller="ActionBarController" ng-class="global.selectedFile?'':'leftOut'">
+    <div ng-repeat="action in actions"
+        title="{{action.name}}"
+        class="actionButton glyphicons {{action.type}}"
+        ng-click="action.execute(action)">
+    </div>
 </aside>
-<section class="browserView" ng-controller="BrowserController">
+<section class="browserView" ng-controller="BrowserController" ng-click="clearSelections()">
     <div id="itemsContainer" class="browserframe">
-        <div class="folderDiv" ng-repeat="folder in folders">
-            <folder ng-click="select(folder)" ng-class="{selected: folder.selected}"
-                foldername="{{folder.fileName}}" 
-                folderpath="{{folder.filePath}}" ></folder>
-        </div>
         <div class="fileDiv" ng-repeat="file in files">
-            <file ng-click="select(file)" ng-class="{selected: file.selected}" 
-                filename="{{file.fileName}}" 
+            <project ng-if="file.isProject"
+                ng-click="select(file); $event.stopPropagation()"
+                ng-class="{selected: file.selected}"
+                ownername="{{file.ownerName}}"
+                projectname="{{file.projectName}}"></project>
+            <folder ng-if="!file.isRealFile && !file.isProject"
+                ng-click="select(file); $event.stopPropagation()"
+                ng-class="{selected: file.selected}"
+                foldername="{{file.fileName}}"
+                folderpath="{{file.filePath}}"></folder>
+            <file ng-if="file.isRealFile"
+                ng-click="select(file); $event.stopPropagation()"
+                ng-class="{selected: file.selected}"
+                filename="{{file.fileName}}"
                 filepath="{{file.filePath}}"
                 lastmodified="{{file.lastModified}}"></file>
         </div>
-
     </div>
 </section>
-<aside class="propsView">
-    <div ng-controller="PropertiesController">
-        <h2>{{targetName}}</h2>
-        <div ng-repeat="property in properties">
+<aside class="propsView" ng-controller="PropertiesController">
+    <div ng-if="global.selectedFile">
+        <h2>{{global.selectedFile.fileName || global.selectedFile.projectName}}</h2>
+        <button ng-click="assumeControl()">{{getLockText()}}</button>
+        <div ng-repeat="property in global.selectedFile.properties">
             <span class="propName">{{property.propName}}</span><span class="propValue">{{property.propValue}}</span>
         </div>
     </div>
+    <div class="browseHelp" ng-if="!global.selectedFile">
+        Select a file on the left.
+    </div>
+    <span>{{inspectedFile}}</span>
 </aside>

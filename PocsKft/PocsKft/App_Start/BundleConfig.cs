@@ -23,7 +23,7 @@ namespace PocsKft
             bundles.Add(new ScriptBundle("~/bundles/modernizr").Include(
                         "~/Scripts/modernizr-*"));
 
-            bundles.Add(new StyleBundle("~/Content/css").Include("~/Content/site.css"));
+            bundles.Add(new StyleBundle("~/Content/css").Include("~/Content/site.css").Include("~/Content/glyphreg.css"));
 
             bundles.Add(new StyleBundle("~/Content/themes/base/css").Include(
                         "~/Content/themes/base/jquery.ui.core.css",
@@ -43,7 +43,7 @@ namespace PocsKft
                 .Include("~/Scripts/appMain.js")
                 .Include("~/Scripts/User.js")
                 .Include("~/Scripts/File.js")
-                //.Include("~/Scripts/Folder.js")
+                .Include("~/Scripts/Project.js")
                 .Include("~/Scripts/Property.js")
                 .Include("~/Scripts/bootstrap.js")
                 );

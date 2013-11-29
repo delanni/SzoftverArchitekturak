@@ -1,7 +1,7 @@
-﻿
-html {
+﻿html {
     margin: 0;
     padding: 0;
+    background: #61210B;
 }
 
 body {
@@ -35,70 +35,102 @@ nav, section {
 }
 
 
-header{
+header {
+    box-shadow: 0 0 10px lime;
 }
 
 footer {
+    box-shadow: 0 0 10px lime;
     clear: both;
-    background-color: #e2e2e2;
-    font-size: .8em;
-    height: 20px;
     overflow: hidden;
 }
 
-nav{
-	background: yellow;
+nav {
+    background: #1f0;
     overflow: hidden;
 }
-section{
-	background: aqua;
-}
-aside{
-	background: aquamarine;
+
+section {
 }
 
-.topNavBar{
-	height:30px;
-	width: 100%;
+.topNavBar {
+    height: 30px;
+    width: 100%;
 }
 
-.content{
-	overflow: hidden;
-	width: 90%;
-	margin: auto;
+.bottomNavBar {
+    height: 30px;
+    width: 100%;
 }
 
-.leftActionBarAcceptor{
-	position: absolute;
-	left:0;
-	top: 45px;
-	width: 5%;
-    display: none;
+.content {
+    background:#7EFF93;
+    overflow: hidden;
+    width: 90%;
+    margin: auto;
 }
 
-.browserView{
-	float:left;
-	width: 59%;
-	border-right: double yellow;
+.leftActionBarAcceptor {
+    position: absolute;
+    left: 0;
+    top: 45px;
+    width: 5%;
+    border-radius:9px;
+    background: #643400;
+    box-shadow: 0 4px 10px black;
+    
 }
 
-.propsView{
-	float: left;
-	width: 40%;
+.leftOut {
+    left: -30%;
 }
 
-.wellPadded{
+.browserView {
+    height: 100%;
+    float: left;
+    width: 59%;
+    border-right: double yellow;
+}
+
+.propsView {
+    height: 100%;
+    float: left;
+    width: 40%;
+}
+
+.wellPadded {
     margin: 8px 30px;
 }
 
-#loginBox{
-    float:right;
+#loginBox {
+    float: right;
 }
 
 #homeLink {
-    float:left;
+    float: left;
 }
 
-.selected div{
-    font-weight:bold;
+.selected div {
+    font-weight: bold;
+}
+
+.actionButton:hover {
+    box-shadow: inset 0px 0px 20px lime;
+    color: lime;
+    cursor: pointer;
+}
+
+.actionButton{
+    box-shadow: inset 0px 0px 4px black;
+    background-color: rgb(27, 20, 0);
+    width:90%;
+    height: 40px;
+    margin: 6px auto;
+    border-radius:60px;
+    
+    text-align: center;
+    vertical-align: middle;
+    font-size: x-large;
+    color: darkgreen;
+    font-weight: bold;
 }

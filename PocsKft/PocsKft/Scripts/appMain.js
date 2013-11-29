@@ -4,102 +4,210 @@ var HBMAIN = angular.module("heribolz", function () {
     // Configure
 });
 
+HBMAIN.factory("GlobalService", function () {
+    return {};
+});
+
 HBMAIN.factory("TestUser", function () {
     var user = new User({ name: "Alex" });
-
     return user;
 });
 
 HBMAIN.factory("TestData", function () {
-    var files = [
-            new File({
-                fileName: "alma.txt",
-                projectName: "almaproject",
-                filePath: "/almaproject/korte/alma"
-            }),
-            new File({
-                fileName: "banan.dat",
-                projectName: "almaproject",
-                filePath: "/almaproject/korte/alma"
-            }),
-            new File({
-                fileName: "almacsutka",
-                projectName: "almaproject",
-                filePath: "/almaproject/korte/barack/"
-            }),
-    ];
-    var folders = [
-        new File({
-            fileName: "Potato",
-            filePath: "/almaproject/korte/alma",
-            projectName: "almaproject"
-        }),
-    ];
+    /// FILES ///
+    var alma = new File({
+        fileName: "alma.txt",
+        projectName: "almaproject",
+        filePath: "/almaproject/korte/alma",
+        properties: Property.fromObject(window)
+    });
+    var banan = new File({
+        fileName: "banan.dat",
+        projectName: "almaproject",
+        filePath: "/almaproject/korte",
+        properties: Property.fromObject({ "anyja neve": "ban'nos joe", "apja neve": "bananos janka" })
+    });
+    var csutka = new File({
+        fileName: "almacsutka",
+        projectName: "almaproject",
+        filePath: "/almaproject/korte/barack/",
+        properties: Property.fromObject(new Date())
+    });
+    /// selif ///
 
-    var properties = {
-        targetName: "selected file name.txt",
-        properties: [
-            new Property({
-                propName: "this property name",
-                propValue: "this property value"
-            }),
-            Property.fromObject({
-                abra: "kadabra",
-                bingidi: "boom",
-            })[0]
-        ]
-    };
+    /// FOLDERS ///
+    var almaFolder = new File({
+        fileName: "alma",
+        filePath: "/almaproject/korte/",
+        projectName: "almaproject",
+        isRealFile: false
+    });
+    var barackFolder = new File({
+        fileName: "barack",
+        filePath: "/almaproject/korte",
+        projectName: "almaproject",
+        isRealFile: false
+    });
+    var korte = new File({
+        fileName: "korte",
+        filePath: "/almaproject",
+        projectName: "almaproject",
+        isRealFile: false
+    });
+    var almaproject = new Project({
+        projectName: "almaproject",
+        ownerName: "alex",
+    });
+    /// sredlof ///
 
     return {
-        files: files,
-        folders: folders,
-        properties: properties
+        listFolder: function (folderName) {
+            if (folderName === '/') return [almaproject];
+            if (folderName === '/almaproject') return [
+                korte
+            ]; else if (folderName === '/almaproject/korte') return [
+                barackFolder,
+                almaFolder,
+                banan
+            ]; else if (folderName === '/almaproject/korte/alma') return [
+                alma
+            ]; else if (folderName === '/almaproject/korte/barack') return [
+                csutka
+            ];
+        }
     };
 });
 
-HBMAIN.controller("BrowserController", ["$scope", "TestData", function ($scope, TestData) {
-    /***
-    currentPath: Current path
-    files: Files list
-    folders: Folders list
-    projectName: Project name
-    ***/
-    $scope.folders = [];
-    $scope.files = TestData.files;
-    $scope.folders = TestData.folders;
-    $scope.getAll = function () { return $scope.files.concat($scope.folders);}
-    $scope.currentPath = (function (files) {
-        var fallback = "unknown";
-        for (var i = 0; i < files.length; i++) {
-            for (var j = i + 1 ; j < files.length; j++) {
-                if (files[i].fileName === files[j].fileName) return files[i].fileName;
-            }
-        }
-        return fallback;
-    })($scope.files);
-    $scope.projectName = (function (files) {
-        var fallback = "unknown";
-        for (var i = 0; i < files.length; i++) {
-            for (var j = i + 1 ; j < files.length; j++) {
-                if (files[i].projectName === files[j].projectName) return files[i].projectName;
-            }
-        }
-        return fallback;
-    })($scope.files);
+HBMAIN.factory("Communicator", function () {
+    var c = {};
+    return {
+        listFolder: function (folderName) {
 
-    $scope.select = function (selected) {
-        if (selected.selected) console.log("navigation not supported, sit tight");
-        for (var i in $scope.getAll()) { $scope.getAll()[i].selected = false; }
-        selected.selected = true;
+        }
+    };
+});
+
+HBMAIN.controller("BrowserController", ["$scope", "TestData", "GlobalService", function ($scope, TestData, GlobalService) {
+    $scope.reload = function () {
+        $scope.currentPath = window.location.pathname || "/";
+        $scope.files = TestData.listFolder($scope.currentPath);
+        $scope.projectName = (function (files) {
+            var fallback = "unknown";
+            for (var i = 0; i < files.length; i++) {
+                for (var j = i + 1 ; j < files.length; j++) {
+                    if (files[i].projectName === files[j].projectName) return files[i].projectName;
+                }
+            }
+            return fallback;
+        })($scope.files);
+        $scope.clearSelections();
+    };
+
+    $scope.select = function (selected, event) {
+        if (selected.selected && !selected.isRealFile) {
+            delete GlobalService.selectedFile;
+            $scope.currentPath = selected.filePath + (selected.fileName || selected.projectName);
+            window.history.pushState($scope.currentPath, null, $scope.currentPath);
+            selected.selected = false;
+            $scope.reload();
+        } else {
+            $scope.clearSelections();
+            selected.selected = true;
+            GlobalService.selectedFile = selected;
+            setTimeout(window.resize, 500);
+        }
+        return true;
+    };
+
+    $scope.clearSelections = function (event) {
+        if (event) { event.bubbles = true; event.handled = false; }
+        for (var i in $scope.files) { $scope.files[i].selected = false; }
+        delete GlobalService.selectedFile;
+    }
+
+    $(window).on('popstate', function (e) {
+        $scope.currentPath = e.originalEvent.state;
+        $scope.$apply(function () { $scope.reload() });
+        window.resize();
+    });
+
+    $scope.reload();
+}]);
+
+HBMAIN.controller("PropertiesController", ["$scope", "TestData", "GlobalService", function ($scope, TestData, GlobalService) {
+    $scope.global = GlobalService;
+
+    getTarget = function () {
+        return GlobalService.selectedFile;
+    }
+    $scope.evaluateLockStatus = function () {
+        var target = getTarget();
+        if (!target) {
+            $scope.displayHelpMessage(true);
+            return;
+        } else if (!target.hasOwnProperty("lockStatus")) {
+            $scope.displayHelpMessage(false);
+        }
+
+        switch (target.lockStatus) {
+            case "UNAUTHORIZED":
+                $scope.lockMessage = "You don't have the rights to assume file lock"
+                $scope.lockEnabled = false;
+                break;
+            case "LOCKED":
+                $scope.lockMessage = "The file is currently locked"
+                $scope.lockEnabled = false;
+                break;
+            case "UNLOCKED":
+                $scope.lockMessage = "Assume the lock of the file"
+                $scope.lockEnabled = true;
+                break;
+            default:
+                break;
+        }
+    };
+
+    $scope.assumeControl = function () {
+
     };
 }]);
 
-HBMAIN.controller("PropertiesController", ["$scope", "TestData", function ($scope, TestData) {
-    $scope.targetName = TestData.properties.targetName;
-    $scope.properties = TestData.properties.properties;
-}]);
-
-HBMAIN.controller("ActionBarController", ["$scope", "TestData", function ($scope, TestData) {
+HBMAIN.controller("ActionBarController", ["$scope", "TestData", "GlobalService", function ($scope, TestData, GlobalService) {
+    $scope.global = GlobalService;
+    $scope.execute = function (action) {
+        action.execute();
+    }
+    ACTIONS = {
+        DELETE: {
+            name: "Delete file",
+            type: "bin",
+            execute: function () { console.log("deleting file"); }
+        },
+        EDIT: {
+            name: "Edit / Rename file",
+            type: "pencil",
+            execute: function () { console.log("renaming file"); }
+        },
+        UPLOAD: {
+            name: "Upload new version of the file",
+            type: "upload",
+            execute: function () { console.log("uploading file"); }
+        },
+        DOWNLOAD: {
+            name: "Download file",
+            type: "download",
+            execute: function () { console.log("downloading file"); }
+        },
+        LOCK: {
+            name: "Try to acquire file lock",
+            type: "lock",
+            execute: function () { console.log("file locking");}
+        }
+    };
+    
+    $scope.actions = [
+        ACTIONS.DELETE, ACTIONS.EDIT, ACTIONS.UPLOAD, ACTIONS.DOWNLOAD, ACTIONS.LOCK
+    ];
 }]);
 
 HBMAIN.directive("file", function () {
@@ -108,13 +216,9 @@ HBMAIN.directive("file", function () {
             fileName: "@filename",
             filePath: "@filepath",
             lastModified: "@lastmodified",
-            selected: "@selected"
         },
         restrict: "E",
-        template: "<div title='{{filePath + fileName}}' >{{fileName}}</div>",
-        link: function (scope, element) {
-            scope.selected ? $(element).addClass("selected") : $(element).removeClass("selected");
-        }
+        template: "<div class='file' title='{{filePath + fileName}}' >{{fileName}}</div>",
     };
 });
 
@@ -124,9 +228,19 @@ HBMAIN.directive("folder", function () {
             folderName: "@foldername",
             folderPath: "@folderpath",
             createdOn: "@createdon",
-            selected: "@selected"
         },
         restrict: "E",
-        template: "<div>[{{folderPath}}]</div>",
+        template: "<div class='folder' alt='{{folderPath + folderName}}'>[{{folderName}}]</div>",
+    };
+});
+
+HBMAIN.directive("project", function () {
+    return {
+        scope: {
+            projectName: "@projectname",
+            ownerName: "@ownername"
+        },
+        restrict: "E",
+        template: "<div class='project'>*{{projectName}}*</div>",
     };
 });
