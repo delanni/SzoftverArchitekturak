@@ -5,13 +5,26 @@
 }
 
 body {
-    font-size: .85em;
+    color: #242424;
     font-family: "Segoe UI", Verdana, Helvetica, Sans-Serif;
     margin: 0;
     padding: 0;
     height: 100%;
     width: 100%;
 }
+
+a {
+    text-decoration: none;
+    font-weight: bold;
+    color: #393939;
+}
+
+    a:hover {
+        text-decoration: none;
+        font-weight: bold;
+        cursor: pointer;
+        text-shadow: 0 0 3px gray;
+    }
 
 header, footer, hgroup,
 nav, section {
@@ -36,11 +49,11 @@ nav, section {
 
 
 header {
-    box-shadow: 0 0 10px lime;
+    box-shadow: 0 0 15px black;
 }
 
 footer {
-    box-shadow: 0 0 10px lime;
+    box-shadow: 0 0 15px black;
     clear: both;
     overflow: hidden;
 }
@@ -64,10 +77,11 @@ section {
 }
 
 .content {
-    background:#7EFF93;
+    background: #7EFF93;
     overflow: hidden;
     width: 90%;
     margin: auto;
+    box-shadow: 0 20px 40px black;
 }
 
 .leftActionBarAcceptor {
@@ -75,10 +89,9 @@ section {
     left: 0;
     top: 45px;
     width: 5%;
-    border-radius:9px;
+    border-radius: 9px;
     background: #643400;
     box-shadow: 0 4px 10px black;
-    
 }
 
 .leftOut {
@@ -89,7 +102,15 @@ section {
     height: 100%;
     float: left;
     width: 59%;
-    border-right: double yellow;
+    border-right: double 6px mediumseagreen;
+}
+
+    .browserView > * {
+        margin: 14px;
+    }
+
+.propsView > * {
+    margin: 14px;
 }
 
 .propsView {
@@ -99,7 +120,7 @@ section {
 }
 
 .wellPadded {
-    margin: 8px 30px;
+    margin: 4px 30px;
 }
 
 #loginBox {
@@ -120,17 +141,47 @@ section {
     cursor: pointer;
 }
 
-.actionButton{
+.actionButton {
     box-shadow: inset 0px 0px 4px black;
     background-color: rgb(27, 20, 0);
-    width:90%;
+    width: 90%;
     height: 40px;
     margin: 6px auto;
-    border-radius:60px;
-    
+    border-radius: 60px;
     text-align: center;
     vertical-align: middle;
     font-size: x-large;
     color: darkgreen;
     font-weight: bold;
 }
+
+.file, .project, .folder {
+    padding: 10px;
+    background-color: rgba(255,255,255,0.3);
+    margin: 4px;
+    border: 3px solid transparent;
+    border-radius: 4px;
+}
+
+    .project:hover, .selected .project, .folder:hover, .selected .folder, .file:hover, .selected .file {
+        border: 3px solid;
+        cursor: pointer;
+    }
+
+    .folder::before, .project::before, .file::before {
+        font: 1em 'Glyphicons Regular';
+        margin-right: 16px;
+    }
+
+    .folder::before {
+        content: "\E441";
+    }
+
+    .project::before {
+        content: "\E072";
+    }
+
+    .file::before {
+        content: "\E037";
+    }
+    
