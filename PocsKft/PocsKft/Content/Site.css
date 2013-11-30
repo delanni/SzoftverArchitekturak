@@ -59,7 +59,7 @@ footer {
 }
 
 nav {
-    background: #1f0;
+    background: #27CE1B;
     overflow: hidden;
 }
 
@@ -92,6 +92,10 @@ section {
     border-radius: 9px;
     background: #643400;
     box-shadow: 0 4px 10px black;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .leftOut {
@@ -101,8 +105,12 @@ section {
 .browserView {
     height: 100%;
     float: left;
-    width: 59%;
+    width: 50%;
     border-right: double 6px mediumseagreen;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
     .browserView > * {
@@ -116,7 +124,7 @@ section {
 .propsView {
     height: 100%;
     float: left;
-    width: 40%;
+    width: 49%;
 }
 
 .wellPadded {
@@ -161,6 +169,11 @@ section {
     margin: 4px;
     border: 3px solid transparent;
     border-radius: 4px;
+    overflow: hidden;
+    -ms-text-overflow: ellipsis;
+    -o-text-overflow: ellipsis;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
     .project:hover, .selected .project, .folder:hover, .selected .folder, .file:hover, .selected .file {
@@ -184,4 +197,21 @@ section {
     .file::before {
         content: "\E037";
     }
-    
+
+.property {
+    border-radius: 6px;
+    background: rgba(255,255,255,0.3);
+    padding: 6px;
+    margin: 6px;
+}
+
+.propsView .edit {
+    display: none;
+    width: 100%;
+}
+
+#saveChangesButton {
+}
+
+#discardChangesButton {
+}

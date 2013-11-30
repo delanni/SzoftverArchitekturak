@@ -9,5 +9,6 @@
     };
     $(window).resize(window.resize);
     window.resize();
+    setInterval(window.resize, 300);
 });
 

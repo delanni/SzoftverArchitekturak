@@ -4,8 +4,94 @@ var HBMAIN = angular.module("heribolz", function () {
     // Configure
 });
 
-HBMAIN.factory("GlobalService", function () {
-    return {};
+HBMAIN.setLoading = function (onOff) {
+    if (onOff) {
+        $(document.body).css("cursor", "progress");
+    } else {
+        $(document.body).css("cursor", "auto");
+    }
+}
+
+HBMAIN.factory("GlobalService", function (Communicator) {
+    ACTIONS = {
+        DELETE: {
+            name: "Delete file",
+            type: "bin",
+            execute: function (file) {
+                Communicator.delete(file);
+            }
+        },
+        EDIT: {
+            name: "Edit / Rename file",
+            type: "pencil",
+            execute: function () {
+                var display = $(".edit").css("display");
+                if (display === 'none') {
+                    $(".edit").slideDown(100);
+                } else {
+                    $(".edit").slideUp(100);
+                }
+            }
+        },
+        UPLOAD: {
+            name: "Upload new version of the file / new file",
+            type: "upload",
+            execute: function (file) {
+                if (file) {
+                    Communicator.updateFile(file);
+                } else {
+                    Communicator.uploadFile();
+                }
+            }
+        },
+        DOWNLOAD: {
+            name: "Download file",
+            type: "download",
+            execute: function (file) {
+                Communicator.download(file);
+            }
+        },
+        DOLOCK:{
+            name: "Try to acquire lock on the file",
+            type: "lock",
+            execute: function (file) {
+                Communicator.tryLock(file);
+            }
+        },
+        UNLOCK:{
+            name: "Release the lock",
+            type: "unlock",
+            execute: function (file) {
+                Communicator.unlock(file);
+            }
+        },
+        NOPERMLOCK:{
+            name: "You have no rights to lock the file",
+            type: "warning_sign",
+            execute: function () {
+
+            }
+        },
+        LOCKED: {
+            name: "The file is currently locked",
+            type: "rotation_lock",
+            execute: function(){
+                
+            }
+        },
+        SAVE: {
+            name: "Save editions on the file",
+            type: "save",
+            execute: function (file) {
+                Communicator.updateMeta(file);
+            }
+        }
+    };
+    ACTIONS.LOCK = ACTIONS.NOPERMLOCK;
+
+    return {
+        ACTIONS: ACTIONS
+    };
 });
 
 HBMAIN.factory("TestUser", function () {
@@ -78,29 +164,55 @@ HBMAIN.factory("TestData", function () {
     };
 });
 
-HBMAIN.factory("Communicator", function () {
+HBMAIN.factory("Communicator", function ($http, $q, TestData) {
     var c = {};
-    return {
-        listFolder: function (folderName) {
+    var fakeList = function (scope, folderName) {
+        var deferred = $q.defer();
 
-        }
+        setTimeout(function () {
+            scope.$apply(function () {
+                deferred.resolve(TestData.listFolder(folderName));
+            });
+        }, 500);
+        HBMAIN.setLoading(true);
+        return deferred.promise;
+    };
+
+    var listAsync = function (scope, folderName) {
+        var deferred = $q.defer();
+        var url = folderName;
+
+        $http.get(url).success(function (data) {
+            deferred.resolve(data);
+        }).error(function (data, status) {
+            data = data || "Folder request failed";
+            deferred.reject(data);
+        });
+
+        HBMAIN.setLoading(true);
+        return deferred.promise;
+    };
+
+    return {
+        listFolder: fakeList,
+        delete: angular.noop,
+        updateFile: angular.noop,
+        uploadFile: angular.noop,
+        updateMeta: angular.noop,
+        download: angular.noop,
+        tryLock: angular.noop,
+        unlock: angular.noop
     };
 });
 
-HBMAIN.controller("BrowserController", ["$scope", "TestData", "GlobalService", function ($scope, TestData, GlobalService) {
+HBMAIN.controller("BrowserController", ["$scope", "Communicator","GlobalService", function ($scope, Communicator, GlobalService) {
     $scope.reload = function () {
         $scope.currentPath = window.location.pathname || "/";
-        $scope.files = TestData.listFolder($scope.currentPath);
-        $scope.projectName = (function (files) {
-            var fallback = "unknown";
-            for (var i = 0; i < files.length; i++) {
-                for (var j = i + 1 ; j < files.length; j++) {
-                    if (files[i].projectName === files[j].projectName) return files[i].projectName;
-                }
-            }
-            return fallback;
-        })($scope.files);
-        $scope.clearSelections();
+        Communicator.listFolder($scope, $scope.currentPath).then(function (data) {
+            $scope.files = data;
+            $scope.clearSelections();
+            HBMAIN.setLoading(false);
+        });
     };
 
     $scope.select = function (selected, event) {
@@ -134,113 +246,110 @@ HBMAIN.controller("BrowserController", ["$scope", "TestData", "GlobalService", f
     $scope.reload();
 }]);
 
-HBMAIN.controller("PropertiesController", ["$scope", "TestData", "GlobalService", function ($scope, TestData, GlobalService) {
+HBMAIN.controller("PropertiesController", ["$scope", "Communicator", "GlobalService", function ($scope, Communicator, GlobalService) {
     $scope.global = GlobalService;
 
-    getTarget = function () {
-        return GlobalService.selectedFile;
-    }
-    $scope.evaluateLockStatus = function () {
-        var target = getTarget();
+    $scope.$watch($scope.global.selectedFile, function (oldval, newVal) {
+        if (newVal) {
+            $scope.$apply(function () {
+                $scope.evaluateLockStatus(newVal);
+            });
+        }
+    });
+
+    $scope.evaluateLockStatus = function (target) {
         if (!target) {
-            $scope.displayHelpMessage(true);
+            GlobalService.ACTIONS.LOCK = GlobalService.ACTIONS.NOPERMLOCK;
             return;
-        } else if (!target.hasOwnProperty("lockStatus")) {
-            $scope.displayHelpMessage(false);
         }
 
         switch (target.lockStatus) {
+            case "UNDERCONTROL":
+                GlobalService.ACTIONS.LOCK = GlobalService.ACTIONS.UNLOCK;
+                break;
             case "UNAUTHORIZED":
-                $scope.lockMessage = "You don't have the rights to assume file lock"
-                $scope.lockEnabled = false;
+                GlobalService.ACTIONS.LOCK = GlobalService.ACTIONS.NOPERMLOCK;
                 break;
             case "LOCKED":
-                $scope.lockMessage = "The file is currently locked"
-                $scope.lockEnabled = false;
+                GlobalService.ACTIONS.LOCK = GlobalService.ACTIONS.LOCKED;
                 break;
             case "UNLOCKED":
-                $scope.lockMessage = "Assume the lock of the file"
-                $scope.lockEnabled = true;
+                GlobalService.ACTIONS.LOCK = GlobalService.ACTIONS.DOLOCK;
                 break;
             default:
+                GlobalService.ACTIONS.LOCK = GlobalService.ACTIONS.NOPERMLOCK;
                 break;
         }
     };
 
-    $scope.assumeControl = function () {
-
+    getTarget = function () {
+        return GlobalService.selectedFile;
     };
 }]);
 
-HBMAIN.controller("ActionBarController", ["$scope", "TestData", "GlobalService", function ($scope, TestData, GlobalService) {
+HBMAIN.controller("ActionBarController", ["$scope", "Communicator", "GlobalService", function ($scope, Communicator, GlobalService) {
     $scope.global = GlobalService;
-    $scope.execute = function (action) {
-        action.execute();
-    }
-    ACTIONS = {
-        DELETE: {
-            name: "Delete file",
-            type: "bin",
-            execute: function () { console.log("deleting file"); }
-        },
-        EDIT: {
-            name: "Edit / Rename file",
-            type: "pencil",
-            execute: function () { console.log("renaming file"); }
-        },
-        UPLOAD: {
-            name: "Upload new version of the file",
-            type: "upload",
-            execute: function () { console.log("uploading file"); }
-        },
-        DOWNLOAD: {
-            name: "Download file",
-            type: "download",
-            execute: function () { console.log("downloading file"); }
-        },
-        LOCK: {
-            name: "Try to acquire file lock",
-            type: "lock",
-            execute: function () { console.log("file locking");}
-        }
-    };
     
+    $scope.execute = function (action) {
+        action.execute(GlobalService.selectedFile);
+    }
+
     $scope.actions = [
-        ACTIONS.DELETE, ACTIONS.EDIT, ACTIONS.UPLOAD, ACTIONS.DOWNLOAD, ACTIONS.LOCK
+       GlobalService.ACTIONS.DELETE,
+       GlobalService.ACTIONS.EDIT,
+       GlobalService.ACTIONS.UPLOAD,
+       GlobalService.ACTIONS.DOWNLOAD,
+       GlobalService.ACTIONS.LOCK
     ];
 }]);
 
 HBMAIN.directive("file", function () {
     return {
         scope: {
-            fileName: "@filename",
-            filePath: "@filepath",
-            lastModified: "@lastmodified",
+            filename: "@",
+            filepath: "@",
+            lastmodified: "@",
         },
         restrict: "E",
-        template: "<div class='file' title='{{filePath + fileName}}' >{{fileName}}</div>",
+        template: "<div class='file' alt='{{filepath}}' title='{{filepath + filename}}' >{{filename}}</div>",
     };
 });
 
 HBMAIN.directive("folder", function () {
     return {
         scope: {
-            folderName: "@foldername",
-            folderPath: "@folderpath",
-            createdOn: "@createdon",
+            foldername: "@",
+            folderpath: "@",
+            createdon: "@",
         },
         restrict: "E",
-        template: "<div class='folder' alt='{{folderPath + folderName}}'>[{{folderName}}]</div>",
+        template: "<div class='folder' alt='{{folderpath + foldername}}'>[{{foldername}}]</div>",
     };
 });
 
 HBMAIN.directive("project", function () {
     return {
         scope: {
-            projectName: "@projectname",
-            ownerName: "@ownername"
+            projectname: "@",
+            ownername: "@"
         },
         restrict: "E",
-        template: "<div class='project'>*{{projectName}}*</div>",
+        template: "<div alt='Owner: {{ownername}}' class='project'>*{{projectname}}*</div>",
     };
+});
+
+HBMAIN.directive("propertyfield", function () {
+    var propertyTemplate = "<div class='property'>\
+                            <div class='propname' ng-bind='property.propName' />\
+                            <input class='edit propname' ng-model='property.propName'/>\
+                            <div class='propvalue' ng-bind='property.propValue' />\
+                            <input class='edit propvalue' ng-model='property.propValue' />\
+                            </div>";
+    return {
+        scope: {
+            property:"="
+        },
+        restrict: "E",
+        template: propertyTemplate,
+    }
 });
