@@ -1,7 +1,8 @@
-﻿var FILESTATES = {
+﻿var LOCKSTATUS = {
     LOCKED: "LOCKED",
-    OPEN: "OPEN",
-    ARCHIVED: "ARCHIVED"
+    UNLOCKED: "UNLOCKED",
+    UNDERCONTROL: "UNDERCONTROL",
+    UNAUTHORIZED: "UNAUTHORIZED"
 };
 
 var File = (function () {
@@ -22,7 +23,7 @@ var File = (function () {
 
         this.lastModifierName = opts.lastModifierName || "unknown";
 
-        this.state = opts.state || FILESTATES.LOCKED;
+        this.lockStatus = opts.lockStatus || LOCKSTATUS.UNAUTHORIZED;
 
         if (this.filePath.lastIndexOf("/") !== (this.filePath.length - 1)) {
             this.filePath += "/";
@@ -37,12 +38,14 @@ var File = (function () {
     _File.__defineGetter__("isRealFile", function () { return this.isRealFile; });
 
     /**
-    *  Tells the state of the given file. States are as follows:
+    *  Tells the lock state of the given file. States are as follows:
     *  LOCKED: this file is not open for modification
-    *  OPEN: this file is open for modification
-    *  ARCHIVED: this file has been deleted, the file is only an archived version
+    *  UNLOCKED: this file is open for modification
+    *  UNAUTHORIZED: the current user has no right to lock the file
+    *  UNDERCONTROL: this file is under the lock of the current user
     **/
-    _File.__defineGetter__("state", function () { return this.state; });
+    _File.__defineGetter__("lockStatus", function () { return this.lockStatus; });
+    _File.__defineSetter__("lockStatus", function (value) { this.lockStatus = value; });
 
 
     /**

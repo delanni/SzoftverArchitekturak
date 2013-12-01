@@ -1,7 +1,7 @@
 ﻿@{
     ViewBag.Title = "Home Page";
 }
-<aside class="leftActionBarAcceptor" ng-controller="ActionBarController" ng-class="global.selectedFile?'':'leftOut'">
+<aside class="leftActionBarAcceptor" ng-controller="ActionBarController" >
     <div ng-repeat="action in actions"
         title="{{action.name}}"
         class="actionButton glyphicons {{action.type}}"

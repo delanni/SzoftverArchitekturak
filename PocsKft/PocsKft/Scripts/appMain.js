@@ -15,14 +15,14 @@ HBMAIN.setLoading = function (onOff) {
 HBMAIN.factory("GlobalService", function (Communicator) {
     ACTIONS = {
         DELETE: {
-            name: "Delete file",
+            name: "Delete",
             type: "bin",
             execute: function (file) {
                 Communicator.delete(file);
             }
         },
         EDIT: {
-            name: "Edit / Rename file",
+            name: "Edit / Rename",
             type: "pencil",
             execute: function () {
                 var display = $(".edit").css("display");
@@ -34,38 +34,41 @@ HBMAIN.factory("GlobalService", function (Communicator) {
             }
         },
         UPLOAD: {
-            name: "Upload new version of the file / new file",
+            name: "Upload a new file",
             type: "upload",
             execute: function (file) {
-                if (file) {
-                    Communicator.updateFile(file);
-                } else {
-                    Communicator.uploadFile();
-                }
+                Communicator.uploadFile();
+            }
+        },
+        UPDATE: {
+            name: "Upload new version",
+            type: "git_commit",
+            execute: function (file) {
+                Communicator.updateFile(file);
             }
         },
         DOWNLOAD: {
-            name: "Download file",
+            name: "Download",
             type: "download",
             execute: function (file) {
                 Communicator.download(file);
             }
         },
-        DOLOCK:{
+        DOLOCK: {
             name: "Try to acquire lock on the file",
             type: "lock",
             execute: function (file) {
                 Communicator.tryLock(file);
             }
         },
-        UNLOCK:{
+        UNLOCK: {
             name: "Release the lock",
             type: "unlock",
             execute: function (file) {
                 Communicator.unlock(file);
             }
         },
-        NOPERMLOCK:{
+        NOPERMLOCK: {
             name: "You have no rights to lock the file",
             type: "warning_sign",
             execute: function () {
@@ -75,15 +78,29 @@ HBMAIN.factory("GlobalService", function (Communicator) {
         LOCKED: {
             name: "The file is currently locked",
             type: "rotation_lock",
-            execute: function(){
-                
+            execute: function () {
+
             }
         },
         SAVE: {
-            name: "Save editions on the file",
-            type: "save",
+            name: "Save changes",
+            type: "floppy_disk",
             execute: function (file) {
                 Communicator.updateMeta(file);
+            }
+        },
+        CREATEPROJECT: {
+            name: "Create a new project here",
+            type: "book_open",
+            execute: function () {
+                Communicator.createProject();
+            }
+        },
+        CREATEFOLDER: {
+            name: "Create a new folder here",
+            type: "folder_new",
+            execute: function () {
+                Communicator.createFolder();
             }
         }
     };
@@ -201,106 +218,161 @@ HBMAIN.factory("Communicator", function ($http, $q, TestData) {
         updateMeta: angular.noop,
         download: angular.noop,
         tryLock: angular.noop,
-        unlock: angular.noop
+        unlock: angular.noop,
+        createFile: angular.noop,
+        createFolder: angular.noop
     };
 });
 
-HBMAIN.controller("BrowserController", ["$scope", "Communicator","GlobalService", function ($scope, Communicator, GlobalService) {
-    $scope.reload = function () {
-        $scope.currentPath = window.location.pathname || "/";
-        Communicator.listFolder($scope, $scope.currentPath).then(function (data) {
-            $scope.files = data;
-            $scope.clearSelections();
-            HBMAIN.setLoading(false);
-        });
-    };
+HBMAIN.controller("BrowserController", ["$scope", "$rootScope", "Communicator", "GlobalService",
+    function ($scope, $rootScope, Communicator, GlobalService) {
+        $scope.reload = function () {
+            $scope.currentPath = window.location.pathname || "/";
+            GlobalService.currentPath = $scope.currentPath;
+            $rootScope.$broadcast("pathChanged", $scope.currentPath);
 
-    $scope.select = function (selected, event) {
-        if (selected.selected && !selected.isRealFile) {
-            delete GlobalService.selectedFile;
-            $scope.currentPath = selected.filePath + (selected.fileName || selected.projectName);
-            window.history.pushState($scope.currentPath, null, $scope.currentPath);
-            selected.selected = false;
-            $scope.reload();
-        } else {
-            $scope.clearSelections();
-            selected.selected = true;
-            GlobalService.selectedFile = selected;
-            setTimeout(window.resize, 500);
-        }
-        return true;
-    };
-
-    $scope.clearSelections = function (event) {
-        if (event) { event.bubbles = true; event.handled = false; }
-        for (var i in $scope.files) { $scope.files[i].selected = false; }
-        delete GlobalService.selectedFile;
-    }
-
-    $(window).on('popstate', function (e) {
-        $scope.currentPath = e.originalEvent.state;
-        $scope.$apply(function () { $scope.reload() });
-        window.resize();
-    });
-
-    $scope.reload();
-}]);
-
-HBMAIN.controller("PropertiesController", ["$scope", "Communicator", "GlobalService", function ($scope, Communicator, GlobalService) {
-    $scope.global = GlobalService;
-
-    $scope.$watch($scope.global.selectedFile, function (oldval, newVal) {
-        if (newVal) {
-            $scope.$apply(function () {
-                $scope.evaluateLockStatus(newVal);
+            Communicator.listFolder($scope, $scope.currentPath).then(function (data) {
+                $scope.files = data;
+                $scope.clearSelections();
+                HBMAIN.setLoading(false);
             });
-        }
-    });
+        };
 
-    $scope.evaluateLockStatus = function (target) {
-        if (!target) {
-            GlobalService.ACTIONS.LOCK = GlobalService.ACTIONS.NOPERMLOCK;
-            return;
+        $scope.select = function (selected, event) {
+            if (selected.selected && !selected.isRealFile) {
+                delete GlobalService.selectedFile;
+                $scope.currentPath = selected.filePath + (selected.fileName || selected.projectName);
+                window.history.pushState($scope.currentPath, null, $scope.currentPath);
+                selected.selected = false;
+                $scope.reload();
+            } else {
+                $scope.clearSelections();
+                selected.selected = true;
+                GlobalService.selectedFile = selected;
+                $rootScope.$broadcast("fileSelectionChanged", selected);
+                setTimeout(window.resize, 500);
+            }
+            return true;
+        };
+
+        $scope.clearSelections = function (event) {
+            if (event) { event.bubbles = true; event.handled = false; }
+            for (var i in $scope.files) { $scope.files[i].selected = false; }
+            delete GlobalService.selectedFile;
+            $rootScope.$broadcast("fileSelectionChanged", null);
         }
 
-        switch (target.lockStatus) {
-            case "UNDERCONTROL":
-                GlobalService.ACTIONS.LOCK = GlobalService.ACTIONS.UNLOCK;
-                break;
-            case "UNAUTHORIZED":
+        $(window).on('popstate', function (e) {
+            $scope.currentPath = e.originalEvent.state;
+            $scope.$apply(function () { $scope.reload() });
+            window.resize();
+        });
+
+        $scope.reload();
+    }]);
+
+HBMAIN.controller("PropertiesController", ["$scope", "$rootScope", "Communicator", "GlobalService",
+    function ($scope, $rootScope, Communicator, GlobalService) {
+        $scope.global = GlobalService;
+
+        $scope.$on("fileSelectionChanged", function (event) {
+            if (GlobalService.selectedFile) {
+                $scope.evaluateLockStatus(newVal);
+            }
+        });
+
+        $scope.evaluateLockStatus = function (target) {
+            if (!target) {
                 GlobalService.ACTIONS.LOCK = GlobalService.ACTIONS.NOPERMLOCK;
-                break;
-            case "LOCKED":
-                GlobalService.ACTIONS.LOCK = GlobalService.ACTIONS.LOCKED;
-                break;
-            case "UNLOCKED":
-                GlobalService.ACTIONS.LOCK = GlobalService.ACTIONS.DOLOCK;
-                break;
-            default:
-                GlobalService.ACTIONS.LOCK = GlobalService.ACTIONS.NOPERMLOCK;
-                break;
-        }
-    };
+                return;
+            }
 
-    getTarget = function () {
-        return GlobalService.selectedFile;
-    };
-}]);
+            switch (target.lockStatus) {
+                case "UNDERCONTROL":
+                    GlobalService.ACTIONS.LOCK = GlobalService.ACTIONS.UNLOCK;
+                    break;
+                case "UNAUTHORIZED":
+                    GlobalService.ACTIONS.LOCK = GlobalService.ACTIONS.NOPERMLOCK;
+                    break;
+                case "LOCKED":
+                    GlobalService.ACTIONS.LOCK = GlobalService.ACTIONS.LOCKED;
+                    break;
+                case "UNLOCKED":
+                    GlobalService.ACTIONS.LOCK = GlobalService.ACTIONS.DOLOCK;
+                    break;
+                default:
+                    GlobalService.ACTIONS.LOCK = GlobalService.ACTIONS.NOPERMLOCK;
+                    break;
+            }
+        };
+    }]);
 
 HBMAIN.controller("ActionBarController", ["$scope", "Communicator", "GlobalService", function ($scope, Communicator, GlobalService) {
     $scope.global = GlobalService;
-    
-    $scope.execute = function (action) {
-        action.execute(GlobalService.selectedFile);
+
+    $scope.$on("fileSelectionChanged", function (event) {
+        if (GlobalService.selectedFile) {
+            if (GlobalService.selectedFile.isRealFile) {
+                $scope.setFileActions();
+            } else if (GlobalService.selectedFile.hasOwnProperty("isRealFile")) {
+                $scope.setFolderActions();
+            } else {
+                $scope.setProjectActions();
+            }
+        } else {
+            if (GlobalService.currentPath === '/') {
+                $scope.setNoTargetActionsProject();
+            } else {
+                $scope.setNoTargetActions();
+            }
+        }
+    });
+
+    $scope.setFolderActions = function () {
+        $scope.actions = [
+            GlobalService.ACTIONS.EDIT,
+            GlobalService.ACTIONS.DOWNLOAD,
+            GlobalService.ACTIONS.SAVE,
+            GlobalService.ACTIONS.DELETE
+        ];
     }
 
-    $scope.actions = [
-       GlobalService.ACTIONS.DELETE,
-       GlobalService.ACTIONS.EDIT,
-       GlobalService.ACTIONS.UPLOAD,
-       GlobalService.ACTIONS.DOWNLOAD,
-       GlobalService.ACTIONS.LOCK
-    ];
+    $scope.setProjectActions = function () {
+        $scope.actions = [
+            GlobalService.ACTIONS.EDIT,
+            GlobalService.ACTIONS.DOWNLOAD,
+            GlobalService.ACTIONS.SAVE,
+            GlobalService.ACTIONS.DELETE
+        ];
+    }
+
+    $scope.setFileActions = function () {
+        $scope.actions = [
+            GlobalService.ACTIONS.EDIT,
+            GlobalService.ACTIONS.LOCK,
+            GlobalService.ACTIONS.UPDATE,
+            GlobalService.ACTIONS.DOWNLOAD,
+            GlobalService.ACTIONS.SAVE,
+            GlobalService.ACTIONS.DELETE
+        ];
+    };
+
+    $scope.setNoTargetActions = function () {
+        $scope.actions = [
+            GlobalService.ACTIONS.CREATEFOLDER,
+            GlobalService.ACTIONS.UPLOAD
+        ];
+    };
+
+    $scope.setNoTargetActionsProject = function () {
+        $scope.actions = [
+            GlobalService.ACTIONS.CREATEPROJECT
+        ];
+    };
+
+    $scope.execute = function (action) {
+        action.execute(GlobalService.selectedFile);
+    };
 }]);
 
 HBMAIN.directive("file", function () {
@@ -347,7 +419,7 @@ HBMAIN.directive("propertyfield", function () {
                             </div>";
     return {
         scope: {
-            property:"="
+            property: "="
         },
         restrict: "E",
         template: propertyTemplate,
