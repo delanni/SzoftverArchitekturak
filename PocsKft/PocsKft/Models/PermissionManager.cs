@@ -7,8 +7,21 @@ namespace PocsKft.Models
 {
     public class PermissionManager
     {
-        private FolderManager folderManager;
-        private GroupManager groupManager; 
+        private static volatile PermissionManager instance;
+        private static object syncRoot = new Object();
+        private PermissionManager() { }
+        public static PermissionManager Instance
+        {
+            get
+            {
+                lock (syncRoot)
+                {
+                    if (instance == null)
+                        instance = new PermissionManager();
+                }
+                return instance;
+            }
+        }
 
         public UserProfile GetUserById(int id)
         {
@@ -25,18 +38,20 @@ namespace PocsKft.Models
         /// <param name="userId"></param>
         /// <param name="documentId"></param>
         /// <returns></returns>
-        public bool DoesUserHavePermissionOnDocument(int userId, int documentId)
+        public bool DoesUserHavePermissionOnDocumentOrFolder(int userId, int documentId)
         {
             using (UsersContext ct = new UsersContext())
             {
+                //magára a user-re
                 if (ct.Permissions.Where(i => i.CommonAncestorId == documentId
                     && i.UserOrGroupId == userId).FirstOrDefault() != null)
                 {
                     return true;
                 }
+                //valamely, a user-t tartalmazó csoport-ra
                 else
                 {
-                    List<Group> list = groupManager.GetGroupsOfUser(userId);
+                    List<Group> list = GroupManager.GroupManagerInstance.GetGroupsOfUser(userId);
                     if (list != null)
                     {
                         foreach (Group g in list)
@@ -95,7 +110,7 @@ namespace PocsKft.Models
         /// <param name="userOrGroupId"></param>
         public void GrantRightOnAllChildren(UsersContext ct, int folderId, int userOrGroupId)
         {
-            Folder f = folderManager.GetFolderById(folderId);
+            Folder f = FolderManager.Instance.GetFolderById(folderId);
 
             //erre a Folder-re van-e már bejegyzés. Ha nincs -> új rekord.
             if (ct.Permissions.Where(i => i.UserOrGroupId == userOrGroupId
@@ -161,7 +176,7 @@ namespace PocsKft.Models
 
         public void RevokeRightOnAllChildren(UsersContext ct, int folderId, int userOrGroupId)
         {
-            Folder f = folderManager.GetFolderById(folderId);
+            Folder f = FolderManager.Instance.GetFolderById(folderId);
 
             //erre a Folder-re a Permission törlése
             Permission p = ct.Permissions.Where(i => i.UserOrGroupId == userOrGroupId

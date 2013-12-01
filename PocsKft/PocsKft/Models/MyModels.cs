@@ -45,7 +45,6 @@ namespace PocsKft.Models
     public class Document : CommonAncestor
     {
         public int VersionNumber { get; set; }
-        public bool IsLocked { get; set; }
         public int LockedByUserId { get; set; }
         public Status Status { get; set; }
         public DocumentType DocumentType { get; set; }
