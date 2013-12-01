@@ -13,7 +13,7 @@ namespace PocsKft.Models
         private GroupManager() { }
         //public List<Group> Groups { get; set; }
 
-        public static GroupManager GroupManagerInstance
+        public static GroupManager Instance
         {
             get
             {
