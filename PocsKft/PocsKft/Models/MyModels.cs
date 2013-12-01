@@ -74,6 +74,24 @@ namespace PocsKft.Models
         public int Writtenby { get; set; } //userId
     }
 
+    [Table("Lock")]
+    public class Lock
+    {
+        public int Id { get; set; }
+        public int UserId { get; set; }
+        public int CommonAncestorId { get; set; } // Folder or Document Id
+        //public int Read { get; set; }
+    }
+
+    [Table("Permission")]
+    public class Permission
+    {
+        public int Id { get; set; }
+        public int UserOrGroupId { get; set; }
+        public int CommonAncestorId { get; set; } // Folder or Document Id
+        public bool IsFolder { get; set; }
+    }
+
     public enum Status
     {
         Active = 1,

@@ -26,6 +26,14 @@ namespace PocsKft.Models
             }
         }
 
+        public UserProfile GetUserById(int id)
+        {
+            using (UsersContext ct = new UsersContext())
+            {
+                return ct.UserProfiles.Where(i => i.UserId == id).FirstOrDefault();
+            }
+        }
+
         public void DeleteGroup(Group g)
         {
             using (UsersContext ct = new UsersContext())
@@ -125,6 +133,18 @@ namespace PocsKft.Models
                 else
                     return false;
             }
+        }
+
+        public List<Group> GetGroupsOfUser(int userId)
+        {
+            UserProfile user = GetUserById(userId);
+            
+            List<Group> list = new List<Group>();
+            using (UsersContext ct = new UsersContext())
+            {
+                return ct.Groups.Where(i => i.Users.Contains(user) == true).ToList();
+            }
+
         }
     }
 }

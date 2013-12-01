@@ -186,6 +186,10 @@
     <Compile Include="Migrations\201311270225392_elso.Designer.cs">
       <DependentUpon>201311270225392_elso.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201312012003450_masodik.cs" />
+    <Compile Include="Migrations\201312012003450_masodik.Designer.cs">
+      <DependentUpon>201312012003450_masodik.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\DocumentManager.cs" />
     <Compile Include="Models\FolderManager.cs" />
@@ -196,7 +200,9 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\AccountModels.cs" />
+    <Compile Include="Models\LockManager.cs" />
     <Compile Include="Models\MyModels.cs" />
+    <Compile Include="Models\PermissionManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -266,6 +272,7 @@
     <Content Include="Content\glyphicons-halflings-regular.eot" />
     <Content Include="Content\glyphicons-social-regular.eot" />
     <None Include="Scripts\jquery-1.8.2.intellisense.js" />
+    <Content Include="Scripts\angular.js" />
     <Content Include="Scripts\appMain.js" />
     <Content Include="Scripts\bootStrap.js" />
     <Content Include="Scripts\File.js" />
@@ -333,6 +340,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Migrations\201311270225392_elso.resx">
       <DependentUpon>201311270225392_elso.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201312012003450_masodik.resx">
+      <DependentUpon>201312012003450_masodik.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
