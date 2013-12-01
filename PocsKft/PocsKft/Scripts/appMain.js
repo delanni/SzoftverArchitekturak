@@ -10,7 +10,7 @@ HBMAIN.setLoading = function (onOff) {
     } else {
         $(document.body).css("cursor", "auto");
     }
-}
+};
 
 HBMAIN.factory("GlobalService", function (Communicator) {
     ACTIONS = {
@@ -54,7 +54,7 @@ HBMAIN.factory("GlobalService", function (Communicator) {
                 Communicator.download(file);
             }
         },
-        DOLOCK: {
+        LOCK: {
             name: "Try to acquire lock on the file",
             type: "lock",
             execute: function (file) {
@@ -68,24 +68,17 @@ HBMAIN.factory("GlobalService", function (Communicator) {
                 Communicator.unlock(file);
             }
         },
-        NOPERMLOCK: {
-            name: "You have no rights to lock the file",
-            type: "warning_sign",
-            execute: function () {
-
-            }
-        },
         LOCKED: {
             name: "The file is currently locked",
             type: "rotation_lock",
             execute: function () {
-
             }
         },
         SAVE: {
             name: "Save changes",
             type: "floppy_disk",
             execute: function (file) {
+                $(".edit").slideUp(100);
                 Communicator.updateMeta(file);
             }
         },
@@ -104,7 +97,44 @@ HBMAIN.factory("GlobalService", function (Communicator) {
             }
         }
     };
-    ACTIONS.LOCK = ACTIONS.NOPERMLOCK;
+
+    ACTIONS.getWriteActionsInLobby = function () {
+        return [ACTIONS.CREATEPROJECT];
+    };
+    ACTIONS.getReadActionsInLobby = function () {
+        return [];
+    };
+    ACTIONS.getWriteActionsForProject = function () {
+        return [ACTIONS.EDIT, ACTIONS.SAVE, ACTIONS.DELETE];
+    };
+    ACTIONS.getReadActionsForProject = function () {
+        return [ACTIONS.DOWNLOAD];
+    };
+    ACTIONS.getWriteActionsInFolder = function () {
+        return [ACTIONS.CREATEFOLDER, ACTIONS.UPLOAD];
+    };
+    ACTIONS.getReadActionsInFolder = function () {
+        return [];
+    };
+    ACTIONS.getWriteActionsForFolder = function () {
+        return [ACTIONS.EDIT, ACTIONS.SAVE, ACTIONS.DELETE];
+    };
+    ACTIONS.getReadActionsForFolder = function () {
+        return [ACTIONS.DOWNLOAD];
+    };
+    ACTIONS.getWriteActionsForFile = function (file) {
+        var baseActions = [ACTIONS.EDIT, ACTIONS.SAVE, ACTIONS.DELETE];
+        if (file.lockStatus === 'UNLOCKED') {
+            return [ACTIONS.LOCK].concat(baseActions);
+        } else if (file.lockStatus === 'LOCKED') {
+            return [ACTIONS.LOCKED];
+        } else {
+            return [ACTIONS.UPDATE, ACTIONS.UNLOCK].concat(baseActions);
+        }
+    };
+    ACTIONS.getReadActionsForFile = function (file) {
+        return [ACTIONS.DOWNLOAD];
+    };
 
     return {
         ACTIONS: ACTIONS
@@ -127,12 +157,14 @@ HBMAIN.factory("TestData", function () {
     var banan = new File({
         fileName: "banan.dat",
         projectName: "almaproject",
+        lockStatus: "LOCKED",
         filePath: "/almaproject/korte",
         properties: Property.fromObject({ "anyja neve": "ban'nos joe", "apja neve": "bananos janka" })
     });
     var csutka = new File({
         fileName: "almacsutka",
         projectName: "almaproject",
+        lockStatus: "UNLOCKED",
         filePath: "/almaproject/korte/barack/",
         properties: Property.fromObject(new Date())
     });
@@ -163,20 +195,26 @@ HBMAIN.factory("TestData", function () {
     });
     /// sredlof ///
 
+    var root = { files: [almaproject] };
+    almaproject.files = [korte];
+    korte.files = [barackFolder, almaFolder, banan];
+    barackFolder.files = [csutka];
+    almaFolder.files = [alma];
+
     return {
         listFolder: function (folderName) {
-            if (folderName === '/') return [almaproject];
-            if (folderName === '/almaproject') return [
-                korte
-            ]; else if (folderName === '/almaproject/korte') return [
-                barackFolder,
-                almaFolder,
-                banan
-            ]; else if (folderName === '/almaproject/korte/alma') return [
-                alma
-            ]; else if (folderName === '/almaproject/korte/barack') return [
-                csutka
-            ];
+            var current = root;
+            folderName = folderName.substring(1, folderName.length);
+            var path = folderName.split("/");
+            for (var i = 0; i < path.length; i++) {
+                var name = path[i];
+                if (name === "") {
+                    return current.files;
+                } else {
+                    current = current.files[current.files.map(function (e) { return e.fileName || e.projectName; }).indexOf(name)];
+                }
+            }
+            return current.files;
         }
     };
 });
@@ -200,7 +238,13 @@ HBMAIN.factory("Communicator", function ($http, $q, TestData) {
         var url = folderName;
 
         $http.get(url).success(function (data) {
-            deferred.resolve(data);
+            if (data && data.hasOwnProperty("length")) {
+                deferred.resolve(data);
+            } else if(!data) {
+                deferred.resolve([]);
+            } else {
+                deferred.resolve([data]);
+            }
         }).error(function (data, status) {
             data = data || "Folder request failed";
             deferred.reject(data);
@@ -210,8 +254,46 @@ HBMAIN.factory("Communicator", function ($http, $q, TestData) {
         return deferred.promise;
     };
 
+    createFolderFake = function () {
+        $("#folderDialog").dialog({
+            resizable: false,
+            modal: true,
+            buttons: {
+                "Create": function () {
+                    var folderName = $("#folderNameBox").val();
+                    // validate
+                    // actually create
+                    $("#folderNameBox").val("");
+                    $(this).dialog("close");
+                },
+                Cancel: function () {
+                    $(this).dialog("close");
+                }
+            }
+        });
+    };
+
+    createProjectFake = function () {
+        $("#projectDialog").dialog({
+            resizable: false,
+            modal: true,
+            buttons: {
+                "Create": function () {
+                    var folderName = $("#projectNameBox").val();
+                    // validate 
+                    // actually create
+                    $("#projectNameBox").val("");
+                    $(this).dialog("close");
+                },
+                Cancel: function () {
+                    $(this).dialog("close");
+                }
+            }
+        });
+    };
+
     return {
-        listFolder: fakeList,
+        listFolder: listAsync,
         delete: angular.noop,
         updateFile: angular.noop,
         uploadFile: angular.noop,
@@ -219,15 +301,18 @@ HBMAIN.factory("Communicator", function ($http, $q, TestData) {
         download: angular.noop,
         tryLock: angular.noop,
         unlock: angular.noop,
-        createFile: angular.noop,
-        createFolder: angular.noop
+        createProject: createProjectFake,
+        createFolder: createFolderFake
     };
 });
 
 HBMAIN.controller("BrowserController", ["$scope", "$rootScope", "Communicator", "GlobalService",
     function ($scope, $rootScope, Communicator, GlobalService) {
         $scope.reload = function () {
-            $scope.currentPath = window.location.pathname || "/";
+            $scope.currentPath = window.location.pathname || "/#";
+            if ($scope.currentPath === "/") {
+                $scope.currentPath = "/null";
+            }
             GlobalService.currentPath = $scope.currentPath;
             $rootScope.$broadcast("pathChanged", $scope.currentPath);
 
@@ -260,11 +345,11 @@ HBMAIN.controller("BrowserController", ["$scope", "$rootScope", "Communicator", 
             for (var i in $scope.files) { $scope.files[i].selected = false; }
             delete GlobalService.selectedFile;
             $rootScope.$broadcast("fileSelectionChanged", null);
-        }
+        };
 
         $(window).on('popstate', function (e) {
             $scope.currentPath = e.originalEvent.state;
-            $scope.$apply(function () { $scope.reload() });
+            $scope.$apply(function () { $scope.reload(); });
             window.resize();
         });
 
@@ -276,98 +361,62 @@ HBMAIN.controller("PropertiesController", ["$scope", "$rootScope", "Communicator
         $scope.global = GlobalService;
 
         $scope.$on("fileSelectionChanged", function (event) {
-            if (GlobalService.selectedFile) {
-                $scope.evaluateLockStatus(newVal);
-            }
         });
 
-        $scope.evaluateLockStatus = function (target) {
-            if (!target) {
-                GlobalService.ACTIONS.LOCK = GlobalService.ACTIONS.NOPERMLOCK;
-                return;
-            }
 
-            switch (target.lockStatus) {
-                case "UNDERCONTROL":
-                    GlobalService.ACTIONS.LOCK = GlobalService.ACTIONS.UNLOCK;
-                    break;
-                case "UNAUTHORIZED":
-                    GlobalService.ACTIONS.LOCK = GlobalService.ACTIONS.NOPERMLOCK;
-                    break;
-                case "LOCKED":
-                    GlobalService.ACTIONS.LOCK = GlobalService.ACTIONS.LOCKED;
-                    break;
-                case "UNLOCKED":
-                    GlobalService.ACTIONS.LOCK = GlobalService.ACTIONS.DOLOCK;
-                    break;
-                default:
-                    GlobalService.ACTIONS.LOCK = GlobalService.ACTIONS.NOPERMLOCK;
-                    break;
-            }
-        };
     }]);
 
 HBMAIN.controller("ActionBarController", ["$scope", "Communicator", "GlobalService", function ($scope, Communicator, GlobalService) {
     $scope.global = GlobalService;
 
+    ACTIONS = GlobalService.ACTIONS;
+
     $scope.$on("fileSelectionChanged", function (event) {
         if (GlobalService.selectedFile) {
             if (GlobalService.selectedFile.isRealFile) {
-                $scope.setFileActions();
+                setFileActions(GlobalService.selectedFile);
             } else if (GlobalService.selectedFile.hasOwnProperty("isRealFile")) {
-                $scope.setFolderActions();
+                setFolderActions(GlobalService.selectedFile);
             } else {
-                $scope.setProjectActions();
+                setProjectActions(GlobalService.selectedFile);
             }
         } else {
             if (GlobalService.currentPath === '/') {
-                $scope.setNoTargetActionsProject();
+                setNoTargetActionsProject();
             } else {
-                $scope.setNoTargetActions();
+                setNoTargetActions();
             }
         }
     });
 
-    $scope.setFolderActions = function () {
-        $scope.actions = [
-            GlobalService.ACTIONS.EDIT,
-            GlobalService.ACTIONS.DOWNLOAD,
-            GlobalService.ACTIONS.SAVE,
-            GlobalService.ACTIONS.DELETE
-        ];
-    }
-
-    $scope.setProjectActions = function () {
-        $scope.actions = [
-            GlobalService.ACTIONS.EDIT,
-            GlobalService.ACTIONS.DOWNLOAD,
-            GlobalService.ACTIONS.SAVE,
-            GlobalService.ACTIONS.DELETE
-        ];
-    }
-
-    $scope.setFileActions = function () {
-        $scope.actions = [
-            GlobalService.ACTIONS.EDIT,
-            GlobalService.ACTIONS.LOCK,
-            GlobalService.ACTIONS.UPDATE,
-            GlobalService.ACTIONS.DOWNLOAD,
-            GlobalService.ACTIONS.SAVE,
-            GlobalService.ACTIONS.DELETE
-        ];
+    setFolderActions = function (file) {
+        $scope.actions = [];
+        if (file.rights === 'WRITE') $scope.actions = $scope.actions.concat(ACTIONS.getWriteActionsForFolder());
+        $scope.actions = $scope.actions.concat(ACTIONS.getReadActionsForFolder());
     };
 
-    $scope.setNoTargetActions = function () {
-        $scope.actions = [
-            GlobalService.ACTIONS.CREATEFOLDER,
-            GlobalService.ACTIONS.UPLOAD
-        ];
+    setProjectActions = function (file) {
+        $scope.actions = [];
+        if (false) $scope.actions = $scope.actions.concat(ACTIONS.getWriteActionsForProject());
+        $scope.actions = $scope.actions.concat(ACTIONS.getReadActionsForProject());
     };
 
-    $scope.setNoTargetActionsProject = function () {
-        $scope.actions = [
-            GlobalService.ACTIONS.CREATEPROJECT
-        ];
+    setFileActions = function (file) {
+        $scope.actions = [];
+        if (file.rights === 'WRITE') $scope.actions = $scope.actions.concat(ACTIONS.getWriteActionsForFile(file));
+        $scope.actions = $scope.actions.concat(ACTIONS.getReadActionsForFile(file));
+    };
+
+    setNoTargetActions = function () {
+        $scope.actions = [];
+        if (true) $scope.actions = $scope.actions.concat(ACTIONS.getWriteActionsInFolder());
+        $scope.actions = $scope.actions.concat(ACTIONS.getReadActionsInFolder());
+    };
+
+    setNoTargetActionsProject = function () {
+        $scope.actions = [];
+        if (true) $scope.actions = $scope.actions.concat(ACTIONS.getWriteActionsInLobby());
+        $scope.actions = $scope.actions.concat(ACTIONS.getReadActionsInLobby());
     };
 
     $scope.execute = function (action) {
@@ -423,5 +472,5 @@ HBMAIN.directive("propertyfield", function () {
         },
         restrict: "E",
         template: propertyTemplate,
-    }
+    };
 });

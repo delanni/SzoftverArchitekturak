@@ -1,9 +1,13 @@
 ﻿var LOCKSTATUS = {
     LOCKED: "LOCKED",
     UNLOCKED: "UNLOCKED",
-    UNDERCONTROL: "UNDERCONTROL",
-    UNAUTHORIZED: "UNAUTHORIZED"
+    UNDERCONTROL: "UNDERCONTROL"
 };
+
+var RIGHTS = {
+    WRITE: "WRITE",
+    READ: "READ"
+}
 
 var File = (function () {
     function _File(opts) {
@@ -13,7 +17,7 @@ var File = (function () {
 
         this.fileName = opts.fileName || "";
 
-        this.filePath = opts.filePath || "./";
+        this.filePath = opts.filePath || "/";
 
         this.creationDate = opts.creationDate || new Date();
 
@@ -23,7 +27,9 @@ var File = (function () {
 
         this.lastModifierName = opts.lastModifierName || "unknown";
 
-        this.lockStatus = opts.lockStatus || LOCKSTATUS.UNAUTHORIZED;
+        this.lockStatus = opts.lockStatus || LOCKSTATUS.UNLOCKED;
+
+        this.rights = opts.rights || RIGHTS.WRITE;
 
         if (this.filePath.lastIndexOf("/") !== (this.filePath.length - 1)) {
             this.filePath += "/";
@@ -92,8 +98,15 @@ var File = (function () {
     _File.__defineSetter__("properties", function (value) { this.properties = value });
 
     /**
+    * Getter and setter for the right property.
+    * 
+    **/
+    _File.__defineGetter__("rights", function () { return this.rights; });
+    _File.__defineSetter__("rights", function (value) { this.rights = value });
+
+    /**
     * Gets the path to the grandparent of the file
-    **/ 
+    **/
     _File.__defineGetter__("parentPath", function () {
         var parentPath = this.filePath.split("");
         parentPath.pop();
