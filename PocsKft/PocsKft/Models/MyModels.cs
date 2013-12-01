@@ -61,6 +61,7 @@ namespace PocsKft.Models
         public DateTime createdDate { get; set; }
         public int lastModifiedby { get; set; } //userId
         public DateTime lastModifiedDate { get; set; }
+        public string UserDefinedProperties { get; set; }
     }
 
     [Table("Comments")]
