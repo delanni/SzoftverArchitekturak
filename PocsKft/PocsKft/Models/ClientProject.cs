@@ -20,12 +20,13 @@ namespace PocsKft.Models
              * ownerName:string
              * rights:enum("WRITE","READ")
              **/
-            return new {
+            return new
+            {
                 projectName = Name,
                 creationDate = CreationDate,
                 ownerName = OwnerName,
                 rights = Right
-            }
+            };
         }
     }
 }

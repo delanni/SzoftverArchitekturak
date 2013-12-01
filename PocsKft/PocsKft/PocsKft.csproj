@@ -192,6 +192,7 @@
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\ClientFile.cs" />
+    <Compile Include="Models\ClientProject.cs" />
     <Compile Include="Models\DocumentManager.cs" />
     <Compile Include="Models\FolderManager.cs" />
     <Compile Include="Models\GroupManager.cs" />
