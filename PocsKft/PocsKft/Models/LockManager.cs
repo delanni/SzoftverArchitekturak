@@ -7,5 +7,6 @@ namespace PocsKft.Models
 {
     public class LockManager
     {
+
     }
 }
