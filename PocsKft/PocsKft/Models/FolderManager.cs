@@ -12,8 +12,7 @@ namespace PocsKft.Models
         private static volatile FolderManager instance;
         private static object syncRoot = new Object();
         private FolderManager() { }
-
-        public static FolderManager FolderManagerInstance
+        public static FolderManager Instance
         {
             get
             {
@@ -155,5 +154,14 @@ namespace PocsKft.Models
             return false;
         }
 
+        public List<Folder> GetProjects()
+        {
+            List<Folder> list = null;
+            using (UsersContext ct = new UsersContext())
+            {
+                list = ct.Folders.Where(i => i.IsRootFolder == true).ToList();
+            }
+            return list;
+        }
     }
 }
