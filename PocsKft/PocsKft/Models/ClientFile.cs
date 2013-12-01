@@ -38,11 +38,14 @@ namespace PocsKft.Models
              * properties:[array{string:object}];
              * comments:[array{name:string,date:string,message:string}];
              **/
+
+            
+
             return new
             {
                 isRealFile = !IsFolder,
                 fileName= Name,
-                filePath= PathOnServer,
+                filePath = PathOnServer.EndsWith("/")?PathOnServer:PathOnServer+"/",
                 lockStatus = IsLocked?UserHasLock?"UNDERCONTROL":"LOCKED":"UNLOCKED",
                 rights = Right,
                 properties = new List<object>()
@@ -56,6 +59,18 @@ namespace PocsKft.Models
             example.IsLocked = true;
             example.UserHasLock = true;
             example.Name = "this.txt";
+            example.PathOnServer = "/asd/das";
+            example.Right = "WRITE";
+            return example;
+        }
+
+        public static ClientFile createExampleFolder()
+        {
+            var example = new ClientFile();
+            example.IsFolder = true;
+            example.IsLocked = true;
+            example.UserHasLock = true;
+            example.Name = "alma";
             example.PathOnServer = "/asd/das";
             example.Right = "WRITE";
             return example;

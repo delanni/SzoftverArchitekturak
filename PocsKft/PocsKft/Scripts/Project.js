@@ -5,10 +5,10 @@
         this.filePath = "/";
         this.isProject = true;
 
-
         this.projectName = opts.projectName || "";
         this.creationDate = opts.creationDate || new Date();
         this.ownerName = opts.ownerName || "Admin";
+        this.rights = opts.rights || "READ";
     }
 
     /**
@@ -30,6 +30,13 @@
     _Project.__defineSetter__("ownerName", function (value) { this.ownerName = value });
 
     _Project.__defineGetter__("isProject", function () { return this.isProject; });
+
+
+    /**
+    * Getter and setter for the rights property.
+    **/
+    _Project.__defineGetter__("rights", function () { return this.rights; });
+    _Project.__defineSetter__("rights", function (value) { this.rights = value });
 
     return _Project;
 })();
