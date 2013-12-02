@@ -121,14 +121,14 @@ namespace PocsKft.Controllers
 
             string[] folderNames = path.Split('/');
 
-            string folderName = remFolderNames.Last();
+            string folderName = folderNames.Last();
+
             IEnumerable<string> remFolderNames = folderNames.Take(folderNames.Length - 1);
 
             Regex regex = new Regex("^([a-zA-Z]:)?(\\\\[^<>:\"/\\\\|?*]+)+\\\\?$");
 
             if (regex.IsMatch(folderName))
             {
-
                 Folder f =  FolderManager.Instance.GetFolderByPath(remFolderNames);
 
                 if (f != null)
@@ -138,13 +138,26 @@ namespace PocsKft.Controllers
                         Folder newFolder = new Folder
                         {
                             Name = folderName
-                            
+
                         };
 
                         int newFolderId = FolderManager.Instance.CreateFolder(newFolder, f.Id);
 
                         PermissionManager.Instance.GrantRightOnFolder(userId, newFolderId);
                     }
+                }
+                else
+                {
+                    Folder newFolder = new Folder
+                    {
+                        Name = folderName,
+                        IsRootFolder = true,
+                        CreatorId = userId
+                    };
+
+                    int newFolderId = FolderManager.Instance.CreateFolder(newFolder, f.Id);
+
+                    PermissionManager.Instance.GrantRightOnFolder(userId, newFolderId);
                 }
             }
 
