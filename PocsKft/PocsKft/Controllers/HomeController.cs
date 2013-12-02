@@ -12,27 +12,6 @@ namespace PocsKft.Controllers
 {
     public class HomeController : Controller
     {
-        [HttpPost]
-        public ActionResult Index(HttpPostedFileBase file, string path)
-        {
-            var fileName = Guid.NewGuid().ToString();
-            // Verify that the user selected a file
-            if (file != null && file.ContentLength > 0)
-            {
-                // extract only the fielname
-                var oldFileName = Path.GetFileName(file.FileName);
-                // store the file inside ~/App_Data/uploads folder
-                if (!Directory.Exists(Server.MapPath("~/App_Data/uploads")))
-                {
-                    Directory.CreateDirectory(Server.MapPath("~/App_Data/uploads"));
-                }
-                var newPath = Path.Combine(Server.MapPath("~/App_Data/uploads"), fileName);
-                file.SaveAs(newPath);
-            }
-            // redirect back to the index action to show the form once again
-            return RedirectToAction("Index", new { path = path });
-        }
-
         public ActionResult Index(string path)
         {
             var type = Request.RequestType;
@@ -54,6 +33,43 @@ namespace PocsKft.Controllers
                 }
                 return View();
             }
+        }
+
+        [HttpPost]
+        public ActionResult Index(HttpPostedFileBase file, string path)
+        {
+            var fileName = Guid.NewGuid().ToString();
+            var parentFolderId = FolderManager.Instance.GetFolderByPath(path).Id;
+
+            if (file != null && file.ContentLength > 0)
+            {
+                var oldFileName = Path.GetFileName(file.FileName);
+                // store the file inside ~/App_Data/uploads folder
+                if (!Directory.Exists(Server.MapPath("~/App_Data/uploads")))
+                {
+                    Directory.CreateDirectory(Server.MapPath("~/App_Data/uploads"));
+                }
+                var newPath = Path.Combine(Server.MapPath("~/App_Data/uploads"), fileName);
+                file.SaveAs(newPath);
+
+                DocumentManager.DocumentManagerInstance.AddDocument(new Document()
+                {
+                    CreatedDate = DateTime.Now,
+                    CreatorId = UserManager.Instance.GetUserIdByName(HttpContext.User.Identity.Name),
+                    IsFolder = false,
+                    LastModifiedbyId = UserManager.Instance.GetUserIdByName(HttpContext.User.Identity.Name),
+                    LastModifiedDate = DateTime.Now,
+                    Locked = false,
+                    LockedByUserId = -1,
+                    Name = oldFileName,
+                    ParentFolderId = parentFolderId,
+                    PathOnServer = path,
+                    Status = Status.Active,
+                    VersionNumber = 1,
+                    VirtualFileName = fileName
+                });
+            }
+            return RedirectToAction("Index", new { path = path });
         }
 
         public JsonResult List(string path)
@@ -213,17 +229,42 @@ namespace PocsKft.Controllers
         public ActionResult DeleteFolder(string path)
         {
             int userId = UserManager.Instance.GetUserIdByName(HttpContext.User.Identity.Name);
-            int folderId = FolderManager.Instance.GetFolderByPath(path).Id;
-            if (true /*has right*/)
+            if (path.EndsWith("/"))
             {
-                FolderManager.Instance.DeleteFolderById(folderId);
-                return Json(true);
+                int folderId = FolderManager.Instance.GetFolderByPath(path).Id;
+                if (true /*has right*/)
+                {
+                    FolderManager.Instance.DeleteFolderById(folderId);
+                    return Json(true);
+                }
+                else
+                {
+                    Response.StatusCode = 403;
+                    return View("Error");
+                }
             }
             else
             {
-                Response.StatusCode = 403;
-                return View("Error");
+                var file = DocumentManager.DocumentManagerInstance.GetDocumentByPath(path);
+                if (true /*has rights*/)
+                {
+                    if (DocumentManager.DocumentManagerInstance.DeleteDocumentById(file.Id))
+                    {
+                        return Json(true);
+                    }
+                    else
+                    {
+                        return View("Error");
+                    }
+                }
+                else
+                {
+                    Response.StatusCode = 403;
+                    return View("Error");
+                }
             }
+
+
         }
     }
 }

@@ -50,6 +50,7 @@ namespace PocsKft.Models
         public Status Status { get; set; } // Archived or Active
         public DocumentType DocumentType { get; set; }
         public bool Locked { get; set; }
+        public string VirtualFileName { get; set; }
     }
 
 

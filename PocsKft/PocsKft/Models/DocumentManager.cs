@@ -69,8 +69,16 @@ namespace PocsKft.Models
             {
                 using (UsersContext ct = new UsersContext())
                 {
-                    ct.Documents.Add(g);
-                    ct.SaveChanges();
+                    var siblings = ct.Documents.Where(x => x.ParentFolderId == g.ParentFolderId);
+                    if (siblings.Any(w => w.Name == g.Name))
+                    {
+
+                    }
+                    else
+                    {
+                        ct.Documents.Add(g);
+                        ct.SaveChanges();
+                    }
                 }
             }
 
@@ -95,11 +103,16 @@ namespace PocsKft.Models
                     return false;
             }
 
-            public void AddDocumentAsFile(System.IO.Stream file, string path)
+            public Document GetDocumentByPath(string path)
             {
-                var document = new Document();
-                document.IsFolder = false;
-                document.PathOnServer = path;
+                var folderPath = path.Substring(0, path.LastIndexOf('/'));
+                var fileName = path.Substring(path.LastIndexOf('/'));
+                int folderId = FolderManager.Instance.GetFolderByPath(folderPath).Id;
+                using (UsersContext ct = new UsersContext())
+                {
+                    var doc = ct.Documents.SingleOrDefault(x => x.ParentFolderId == folderId && x.Name == fileName);
+                    return doc;
+                }
             }
         }
     }
