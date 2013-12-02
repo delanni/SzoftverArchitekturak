@@ -59,7 +59,7 @@ namespace PocsKft.Models
         public string UserDefinedProperties { get; set; }
     }
 
-public class Comment
+    public class Comment
     {
         public int Id { get; set; }
         public int DocumentId { get; set; }

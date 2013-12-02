@@ -49,7 +49,7 @@ namespace PocsKft.Models
             {
                 isRealFile = !IsFolder,
                 fileName= Name,
-                filePath = PathOnServer.EndsWith("/")?PathOnServer:PathOnServer+"/",
+                filePath = PathOnServer==null?"":(PathOnServer.EndsWith("/") ? PathOnServer : PathOnServer + "/"),
                 creationDate = CreatedDate,
                 lastModificationDate = LastModifiedDate,
                 lockStatus = Locked?UserHasLock?"UNDERCONTROL":"LOCKED":"UNLOCKED",
