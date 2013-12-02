@@ -82,15 +82,16 @@ namespace PocsKft.Controllers
             {
                 List<Folder> projects = FolderManager.Instance.GetProjects();
                 List<object> projectsWithPermission = new List<object>();
+
                 foreach (Folder f in projects)
                 {
                     if (PermissionManager.Instance.DoesUserHavePermissionOnDocumentOrFolder(userId, f.Id))
                     {
                         projectsWithPermission.Add(new ClientProject
                         {
-                            //CreationDate = f.Metadata.createdDate,
+                            CreationDate = f.CreatedDate,
                             Name = f.Name,
-                            OwnerName = UserManager.Instance.GetUserNameById(f.CreatorId),
+                            OwnerName = UserManager.Instance.GetUserNameById(userId),
                             Right = "WRITE"
                         }.toJSON());
                     }
@@ -115,6 +116,8 @@ namespace PocsKft.Controllers
                     {
                         if (PermissionManager.Instance.DoesUserHavePermissionOnDocumentOrFolder(userId, f.Id))
                         {
+                            Folder parentFolder = FolderManager.Instance.GetFolderById(f.ParentFolderId);
+
                             documentsAndFoldersWithPermission.Add(new ClientFile
                             {
                                 CreatorId = f.CreatorId,
@@ -194,7 +197,8 @@ namespace PocsKft.Controllers
                             LastModifiedDate = DateTime.Now,
                             IsFolder = true,
                             CreatorId = userId,
-                            ParentFolderId = f.Id
+                            ParentFolderId = f.Id,
+                            PathOnServer = path
                         };
 
                         int newFolderId = FolderManager.Instance.CreateFolder(newFolder);
@@ -211,7 +215,8 @@ namespace PocsKft.Controllers
                         CreatedDate = DateTime.Now,
                         LastModifiedDate = DateTime.Now,
                         CreatorId = userId,
-                        IsFolder = true
+                        IsFolder = true,
+                        PathOnServer = path
                     };
 
                     int newFolderId = FolderManager.Instance.CreateFolder(newFolder);
