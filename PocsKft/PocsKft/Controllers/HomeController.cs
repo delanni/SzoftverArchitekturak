@@ -101,14 +101,13 @@ namespace PocsKft.Controllers
                         {
                             documentsAndFoldersWithPermission.Add(new ClientFile
                             {
-                                CreatorName = UserManager.Instance.GetUserNameById(f.CreatorId),
-                                Description = f.Description,
+                                CreatorId = f.CreatorId,
                                 Id = f.Id,
                                 IsFolder = true,
                                 // IsLocked = false,
                                 // LockedByUserName = ,
                                 Name = f.Name,
-                                ParentFolderName = f.ParentFolderId,
+                                ParentFolderId = f.ParentFolderId,
                                 //VersionNumber = ,
                                 //UserHasLock = ,
                                 PathOnServer = f.PathOnServer
@@ -124,16 +123,16 @@ namespace PocsKft.Controllers
                         {
                             documentsAndFoldersWithPermission.Add(new ClientFile
                             {
-                                CreatorName = UserManager.Instance.GetUserNameById(f.CreatorId),
+                                CreatorId = f.CreatorId,
                                 //Description = f.,
                                 Id = f.Id,
                                 IsFolder = false,
-                                IsLocked = f.Locked,
-                                LockedByUserName = UserManager.Instance.GetUserNameById(f.LockedByUserId),
+                                Locked = f.Locked,
+                                LockedByUser = f.LockedByUserId,
                                 Name = f.Name,
-                                ParentFolderName = f.ParentFolderId,
+                                ParentFolderId = f.ParentFolderId,
                                 VersionNumber = f.VersionNumber,
-                                UserHasLock = userId == f.LockedByUserId ? true : false,
+                                UserHasLock = f.LockedByUserId == userId,
                                 PathOnServer = f.PathOnServer
                             }.toJSON());
                         }
@@ -175,16 +174,16 @@ namespace PocsKft.Controllers
                         Folder newFolder = new Folder
                         {
                             Name = folderName,
-                            Children = null,
-                            Documents = null,
+                            CreatedDate = DateTime.Now,
+                            LastModifiedDate = DateTime.Now,
                             IsFolder = true,
                             CreatorId = userId,
                             ParentFolderId = f.Id
                         };
 
-                        int newFolderId = FolderManager.Instance.CreateFolder(newFolder, f.Id);
+                        int newFolderId = FolderManager.Instance.CreateFolder(newFolder);
 
-                        PermissionManager.Instance.GrantRightOnFolder(userId, newFolderId);
+                        PermissionManager.Instance.GrantRightOnFolder(userId, newFolderId, PermissionType.WRITE);
                     }
                 }
                 else
@@ -193,16 +192,15 @@ namespace PocsKft.Controllers
                     {
                         Name = folderName,
                         IsRootFolder = true,
-                        Children = null,
-                        Documents = null,
+                        CreatedDate = DateTime.Now,
+                        LastModifiedDate = DateTime.Now,
                         CreatorId = userId,
-                        IsFolder = true,
-                        ParentFolderId = -1
+                        IsFolder = true
                     };
 
-                    int newFolderId = FolderManager.Instance.CreateRootFolder(newFolder);
+                    int newFolderId = FolderManager.Instance.CreateFolder(newFolder);
 
-                    PermissionManager.Instance.GrantRightOnFolder(userId, newFolderId);
+                    PermissionManager.Instance.GrantRightOnFolder(userId, newFolderId, PermissionType.WRITE);
                 }
             }
 
