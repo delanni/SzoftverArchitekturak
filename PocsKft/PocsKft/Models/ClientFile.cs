@@ -39,8 +39,6 @@ namespace PocsKft.Models
              * comments:[array{name:string,date:string,message:string}];
              **/
 
-            
-
             return new
             {
                 isRealFile = !IsFolder,

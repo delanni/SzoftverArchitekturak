@@ -15,6 +15,25 @@ HBMAIN.setLoading = function (onOff) {
 HBMAIN.factory("GlobalService", function (Communicator) {
     var returnObject = {};
     ACTIONS = {
+        REVERT: {
+            name: "Revert file to an older version",
+            type: "history",
+            execute: function () {
+                var file = returnObject.selectedFile;
+                Communicator.revert(file);
+            }
+        },
+        BACK: {
+            name: "Go back one level",
+            type: "unshare",
+            execute: function () {
+                var current = window.location.pathname;
+                var levels = current.split("/");
+                levels.pop(); levels.pop();
+                var url = levels.join("/") + "/";
+                window.location.pathname = url;
+            }
+        },
         DELETE: {
             name: "Delete",
             type: "bin",
@@ -127,7 +146,7 @@ HBMAIN.factory("GlobalService", function (Communicator) {
         return [ACTIONS.CREATEFOLDER, ACTIONS.UPLOAD];
     };
     ACTIONS.getReadActionsInFolder = function () {
-        return [];
+        return [ACTIONS.BACK];
     };
     ACTIONS.getWriteActionsForFolder = function () {
         return [ACTIONS.EDIT, ACTIONS.SAVE, ACTIONS.DELETE];
@@ -152,11 +171,6 @@ HBMAIN.factory("GlobalService", function (Communicator) {
     returnObject.ACTIONS = ACTIONS;
 
     return returnObject;
-});
-
-HBMAIN.factory("TestUser", function () {
-    var user = new User({ name: "Alex" });
-    return user;
 });
 
 HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
@@ -260,31 +274,35 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
                         }
                     };
 
-                    var formData = new FormData($('form')[0]);
-                    $.ajax({
-                        url: filePath,  //Server side action to process
-                        type: 'POST',
-                        xhr: function () {  // Custom XMLHttpRequest
-                            var myXhr = $.ajaxSettings.xhr();
-                            if (myXhr.upload) { // Check if upload property exists
-                                myXhr.upload.addEventListener('progress', progressHandlingFunction, false); // For handling the progress of the upload
-                            }
-                            return myXhr;
-                        },
-                        //Ajax events
-                        beforeSend: function () { },
-                        success: function () {
-                            $("#fileUploadDialog").dialog("close");
-                            notifyFS();
-                        },
-                        error: function (e) { alert("Error during uploading, please try again."); },
-                        // Form data
-                        data: formData,
-                        //Options to tell jQuery not to process data or worry about content-type.
-                        cache: false,
-                        contentType: false,
-                        processData: false
-                    });
+                    var form = $(this).find("form");
+                    form.attr("action", filePath);
+                    form.submit();
+
+                    //var formData = new FormData($('form')[0]);
+                    //$.ajax({
+                    //    url: filePath,  //Server side action to process
+                    //    type: 'POST',
+                    //    xhr: function () {  // Custom XMLHttpRequest
+                    //        var myXhr = $.ajaxSettings.xhr();
+                    //        if (myXhr.upload) { // Check if upload property exists
+                    //            myXhr.upload.addEventListener('progress', progressHandlingFunction, false); // For handling the progress of the upload
+                    //        }
+                    //        return myXhr;
+                    //    },
+                    //    //Ajax events
+                    //    beforeSend: function () { },
+                    //    success: function () {
+                    //        $("#fileUploadDialog").dialog("close");
+                    //        notifyFS();
+                    //    },
+                    //    error: function (e) { alert("Error during uploading, please try again."); },
+                    //    // Form data
+                    //    data: formData,
+                    //    //Options to tell jQuery not to process data or worry about content-type.
+                    //    cache: false,
+                    //    contentType: false,
+                    //    processData: false
+                    //});
                 },
                 Cancel: function () {
                     $(this).dialog("close");
@@ -295,7 +313,7 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
 
     var deleteResourceFake = function (file) {
         var deferred = $q.defer();
-        var resourceUrl = file.isProject ? file.projectName : (file.filePath + file.fileName);
+        var resourceUrl = file.isProject ? file.projectName : (file.filePath + file.fileName) + "/";
         HBMAIN.setLoading(false);
         $.ajax({
             type: "DELETE",
@@ -312,13 +330,59 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
         return deferred.promise;
     };
 
+    var revert = function (file) {
+        $("#revertDialog").dialog({
+            resizable: false,
+            modal: true,
+            buttons: {
+                "Revert!": function () {
+                    var fileUrl = file.pathName + file.fileName;
+                    $.ajax({
+                        type: "POST",
+                        url: fileUrl,
+                        success: function () {
+                            $("#revertDialog").dialog("close");
+                            notifyFS();
+                        },
+                        error: function (e) { alert("Error during reverting, please try again."); },
+                    });
+                },
+                Cancel: function () {
+                    $(this).dialog("close");
+                }
+            }
+        });
+    }
+
+    var updateFileProperties = function (file) {
+        var deferred = $q.defer();
+        var data = file;
+
+        $.ajax({
+            url: filePath,  //Server side action to process
+            type: 'POST',
+            //Ajax events
+            beforeSend: function () { },
+            success: function () {
+                deferred.resolve();
+                $("#fileUploadDialog").dialog("close");
+                notifyFS();
+            },
+            error: function (e) {
+                alert("Error during uploading, please try again.");
+                deferred.reject();
+            },
+            // Form data
+            data: data
+        });
+    };
 
     return {
         listFolder: listAsync,
         delete: deleteResourceFake,
         updateFile: uploadFileFake,
         uploadFile: uploadFileFake,
-        updateMeta: angular.noop,
+        updateMeta: updateFileProperties,
         download: angular.noop,
         tryLock: angular.noop,
         unlock: angular.noop,
@@ -333,9 +397,11 @@ HBMAIN.controller("BrowserController", ["$scope", "$rootScope", "Communicator", 
             $scope.currentPath = window.location.pathname || "/";
             GlobalService.currentPath = $scope.currentPath;
             $rootScope.$broadcast("pathChanged", $scope.currentPath);
-
+            window.document.title = decodeURI($scope.currentPath);
             Communicator.listFolder($scope, $scope.currentPath).then(function (data) {
-                $scope.files = data;
+                $scope.files = data.map(function (e) {
+                    if (e.isProject) return new Project(e); else return new File(e);
+                });
                 $scope.clearSelections();
                 HBMAIN.setLoading(false);
             });

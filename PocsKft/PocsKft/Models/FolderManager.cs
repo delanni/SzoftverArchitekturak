@@ -44,12 +44,16 @@ namespace PocsKft.Models
 
         public bool DeleteFolderById(int id)
         {
-            Folder g = GetFolderById(id);
             using (UsersContext ct = new UsersContext())
             {
-                if (g != null)
+                var folderToDelete = ct.Folders.SingleOrDefault(x => x.Id == id);
+                if (folderToDelete != null)
                 {
-                    ct.Folders.Remove(g);
+                    foreach (var childId in ct.Folders.Where(w => w.ParentFolderId == id).Select(y=>y.Id))
+                    {
+                        DeleteFolderById(childId);
+                    }
+                    ct.Folders.Remove(folderToDelete);
                     ct.SaveChanges();
                     return true;
                 }
@@ -59,18 +63,11 @@ namespace PocsKft.Models
 
         public List<Folder> ListChildrenFolders(int id)
         {
-            Folder g = GetFolderById(id);
             List<Folder> list = null;
             using (UsersContext ct = new UsersContext())
             {
                 list = new List<Folder>();
-                if (g.Children != null)
-                {
-                    foreach (Folder c in g.Children)
-                    {
-                        list.Add(c);
-                    }
-                }
+                list.AddRange(ct.Folders.Where(w => w.ParentFolderId == id));
             }
             return list;
         }
@@ -102,12 +99,12 @@ namespace PocsKft.Models
             }
         }
 
-        public int  CreateFolder(Folder f, int parentfolderId)
+        public int CreateFolder(Folder f, int parentfolderId)
         {
             using (UsersContext ct = new UsersContext())
             {
                 Folder temp = ct.Folders.Add(f);
-                Metadata met = ct.Metadatas.Add( new Metadata
+                Metadata met = ct.Metadatas.Add(new Metadata
                 {
                     createdDate = DateTime.Now,
                     lastModifiedDate = DateTime.Now
@@ -119,9 +116,9 @@ namespace PocsKft.Models
                 Folder parent = ct.Folders.Where(i => i.Id == parentfolderId).FirstOrDefault();
                 if (parent.Children == null) parent.Children = new List<Folder>();
                 parent.Children.Add(temp);
+                temp.PathOnServer = parent.PathOnServer + "/" + parent.Name;
 
                 ct.Entry(parent).State = EntityState.Modified;
-
                 ct.SaveChanges();
 
                 return temp.Id;
@@ -139,7 +136,7 @@ namespace PocsKft.Models
                     lastModifiedDate = DateTime.Now
                 });
                 temp.Metadata = met;
-                ct.Entry(temp).State = EntityState.Modified;
+                temp.PathOnServer = "";
                 ct.SaveChanges();
 
                 return temp.Id;
@@ -228,12 +225,12 @@ namespace PocsKft.Models
 
                 if (f == null) return null;
 
-                foreach (string s in remFolderNames.Skip(1) )
+                foreach (string s in remFolderNames.Skip(1))
                 {
                     if (String.IsNullOrEmpty(s)) break;
 
-                    f = ct.Folders.Where( i => i.IsRootFolder == false
-                    && i.Name.Equals(s) && i.ParentFolderId == f.Id ).FirstOrDefault();
+                    f = ct.Folders.Where(i => i.IsRootFolder == false
+                    && i.Name.Equals(s) && i.ParentFolderId == f.Id).FirstOrDefault();
 
                     if (f == null) return null;
                 }
