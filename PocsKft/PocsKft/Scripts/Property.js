@@ -7,8 +7,8 @@
             };
         }
         opts = opts || {};
-        this.propName = opts.propName || "property";
-        this.propValue = opts.propValue || {};
+        this.propName = opts.propName || "";
+        this.propValue = opts.propValue || "";
     }
 
     _Property.__defineGetter__("propName", function () { return this.propName; });

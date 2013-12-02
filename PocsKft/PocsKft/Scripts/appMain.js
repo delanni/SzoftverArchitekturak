@@ -143,7 +143,7 @@ HBMAIN.factory("GlobalService", function (Communicator) {
         return [ACTIONS.EDIT, ACTIONS.SAVE, ACTIONS.DELETE];
     };
     ACTIONS.getReadActionsForProject = function () {
-        return [ACTIONS.DOWNLOAD];
+        return [];
     };
     ACTIONS.getWriteActionsInFolder = function () {
         return [ACTIONS.CREATEFOLDER, ACTIONS.UPLOAD];
@@ -155,7 +155,7 @@ HBMAIN.factory("GlobalService", function (Communicator) {
         return [ACTIONS.EDIT, ACTIONS.SAVE, ACTIONS.DELETE];
     };
     ACTIONS.getReadActionsForFolder = function () {
-        return [ACTIONS.DOWNLOAD];
+        return [];
     };
     ACTIONS.getWriteActionsForFile = function (file) {
         var baseActions = [ACTIONS.EDIT, ACTIONS.SAVE, ACTIONS.DELETE];
@@ -336,10 +336,11 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
     var updateFileProperties = function (file) {
         var deferred = $q.defer();
         var data = file;
-
+        var filePath = file.filePath + file.fileName;
         $.ajax({
             url: filePath,  //Server side action to process
             type: 'POST',
+            dataType:'json',
             //Ajax events
             beforeSend: function () { },
             success: function () {
@@ -352,12 +353,12 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
                 deferred.reject();
             },
             // Form data
-            data: data
+            data: { data: JSON.stringify(data) }
         });
     };
 
     var downloadFile = function (file) {
-        $http.get("Download/" + file.filePath + file.fileName);
+        window.open("/Download/" + file.filePath + file.fileName);
     };
 
     return {
@@ -434,7 +435,29 @@ HBMAIN.controller("PropertiesController", ["$scope", "$rootScope", "Communicator
         $scope.$on("fileSelectionChanged", function (event) {
         });
 
+        $scope.addNewProperty = function () {
+            var file = $scope.global.selectedFile;
+            if (file.properties && file.properties[file.properties.length-1]) {
+                if (file.properties[file.properties.length - 1].propName == file.properties[file.properties.length - 1].propValue && file.properties[file.properties.length - 1].propValue==='') {
+                    return;
+                }
+            }
+            file.properties.push(new Property());
+            setTimeout(function () {
+                $(".edit").each(function (i, e) {
+                    if ($(e).css("display") === 'none')
+                        $(e).slideDown(200);
+                });
+            }, 300);
+        };
 
+        $scope.save = function () {
+
+        };
+
+        $scope.discard = function () {
+
+        };
     }]);
 
 HBMAIN.controller("ActionBarController", ["$scope", "Communicator", "GlobalService", function ($scope, Communicator, GlobalService) {
@@ -531,10 +554,17 @@ HBMAIN.directive("project", function () {
 });
 
 HBMAIN.directive("propertyfield", function () {
+    //var propertyTemplate = "<div class='property'>\
+    //                        <div class='propname' ng-bind='property.propName' />\
+    //                        <input class='edit propname' ng-model='property.propName'/>\
+    //                        <div class='propvalue' ng-bind='property.propValue' />\
+    //                        <input class='edit propvalue' ng-model='property.propValue' />\
+    //                        </div>";
     var propertyTemplate = "<div class='property'>\
-                            <div class='propname' ng-bind='property.propName' />\
+                            <div class='propname' style='font-weight:bold'>{{property.propName}} : {{property.propValue}}</div>\
+                            <label class='edit'>Property name:</label>\
                             <input class='edit propname' ng-model='property.propName'/>\
-                            <div class='propvalue' ng-bind='property.propValue' />\
+                            <label class='edit'>Property value:</label>\
                             <input class='edit propvalue' ng-model='property.propValue' />\
                             </div>";
     return {

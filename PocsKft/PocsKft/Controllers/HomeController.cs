@@ -59,7 +59,7 @@ namespace PocsKft.Controllers
         {
             if (path.EndsWith("/"))
             {
-                throw new Exception("WAT");
+                throw new Exception("Do not try to download folders");
             }
             else
             {
@@ -79,6 +79,20 @@ namespace PocsKft.Controllers
         public ActionResult Index(HttpPostedFileBase file, string path)
         {
             // case "POST":
+            if (file == null)
+            {
+                var fileJson = Request.Form["data"];
+                handleFileUpdate(fileJson, path);
+            }
+            else
+            {
+                handleFileUpload(file, path);
+            }
+            return RedirectToAction("Index", new { path = path });
+        }
+
+        private void handleFileUpload(HttpPostedFileBase file, string path)
+        {
             var virtualFileName = Guid.NewGuid().ToString();
             var userId = getUserId();
             var parentFolderId = FolderManager.Instance.GetFolderByPath(path).Id;
@@ -114,7 +128,20 @@ namespace PocsKft.Controllers
                 };
                 DocumentManager.DocumentManagerInstance.AddDocument(document);
             }
-            return RedirectToAction("Index", new { path = path });
+        }
+
+        private void handleFileUpdate(string fileJSON, string path)
+        {
+            var fileToUpdate = DocumentManager.DocumentManagerInstance.GetDocumentByPath(path);
+            if (PermissionManager.Instance.HasRights(getUserId(), fileToUpdate.Id))
+            {
+                dynamic file = Json(fileJSON).Data;
+                DocumentManager.DocumentManagerInstance.UpdateMeta(fileToUpdate.Id, fileJSON);
+            }
+            else
+            {
+                throw new Exception("You have no rights to modify the file");
+            }
         }
 
         public JsonResult List(string path)

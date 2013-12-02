@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using System.Web.Helpers;
 
 namespace PocsKft.Models
 {
@@ -17,6 +18,7 @@ namespace PocsKft.Models
         public DateTime CreatedDate { get; set; }
         public int LastModifiedbyId { get; set; } //userId
         public DateTime LastModifiedDate { get; set; }
+        public Metadata MetaData { get; set; }
 
         //Doc
         public int VersionNumber { get; set; }
@@ -45,6 +47,8 @@ namespace PocsKft.Models
              * comments:[array{name:string,date:string,message:string}];
              **/
 
+            var propertiesJson = Json.Decode(MetaData!=null?MetaData.UserDefinedProperties:"[]");
+
             return new
             {
                 isRealFile = !IsFolder,
@@ -54,7 +58,7 @@ namespace PocsKft.Models
                 lastModificationDate = LastModifiedDate,
                 lockStatus = Locked?UserHasLock?"UNDERCONTROL":"LOCKED":"UNLOCKED",
                 rights = Right,
-                properties = new List<object>()
+                properties = propertiesJson
             };
         }
 
