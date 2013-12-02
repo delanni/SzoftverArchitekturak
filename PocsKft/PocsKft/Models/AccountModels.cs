@@ -15,6 +15,11 @@ namespace PocsKft.Models
         {
         }
 
+        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        {
+            base.Configuration.LazyLoadingEnabled = false;
+        }
+
         public DbSet<UserProfile> UserProfiles { get; set; }
         public DbSet<Group> Groups { get; set; }
         public DbSet<Folder> Folders { get; set; }

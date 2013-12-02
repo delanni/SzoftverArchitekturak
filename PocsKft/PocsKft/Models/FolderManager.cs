@@ -116,6 +116,17 @@ namespace PocsKft.Models
             }
         }
 
+        public int CreateRootFolder(Folder f)
+        {
+            using (UsersContext ct = new UsersContext())
+            {
+                Folder temp = ct.Folders.Add(f);
+                ct.SaveChanges();
+
+                return temp.Id;
+            }
+        }
+
         public void EditFolder(int id)
         {
             Folder g = GetFolderById(id);
@@ -217,7 +228,7 @@ namespace PocsKft.Models
             using (UsersContext ct = new UsersContext())
             {
                 Folder f = ct.Folders.Where(i => i.IsRootFolder == true
-                    && i.Name.Equals(path.First())).FirstOrDefault();
+                    && i.Name.Equals(path.FirstOrDefault())).FirstOrDefault();
 
                 if (f == null) return null;
 

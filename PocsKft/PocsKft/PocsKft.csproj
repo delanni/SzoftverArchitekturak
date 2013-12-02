@@ -194,6 +194,10 @@
     <Compile Include="Migrations\201312012303528_harmadik.Designer.cs">
       <DependentUpon>201312012303528_harmadik.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201312020106050_negyedik.cs" />
+    <Compile Include="Migrations\201312020106050_negyedik.Designer.cs">
+      <DependentUpon>201312020106050_negyedik.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\ClientFile.cs" />
     <Compile Include="Models\ClientProject.cs" />
@@ -353,6 +357,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201312012303528_harmadik.resx">
       <DependentUpon>201312012303528_harmadik.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201312020106050_negyedik.resx">
+      <DependentUpon>201312020106050_negyedik.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

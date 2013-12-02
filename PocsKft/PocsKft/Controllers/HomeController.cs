@@ -40,7 +40,7 @@ namespace PocsKft.Controllers
                     if (PermissionManager.Instance.DoesUserHavePermissionOnDocumentOrFolder(userId, f.Id))
                     {
                         projectsWithPermission.Add(new ClientProject {  
-                            CreationDate = f.Metadata.createdDate,
+                            //CreationDate = f.Metadata.createdDate,
                             Name = f.Name,
                             OwnerName = UserManager.Instance.GetUserNameById(f.CreatorId),
                             Right = "WRITE"
@@ -125,9 +125,9 @@ namespace PocsKft.Controllers
 
             IEnumerable<string> remFolderNames = folderNames.Take(folderNames.Length - 1);
 
-            Regex regex = new Regex("^([a-zA-Z]:)?(\\\\[^<>:\"/\\\\|?*]+)+\\\\?$");
+            //Regex regex = new Regex(@"^[0-9A-Za-Z_-]{3,20}$");
 
-            if (regex.IsMatch(folderName))
+            if (true)//regex.IsMatch(folderName))
             {
                 Folder f =  FolderManager.Instance.GetFolderByPath(remFolderNames);
 
@@ -152,10 +152,11 @@ namespace PocsKft.Controllers
                     {
                         Name = folderName,
                         IsRootFolder = true,
-                        CreatorId = userId
+                        CreatorId = userId,
+                        IsFolder = true
                     };
 
-                    int newFolderId = FolderManager.Instance.CreateFolder(newFolder, f.Id);
+                    int newFolderId = FolderManager.Instance.CreateRootFolder(newFolder);
 
                     PermissionManager.Instance.GrantRightOnFolder(userId, newFolderId);
                 }

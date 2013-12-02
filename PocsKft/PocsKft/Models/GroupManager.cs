@@ -142,7 +142,7 @@ namespace PocsKft.Models
             List<Group> list = new List<Group>();
             using (UsersContext ct = new UsersContext())
             {
-                return ct.Groups.Where(i => i.Users.Contains(user) == true).ToList();
+                return ct.Groups.Where(i => i.Users.Select( x => x.UserId).Contains(user.UserId)  == true).ToList();
             }
 
         }

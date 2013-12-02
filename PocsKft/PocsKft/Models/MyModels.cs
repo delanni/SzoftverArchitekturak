@@ -16,7 +16,7 @@ namespace PocsKft.Models
         public string Name { get; set; }
         public int CreatorId { get; set; }
         public bool IsFolder { get; set; }
-        public virtual Metadata Metadata { get; set; }
+        public Metadata Metadata { get; set; }
         public int ParentFolderId { get; set; }
         public string PathOnServer { get; set; }
     }
@@ -24,8 +24,8 @@ namespace PocsKft.Models
     [Table("Folder")]
     public class Folder : CommonAncestor
     {
-        public virtual List<Folder> Children { get; set; }
-        public virtual List<Document> Documents { get; set; }
+        public List<Folder> Children { get; set; }
+        public List<Document> Documents { get; set; }
         public bool IsRootFolder { get; set; }
         public string Description { get; set; }
     }
@@ -37,8 +37,8 @@ namespace PocsKft.Models
         [DatabaseGeneratedAttribute(DatabaseGeneratedOption.Identity)]
         public int GroupId { get; set; }
         public string GroupName { get; set; }
-        public virtual Metadata Metadata { get; set; }
-        public virtual List<UserProfile> Users { get; set; }
+        public Metadata Metadata { get; set; }
+        public List<UserProfile> Users { get; set; }
     }
 
     [Table("Document")]
@@ -48,7 +48,7 @@ namespace PocsKft.Models
         public int LockedByUserId { get; set; }
         public Status Status { get; set; }
         public DocumentType DocumentType { get; set; }
-        public virtual List<Comments> Comments { get; set; }
+        public List<Comments> Comments { get; set; }
         public bool Locked { get; set; }
     }
 

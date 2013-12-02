@@ -114,7 +114,7 @@ namespace PocsKft.Models
 
             //erre a Folder-re van-e már bejegyzés. Ha nincs -> új rekord.
             if (ct.Permissions.Where(i => i.UserOrGroupId == userOrGroupId
-                && i.CommonAncestorId == folderId) == null)
+                && i.CommonAncestorId == folderId).FirstOrDefault() == null)
             {
                 ct.Permissions.Add(new Permission
                 {
