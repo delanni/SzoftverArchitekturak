@@ -107,10 +107,20 @@ namespace PocsKft.Models
             using (UsersContext ct = new UsersContext())
             {
                 Folder temp = ct.Folders.Add(f);
+                Metadata met = ct.Metadatas.Add( new Metadata
+                {
+                    createdDate = DateTime.Now,
+                    lastModifiedDate = DateTime.Now
+                });
+                temp.Metadata = met;
+                ct.Entry(temp).State = EntityState.Modified;
+
                 Folder parent = ct.Folders.Where(i => i.Id == parentfolderId).FirstOrDefault();
                 if (parent.Children == null) parent.Children = new List<Folder>();
                 parent.Children.Add(temp);
+
                 ct.Entry(parent).State = EntityState.Modified;
+
                 ct.SaveChanges();
 
                 return temp.Id;
@@ -122,6 +132,13 @@ namespace PocsKft.Models
             using (UsersContext ct = new UsersContext())
             {
                 Folder temp = ct.Folders.Add(f);
+                Metadata met = ct.Metadatas.Add(new Metadata
+                {
+                    createdDate = DateTime.Now,
+                    lastModifiedDate = DateTime.Now
+                });
+                temp.Metadata = met;
+                ct.Entry(temp).State = EntityState.Modified;
                 ct.SaveChanges();
 
                 return temp.Id;

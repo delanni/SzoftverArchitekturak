@@ -137,7 +137,11 @@ namespace PocsKft.Controllers
                     {
                         Folder newFolder = new Folder
                         {
-                            Name = folderName
+                            Name = folderName,
+                            Children = null,
+                            Documents = null,
+                            IsFolder = true,
+                            CreatorId = userId
 
                         };
 
@@ -152,6 +156,8 @@ namespace PocsKft.Controllers
                     {
                         Name = folderName,
                         IsRootFolder = true,
+                        Children = null,
+                        Documents = null,
                         CreatorId = userId,
                         IsFolder = true
                     };
