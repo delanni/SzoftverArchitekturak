@@ -1,5 +1,4 @@
-﻿using PocsKft.Models.PocsKft.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -42,7 +41,7 @@ namespace PocsKft.Models
                     DeleteFolder(kid);
                 }
                 foreach (var kid in ct.Documents.Where(x=>x.ParentFolderId==g.Id)){
-                    DocumentManager.DocumentManagerInstance.DeleteDocumentById(kid.Id);
+                    DocumentManager.Instance.DeleteDocumentById(kid.Id);
                 }
                 ct.Folders.Remove(g);
                 ct.SaveChanges();
