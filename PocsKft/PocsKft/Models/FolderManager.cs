@@ -180,14 +180,17 @@ namespace PocsKft.Models
 
                 if (f == null) return null;
 
+                Folder temp = null;
                 foreach (string s in remFolderNames.Skip(1))
                 {
                     if (String.IsNullOrEmpty(s)) break;
 
+                    temp = f;
+
                     f = ct.Folders.Where(i => i.IsRootFolder == false
                     && i.Name.Equals(s) && i.ParentFolderId == f.Id).FirstOrDefault();
 
-                    if (f == null) return null;
+                    if (f == null) return temp;
                 }
 
                 return f;
