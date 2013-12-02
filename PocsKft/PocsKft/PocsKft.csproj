@@ -182,23 +182,6 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Controllers\AccountController.cs" />
-    <Compile Include="Migrations\201311270225392_elso.cs" />
-    <Compile Include="Migrations\201311270225392_elso.Designer.cs">
-      <DependentUpon>201311270225392_elso.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201312012003450_masodik.cs" />
-    <Compile Include="Migrations\201312012003450_masodik.Designer.cs">
-      <DependentUpon>201312012003450_masodik.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201312012303528_harmadik.cs" />
-    <Compile Include="Migrations\201312012303528_harmadik.Designer.cs">
-      <DependentUpon>201312012303528_harmadik.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201312020106050_negyedik.cs" />
-    <Compile Include="Migrations\201312020106050_negyedik.Designer.cs">
-      <DependentUpon>201312020106050_negyedik.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\ClientFile.cs" />
     <Compile Include="Models\ClientProject.cs" />
     <Compile Include="Models\DocumentManager.cs" />
@@ -344,23 +327,10 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="Migrations\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Migrations\201311270225392_elso.resx">
-      <DependentUpon>201311270225392_elso.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201312012003450_masodik.resx">
-      <DependentUpon>201312012003450_masodik.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201312012303528_harmadik.resx">
-      <DependentUpon>201312012303528_harmadik.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201312020106050_negyedik.resx">
-      <DependentUpon>201312020106050_negyedik.cs</DependentUpon>
-    </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

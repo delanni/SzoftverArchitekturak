@@ -63,31 +63,26 @@ namespace PocsKft.Models
 
         public List<Folder> ListChildrenFolders(int id)
         {
+<<<<<<< HEAD
             List<Folder> list = null;
             using (UsersContext ct = new UsersContext())
             {
                 list = new List<Folder>();
                 list.AddRange(ct.Folders.Where(w => w.ParentFolderId == id));
+=======
+            using (UsersContext ct = new UsersContext())
+            {
+                return ct.Folders.Where(i => i.ParentFolderId == id).ToList();
+>>>>>>> 40780fbafcedc9c7726f3bf90e130f839d726871
             }
-            return list;
         }
 
         public List<Document> ListDocumentsInFolder(int id)
         {
-            Folder g = GetFolderById(id);
-            List<Document> list = null;
             using (UsersContext ct = new UsersContext())
             {
-                list = new List<Document>();
-                if (g.Documents != null)
-                {
-                    foreach (Document c in g.Documents)
-                    {
-                        list.Add(c);
-                    }
-                }
+                return ct.Documents.Where(i => i.ParentFolderId == id).ToList();
             }
-            return list;
         }
 
         public List<Folder> SearchFoldersByName(string name)
@@ -99,11 +94,16 @@ namespace PocsKft.Models
             }
         }
 
+<<<<<<< HEAD
         public int CreateFolder(Folder f, int parentfolderId)
+=======
+        public int  CreateFolder(Folder f)
+>>>>>>> 40780fbafcedc9c7726f3bf90e130f839d726871
         {
             using (UsersContext ct = new UsersContext())
             {
                 Folder temp = ct.Folders.Add(f);
+<<<<<<< HEAD
                 Metadata met = ct.Metadatas.Add(new Metadata
                 {
                     createdDate = DateTime.Now,
@@ -119,12 +119,16 @@ namespace PocsKft.Models
                 temp.PathOnServer = parent.PathOnServer + "/" + parent.Name;
 
                 ct.Entry(parent).State = EntityState.Modified;
+=======
+
+>>>>>>> 40780fbafcedc9c7726f3bf90e130f839d726871
                 ct.SaveChanges();
 
                 return temp.Id;
             }
         }
 
+<<<<<<< HEAD
         public int CreateRootFolder(Folder f)
         {
             using (UsersContext ct = new UsersContext())
@@ -142,6 +146,8 @@ namespace PocsKft.Models
                 return temp.Id;
             }
         }
+=======
+>>>>>>> 40780fbafcedc9c7726f3bf90e130f839d726871
 
         public void EditFolder(int id)
         {
@@ -153,39 +159,39 @@ namespace PocsKft.Models
             }
         }
 
-        public bool AddDocumentToFolder(int folderId, Document document)
-        {
-            Folder g = GetFolderById(folderId);
-            using (UsersContext ct = new UsersContext())
-            {
-                if (g != null)
-                {
-                    if (g.Documents == null)
-                        g.Documents = new List<Document>();
-                    g.Documents.Add(document);
-                    ct.SaveChanges();
-                    return true;
-                }
-            }
-            return false;
-        }
+        //public bool AddDocumentToFolder(int folderId, Document document)
+        //{
+        //    Folder g = GetFolderById(folderId);
+        //    using (UsersContext ct = new UsersContext())
+        //    {
+        //        if (g != null)
+        //        {
+        //            if (g.Documents == null)
+        //                g.Documents = new List<Document>();
+        //            g.Documents.Add(document);
+        //            ct.SaveChanges();
+        //            return true;
+        //        }
+        //    }
+        //    return false;
+        //}
 
-        public bool RemoveDocumentFromFolder(int folderId, Document document)
-        {
-            Folder g = GetFolderById(folderId);
-            using (UsersContext ct = new UsersContext())
-            {
-                if (g != null)
-                {
-                    if (g.Documents == null)
-                        g.Documents = new List<Document>();
-                    g.Documents.Remove(document);
-                    ct.SaveChanges();
-                    return true;
-                }
-            }
-            return false;
-        }
+        //public bool RemoveDocumentFromFolder(int folderId, Document document)
+        //{
+        //    Folder g = GetFolderById(folderId);
+        //    using (UsersContext ct = new UsersContext())
+        //    {
+        //        if (g != null)
+        //        {
+        //            if (g.Documents == null)
+        //                g.Documents = new List<Document>();
+        //            g.Documents.Remove(document);
+        //            ct.SaveChanges();
+        //            return true;
+        //        }
+        //    }
+        //    return false;
+        //}
 
         public bool AddDescriptionToFolder(int folderId, string description)
         {

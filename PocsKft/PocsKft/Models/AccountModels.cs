@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Entity;
+using System.Data.Entity.ModelConfiguration.Conventions;
 using System.Globalization;
 using System.Web.Security;
 
@@ -26,11 +27,12 @@ namespace PocsKft.Models
         public DbSet<Document> Documents { get; set; }
         public DbSet<Metadata> Metadatas { get; set; }
         public DbSet<Permission> Permissions { get; set; }
+        public DbSet<GroupMembership> GroupMemberships { get; set; }
         public DbSet<Lock> Locks { get; set; }
         
     }
 
-    [Table("UserProfile")]
+    [Table("UserProfiles")]
     public class UserProfile
     {
         [Key]
