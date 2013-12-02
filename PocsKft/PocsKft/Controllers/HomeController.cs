@@ -25,6 +25,7 @@ namespace PocsKft.Controllers
             }
             return View();
         }
+
         public JsonResult List(string path)
         {
             ViewBag.Message = "Modify this template to jump-start your ASP.NET MVC application.";
@@ -60,44 +61,50 @@ namespace PocsKft.Controllers
 
                 List<object> documentsAndFoldersWithPermission = new List<object>();
 
-                foreach (Folder f in children)
+                if (children != null)
                 {
-                    if (PermissionManager.Instance.DoesUserHavePermissionOnDocumentOrFolder(userId, f.Id))
+                    foreach (Folder f in children)
                     {
-                        documentsAndFoldersWithPermission.Add(new ClientFile
-                        { 
-                            CreatorName = UserManager.Instance.GetUserNameById(f.CreatorId),
-                            Description = f.Description,
-                            Id = f.Id,
-                            IsFolder = true,
-                            // IsLocked = false,
-                            // LockedByUserName = ,
-                            Name = f.Name,
-                            ParentFolderName = f.ParentFolderId,                            
-                            //VersionNumber = ,
-                            //UserHasLock = ,
-                            PathOnServer = f.PathOnServer
-                        }.toJSON());
+                        if (PermissionManager.Instance.DoesUserHavePermissionOnDocumentOrFolder(userId, f.Id))
+                        {
+                            documentsAndFoldersWithPermission.Add(new ClientFile
+                            {
+                                CreatorName = UserManager.Instance.GetUserNameById(f.CreatorId),
+                                Description = f.Description,
+                                Id = f.Id,
+                                IsFolder = true,
+                                // IsLocked = false,
+                                // LockedByUserName = ,
+                                Name = f.Name,
+                                ParentFolderName = f.ParentFolderId,
+                                //VersionNumber = ,
+                                //UserHasLock = ,
+                                PathOnServer = f.PathOnServer
+                            }.toJSON());
+                        }
                     }
                 }
-                foreach (Document f in documents)
+                if (documents != null)
                 {
-                    if (PermissionManager.Instance.DoesUserHavePermissionOnDocumentOrFolder(userId, f.Id))
+                    foreach (Document f in documents)
                     {
-                        documentsAndFoldersWithPermission.Add(new ClientFile
-                        { 
-                            CreatorName = UserManager.Instance.GetUserNameById(f.CreatorId),
-                            //Description = f.,
-                            Id = f.Id,
-                            IsFolder = false,
-                            IsLocked = f.Locked,
-                            LockedByUserName =  UserManager.Instance.GetUserNameById(f.LockedByUserId),
-                            Name = f.Name,
-                            ParentFolderName = f.ParentFolderId,                            
-                            VersionNumber = f.VersionNumber,
-                            UserHasLock = userId == f.LockedByUserId ? true : false,
-                            PathOnServer = f.PathOnServer
-                        }.toJSON());
+                        if (PermissionManager.Instance.DoesUserHavePermissionOnDocumentOrFolder(userId, f.Id))
+                        {
+                            documentsAndFoldersWithPermission.Add(new ClientFile
+                            {
+                                CreatorName = UserManager.Instance.GetUserNameById(f.CreatorId),
+                                //Description = f.,
+                                Id = f.Id,
+                                IsFolder = false,
+                                IsLocked = f.Locked,
+                                LockedByUserName = UserManager.Instance.GetUserNameById(f.LockedByUserId),
+                                Name = f.Name,
+                                ParentFolderName = f.ParentFolderId,
+                                VersionNumber = f.VersionNumber,
+                                UserHasLock = userId == f.LockedByUserId ? true : false,
+                                PathOnServer = f.PathOnServer
+                            }.toJSON());
+                        }
                     }
                 }
 
@@ -141,8 +148,8 @@ namespace PocsKft.Controllers
                             Children = null,
                             Documents = null,
                             IsFolder = true,
-                            CreatorId = userId
-
+                            CreatorId = userId,
+                            ParentFolderId = f.Id
                         };
 
                         int newFolderId = FolderManager.Instance.CreateFolder(newFolder, f.Id);
@@ -159,7 +166,8 @@ namespace PocsKft.Controllers
                         Children = null,
                         Documents = null,
                         CreatorId = userId,
-                        IsFolder = true
+                        IsFolder = true,
+                        ParentFolderId = -1
                     };
 
                     int newFolderId = FolderManager.Instance.CreateRootFolder(newFolder);
