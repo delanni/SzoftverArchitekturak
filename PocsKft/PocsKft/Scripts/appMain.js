@@ -13,12 +13,19 @@ HBMAIN.setLoading = function (onOff) {
 };
 
 HBMAIN.factory("GlobalService", function (Communicator) {
+    var returnObject = {};
     ACTIONS = {
         DELETE: {
             name: "Delete",
             type: "bin",
-            execute: function (file) {
-                Communicator.delete(file);
+            execute: function () {
+                file = returnObject.selectedFile;
+                var promise = Communicator.delete(file);
+                promise.then(function (success) {
+                    HBMAIN.setLoading(false);
+                }, function (notfailure) {
+                    HBMAIN.setLoading(false);
+                });
             }
         },
         EDIT: {
@@ -36,35 +43,40 @@ HBMAIN.factory("GlobalService", function (Communicator) {
         UPLOAD: {
             name: "Upload a new file",
             type: "upload",
-            execute: function (file) {
-                Communicator.uploadFile();
+            execute: function () {
+                var currentPath = returnObject.currentPath;
+                Communicator.uploadFile(currentPath);
             }
         },
         UPDATE: {
             name: "Upload new version",
             type: "git_commit",
-            execute: function (file) {
+            execute: function () {
+                var file = returnObject.selectedFile;
                 Communicator.updateFile(file);
             }
         },
         DOWNLOAD: {
             name: "Download",
             type: "download",
-            execute: function (file) {
+            execute: function () {
+                var file = returnObject.selectedFile;
                 Communicator.download(file);
             }
         },
         LOCK: {
             name: "Try to acquire lock on the file",
             type: "lock",
-            execute: function (file) {
+            execute: function () {
+                var file = returnObject.selectedFile;
                 Communicator.tryLock(file);
             }
         },
         UNLOCK: {
             name: "Release the lock",
             type: "unlock",
-            execute: function (file) {
+            execute: function () {
+                var file = returnObject.selectedFile;
                 Communicator.unlock(file);
             }
         },
@@ -77,7 +89,8 @@ HBMAIN.factory("GlobalService", function (Communicator) {
         SAVE: {
             name: "Save changes",
             type: "floppy_disk",
-            execute: function (file) {
+            execute: function () {
+                var file = returnObject.selectedFile;
                 $(".edit").slideUp(100);
                 Communicator.updateMeta(file);
             }
@@ -93,7 +106,7 @@ HBMAIN.factory("GlobalService", function (Communicator) {
             name: "Create a new folder here",
             type: "folder_new",
             execute: function () {
-                Communicator.createFolder();
+                Communicator.createFolder(returnObject.currentPath);
             }
         }
     };
@@ -136,9 +149,9 @@ HBMAIN.factory("GlobalService", function (Communicator) {
         return [ACTIONS.DOWNLOAD];
     };
 
-    return {
-        ACTIONS: ACTIONS
-    };
+    returnObject.ACTIONS = ACTIONS;
+
+    return returnObject;
 });
 
 HBMAIN.factory("TestUser", function () {
@@ -240,7 +253,7 @@ HBMAIN.factory("Communicator", function ($http, $q, TestData) {
         $http.get(url).success(function (data) {
             if (data && data.hasOwnProperty("length")) {
                 deferred.resolve(data);
-            } else if(!data) {
+            } else if (!data) {
                 deferred.resolve([]);
             } else {
                 deferred.resolve([data]);
@@ -254,17 +267,24 @@ HBMAIN.factory("Communicator", function ($http, $q, TestData) {
         return deferred.promise;
     };
 
-    createFolderFake = function () {
+    var createFolderFake = function (currentPath) {
         $("#folderDialog").dialog({
             resizable: false,
             modal: true,
             buttons: {
                 "Create": function () {
                     var folderName = $("#folderNameBox").val();
-                    // validate
-                    // actually create
-                    $("#folderNameBox").val("");
-                    $(this).dialog("close");
+                    var putUrl = currentPath + folderName;
+                    $.ajax({
+                        type: "PUT",
+                        url: putUrl,
+                        beforeSend: function () { },
+                        success: function () { $(this).dialog("close"); $("#folderNameBox").val(""); },
+                        error: function (e) { alert("Error during creating folder, please try again.\n The message is " + e); },
+                        cache: false,
+                        contentType: false,
+                        processData: false
+                    });
                 },
                 Cancel: function () {
                     $(this).dialog("close");
@@ -273,17 +293,24 @@ HBMAIN.factory("Communicator", function ($http, $q, TestData) {
         });
     };
 
-    createProjectFake = function () {
+    var createProjectFake = function () {
         $("#projectDialog").dialog({
             resizable: false,
             modal: true,
             buttons: {
                 "Create": function () {
                     var folderName = $("#projectNameBox").val();
-                    // validate 
-                    // actually create
-                    $("#projectNameBox").val("");
-                    $(this).dialog("close");
+                    var putUrl = "/" + folderName;
+                    $.ajax({
+                        type: "PUT",
+                        url: putUrl,
+                        beforeSend: function () { },
+                        success: function () { $(this).dialog("close"); $("#projectNameBox").val(""); },
+                        error: function (e) { alert("Error during creating project, please try again.\n The message is " + e); },
+                        cache: false,
+                        contentType: false,
+                        processData: false
+                    });
                 },
                 Cancel: function () {
                     $(this).dialog("close");
@@ -292,11 +319,77 @@ HBMAIN.factory("Communicator", function ($http, $q, TestData) {
         });
     };
 
+    var uploadFileFake = function (filePath) {
+        $("#fileUploadDialog").dialog({
+            resizable: false,
+            modal: true,
+            buttons: {
+                "Upload": function () {
+                    var file = $(this).find("#file");
+                    var progress = $(this).find("progress");
+                    file.change(function (f) {
+                        // validate for file
+                    });
+                    var progressHandlingFunction = function (event) {
+                        if (event.lengthComputable) {
+                            progress.attr({ value: event.loaded, max: event.total });
+                        }
+                    };
+
+                    var formData = new FormData($('form')[0]);
+                    $.ajax({
+                        url: filePath,  //Server side action to process
+                        type: 'POST',
+                        xhr: function () {  // Custom XMLHttpRequest
+                            var myXhr = $.ajaxSettings.xhr();
+                            if (myXhr.upload) { // Check if upload property exists
+                                myXhr.upload.addEventListener('progress', progressHandlingFunction, false); // For handling the progress of the upload
+                            }
+                            return myXhr;
+                        },
+                        //Ajax events
+                        beforeSend: function () { },
+                        success: function () { $(this).dialog("close"); },
+                        error: function (e) { alert("Error during uploading, please try again.\n The message is " + e); },
+                        // Form data
+                        data: formData,
+                        //Options to tell jQuery not to process data or worry about content-type.
+                        cache: false,
+                        contentType: false,
+                        processData: false
+                    });
+                },
+                Cancel: function () {
+                    $(this).dialog("close");
+                }
+            }
+        });
+    };
+
+    var deleteResourceFake = function (file) {
+        var deferred = $q.defer();
+        var resourceUrl = file.isProject ? file.projectName : (file.filePath + file.fileName);
+        HBMAIN.setLoading(false);
+        $.ajax({
+            type: "DELETE",
+            url: resourceUrl,
+            success: function () {
+                deferred.resolve(true);
+            },
+            error: function (e) {
+                deferred.reject(false); alert("Error during creating folder, please try again.\n The message is " + e);
+            },
+        });
+
+        return deferred.promise;
+    };
+
+
     return {
         listFolder: listAsync,
-        delete: angular.noop,
-        updateFile: angular.noop,
-        uploadFile: angular.noop,
+        delete: deleteResourceFake,
+        updateFile: uploadFileFake,
+        uploadFile: uploadFileFake,
         updateMeta: angular.noop,
         download: angular.noop,
         tryLock: angular.noop,
@@ -309,10 +402,7 @@ HBMAIN.factory("Communicator", function ($http, $q, TestData) {
 HBMAIN.controller("BrowserController", ["$scope", "$rootScope", "Communicator", "GlobalService",
     function ($scope, $rootScope, Communicator, GlobalService) {
         $scope.reload = function () {
-            $scope.currentPath = window.location.pathname || "/#";
-            if ($scope.currentPath === "/") {
-                $scope.currentPath = "/null";
-            }
+            $scope.currentPath = window.location.pathname || "/";
             GlobalService.currentPath = $scope.currentPath;
             $rootScope.$broadcast("pathChanged", $scope.currentPath);
 
@@ -326,7 +416,7 @@ HBMAIN.controller("BrowserController", ["$scope", "$rootScope", "Communicator", 
         $scope.select = function (selected, event) {
             if (selected.selected && !selected.isRealFile) {
                 delete GlobalService.selectedFile;
-                $scope.currentPath = selected.filePath + (selected.fileName || selected.projectName);
+                $scope.currentPath = selected.filePath + (selected.fileName || selected.projectName) + "/";
                 window.history.pushState($scope.currentPath, null, $scope.currentPath);
                 selected.selected = false;
                 $scope.reload();

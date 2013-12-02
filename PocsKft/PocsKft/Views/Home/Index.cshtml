@@ -1,11 +1,11 @@
 ﻿@{
     ViewBag.Title = "Home Page";
 }
-<aside class="leftActionBarAcceptor" ng-controller="ActionBarController" >
+<aside class="leftActionBarAcceptor" ng-controller="ActionBarController">
     <div ng-repeat="action in actions"
         title="{{action.name}}"
         class="actionButton glyphicons {{action.type}}"
-        ng-click="action.execute(action)">
+        ng-click="action.execute()">
     </div>
 </aside>
 <section class="browserView" ng-controller="BrowserController" ng-click="clearSelections()">
@@ -43,12 +43,20 @@
     </div>
 </aside>
 
-<div id="folderDialog" title="New folder...">
+<div id="folderDialog" style="display: none" title="New folder...">
     <div>Name of the folder:</div>
-    <input id="folderNameBox" type="text" class="folderInputBox"/>
+    <input id="folderNameBox" type="text" class="folderInputBox" />
 </div>
 
-<div id="projectDialog" title="New project...">
+<div id="projectDialog" style="display: none" title="New project...">
     <div>Name of the project:</div>
     <input id="projectNameBox" type="text" />
+</div>
+
+<div id="fileUploadDialog" style="display: none" title="Pick a file...">
+    <form method="post" enctype="multipart/form-data">
+        <label for="file">Upload:</label>
+        <input type="file" name="file" id="file"><br>
+    </form>
+    <progress></progress>
 </div>

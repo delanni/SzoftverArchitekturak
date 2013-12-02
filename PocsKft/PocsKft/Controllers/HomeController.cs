@@ -10,20 +10,31 @@ namespace PocsKft.Controllers
 {
     public class HomeController : Controller
     {
-        // private UserManager userManager;
-
+        public ActionResult Index(string path)
+        {
+            var type = Request.RequestType;
+            if (type == "PUT")
+            {
+                CreateFolder(path);
+            }
+            var headerAccepts = Request.Headers["Accept"];
+            if (headerAccepts.ToLower().Contains("json"))
+            {
+                var x=  List(path);
+                return x;
+            }
+            return View();
+        }
         public JsonResult List(string path)
         {
             ViewBag.Message = "Modify this template to jump-start your ASP.NET MVC application.";
 
             int userId = UserManager.Instance.GetUserIdByName(HttpContext.User.Identity.Name);
 
-            path = path.Substring(1);
-
             if (String.IsNullOrEmpty(path))
             {
                 List<Folder> projects = FolderManager.Instance.GetProjects();
-                List<ClientProject> projectsWithPermission = new List<ClientProject>();
+                List<object> projectsWithPermission = new List<object>();
                 foreach (Folder f in projects)
                 {
                     if (PermissionManager.Instance.DoesUserHavePermissionOnDocumentOrFolder(userId, f.Id))
@@ -33,11 +44,11 @@ namespace PocsKft.Controllers
                             Name = f.Name,
                             OwnerName = UserManager.Instance.GetUserNameById(f.CreatorId),
                             Right = "WRITE"
-                        });
+                        }.toJSON());
                     }
                 }
 
-                return Json(projectsWithPermission);
+                return Json(projectsWithPermission, JsonRequestBehavior.AllowGet);
 
             }
             else {
@@ -47,7 +58,7 @@ namespace PocsKft.Controllers
                 List<Folder> children = FolderManager.Instance.ListChildrenFolders(folder.Id);
                 List<Document> documents = FolderManager.Instance.ListDocumentsInFolder(folder.Id);
 
-                List<ClientFile> documentsAndFoldersWithPermission = new List<ClientFile>();
+                List<object> documentsAndFoldersWithPermission = new List<object>();
 
                 foreach (Folder f in children)
                 {
@@ -66,7 +77,7 @@ namespace PocsKft.Controllers
                             //VersionNumber = ,
                             //UserHasLock = ,
                             PathOnServer = f.PathOnServer
-                        });
+                        }.toJSON());
                     }
                 }
                 foreach (Document f in documents)
@@ -86,23 +97,15 @@ namespace PocsKft.Controllers
                             VersionNumber = f.VersionNumber,
                             UserHasLock = userId == f.LockedByUserId ? true : false,
                             PathOnServer = f.PathOnServer
-                        });
+                        }.toJSON());
                     }
                 }
 
-                return Json(documentsAndFoldersWithPermission);
+                return Json(documentsAndFoldersWithPermission, JsonRequestBehavior.AllowGet);
             }
         }
 
-        public ActionResult Index(string path)
-        {
-            var headerAccepts = Request.Headers["Accept"];
-            if (headerAccepts.ToLower().Contains("json"))
-            {
-                return List(path);
-            }
-            return View();
-        }
+
 
         public ActionResult About()
         {
@@ -118,15 +121,13 @@ namespace PocsKft.Controllers
 
             string[] folderNames = path.Split('/');
 
+            string folderName = remFolderNames.Last();
             IEnumerable<string> remFolderNames = folderNames.Take(folderNames.Length - 1);
 
             Regex regex = new Regex("^([a-zA-Z]:)?(\\\\[^<>:\"/\\\\|?*]+)+\\\\?$");
 
-            string folderName = remFolderNames.Last();
-
             if (regex.IsMatch(folderName))
             {
-                remFolderNames = remFolderNames.Take(remFolderNames.Count() - 1);
 
                 Folder f =  FolderManager.Instance.GetFolderByPath(remFolderNames);
 
