@@ -8,16 +8,22 @@ namespace PocsKft.Models
     public class ClientFile
     {
         public int Id { get; set; }
-        public string Description { get; set; }
         public string Name { get; set; }
-        public string CreatorName { get; set; }
+        public int CreatorId { get; set; }
         public bool IsFolder { get; set; }
-        public int ParentFolderName { get; set; }
+        public int MetadataId { get; set; }
+        public int ParentFolderId { get; set; }
         public string PathOnServer { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public int LastModifiedbyId { get; set; } //userId
+        public DateTime LastModifiedDate { get; set; }
+
+        //Doc
         public int VersionNumber { get; set; }
-        public bool IsLocked { get; set; }
-        public string LockedByUserName { get; set; }
-        public Status Status { get; set; }
+        public int LockedByUser { get; set; }
+        public Status Status { get; set; } // Archived or Active
+        public DocumentType DocumentType { get; set; }
+        public bool Locked { get; set; }
 
         public string Right { get; set; }
         public bool UserHasLock { get; set; }
@@ -39,14 +45,14 @@ namespace PocsKft.Models
              * comments:[array{name:string,date:string,message:string}];
              **/
 
-            
-
             return new
             {
                 isRealFile = !IsFolder,
                 fileName= Name,
                 filePath = PathOnServer.EndsWith("/")?PathOnServer:PathOnServer+"/",
-                lockStatus = IsLocked?UserHasLock?"UNDERCONTROL":"LOCKED":"UNLOCKED",
+                creationDate = CreatedDate,
+                lastModificationDate = LastModifiedDate,
+                lockStatus = Locked?UserHasLock?"UNDERCONTROL":"LOCKED":"UNLOCKED",
                 rights = Right,
                 properties = new List<object>()
             };
@@ -56,7 +62,7 @@ namespace PocsKft.Models
         {
             var example = new ClientFile();
             example.IsFolder = false;
-            example.IsLocked = true;
+            example.Locked = true;
             example.UserHasLock = true;
             example.Name = "this.txt";
             example.PathOnServer = "/asd/das";
@@ -68,7 +74,7 @@ namespace PocsKft.Models
         {
             var example = new ClientFile();
             example.IsFolder = true;
-            example.IsLocked = true;
+            example.Locked = true;
             example.UserHasLock = true;
             example.Name = "alma";
             example.PathOnServer = "/asd/das";

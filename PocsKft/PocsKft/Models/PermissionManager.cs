@@ -23,14 +23,6 @@ namespace PocsKft.Models
             }
         }
 
-        public UserProfile GetUserById(int id)
-        {
-            using (UsersContext ct = new UsersContext())
-            {
-                return ct.UserProfiles.Where(i => i.UserId == id).FirstOrDefault();
-            }
-        }
-
         /// <summary>
         /// Van-e közvetlenül a User-re vagy valamely User-t tartalmazó csoportra bejegyzés a Permission
         /// tábléba.
@@ -43,7 +35,7 @@ namespace PocsKft.Models
             using (UsersContext ct = new UsersContext())
             {
                 //magára a user-re
-                if (ct.Permissions.Where(i => i.CommonAncestorId == documentId
+                if (ct.Permissions.Where(i => i.Id == documentId
                     && i.UserOrGroupId == userId).FirstOrDefault() != null)
                 {
                     return true;
@@ -56,8 +48,8 @@ namespace PocsKft.Models
                     {
                         foreach (Group g in list)
                         {
-                            if (ct.Permissions.Where(i => i.CommonAncestorId == documentId
-                                && i.UserOrGroupId == g.GroupId).FirstOrDefault() != null)
+                            if (ct.Permissions.Where(i => i.Id == documentId
+                                && i.UserOrGroupId == g.Id).FirstOrDefault() != null)
                             {
                                 return true;
                             }
@@ -78,11 +70,11 @@ namespace PocsKft.Models
             using (UsersContext ct = new UsersContext())
             {
                 if (ct.Permissions.Where(i => i.UserOrGroupId == userOrGroupId
-                    && i.CommonAncestorId == documentId) == null)
+                    && i.Id == documentId) == null)
                 {
                     ct.Permissions.Add(new Permission
                     {
-                        CommonAncestorId = documentId,
+                        Id = documentId,
                         UserOrGroupId = userOrGroupId,
                         IsFolder = false
                     });
@@ -91,11 +83,11 @@ namespace PocsKft.Models
             }
         }
 
-        public void GrantRightOnFolder(int userOrGroupId, int folderId)
+        public void GrantRightOnFolder(int userOrGroupId, int folderId, PermissionType Type)
         {
             using (UsersContext ct = new UsersContext())
             {
-                GrantRightOnAllChildren(ct, folderId, userOrGroupId);
+                GrantRightOnAllChildren(ct, folderId, userOrGroupId, Type);
 
                 ct.SaveChanges();
             }
@@ -108,44 +100,48 @@ namespace PocsKft.Models
         /// <param name="ct"></param>
         /// <param name="folderId"></param>
         /// <param name="userOrGroupId"></param>
-        public void GrantRightOnAllChildren(UsersContext ct, int folderId, int userOrGroupId)
+        public void GrantRightOnAllChildren(UsersContext ct, int folderId, int userOrGroupId, PermissionType Type)
         {
             Folder f = FolderManager.Instance.GetFolderById(folderId);
 
             //erre a Folder-re van-e már bejegyzés. Ha nincs -> új rekord.
             if (ct.Permissions.Where(i => i.UserOrGroupId == userOrGroupId
-                && i.CommonAncestorId == folderId).FirstOrDefault() == null)
+                && i.FolderOrDocumentId == folderId).FirstOrDefault() == null)
             {
                 ct.Permissions.Add(new Permission
                 {
-                    CommonAncestorId = folderId,
+                    FolderOrDocumentId = f.Id,
                     UserOrGroupId = userOrGroupId,
                     IsFolder = true
                 });
             }
 
             //Minden dokumentumra van-e már bejegyzés. Ha nincs -> új rekord.
-            if (f.Documents != null)
+            List<Document> docs = ct.Documents.Where(i => i.ParentFolderId == folderId).ToList();
+            if (docs != null)
             {
-                foreach (Document temp in f.Documents)
+                foreach (Document temp in docs)
                 {
                     if (ct.Permissions.Where(i => i.UserOrGroupId == userOrGroupId
-                        && i.CommonAncestorId == temp.Id) == null)
+                        && i.FolderOrDocumentId == temp.Id) == null)
                     {
                         ct.Permissions.Add(new Permission
                         {
-                            CommonAncestorId = temp.Id,
+                            FolderOrDocumentId = temp.Id,
                             UserOrGroupId = userOrGroupId,
-                            IsFolder = false
+                            IsFolder = false,
+                            Type = Type
                         });
                     }
                 }
             }
-            if (f.Children != null)
+            //Minden gyerek-mappára van-e már bejegyzés. Ha nincs -> új rekord.
+            List<Folder> folders = ct.Folders.Where(i => i.ParentFolderId == folderId).ToList();
+            if (folders != null)
             {
-                foreach (Folder temp in f.Children)
+                foreach (Folder temp in folders)
                 {
-                    GrantRightOnAllChildren(ct, temp.Id, userOrGroupId);
+                    GrantRightOnAllChildren(ct, temp.Id, userOrGroupId, Type);
                 }
             }
         }
@@ -155,7 +151,7 @@ namespace PocsKft.Models
             using (UsersContext ct = new UsersContext())
             {
                 Permission p = ct.Permissions.Where(i => i.UserOrGroupId == userOrGroupId
-                    && i.CommonAncestorId == documentId).FirstOrDefault();
+                    && i.Id == documentId).FirstOrDefault();
 
                 if(p != null){
                     ct.Permissions.Remove(p);
@@ -180,7 +176,7 @@ namespace PocsKft.Models
 
             //erre a Folder-re a Permission törlése
             Permission p = ct.Permissions.Where(i => i.UserOrGroupId == userOrGroupId
-                && i.CommonAncestorId == folderId).FirstOrDefault();
+                && i.Id == folderId).FirstOrDefault();
 
             if (p != null)
             {
@@ -188,12 +184,13 @@ namespace PocsKft.Models
             }
 
             //Minden dokumentumra -> Permission törlése
-            if (f.Documents != null)
+            List<Document> docs = ct.Documents.Where(i => i.ParentFolderId == folderId).ToList();
+            if (docs != null)
             {
-                foreach (Document temp in f.Documents)
+                foreach (Document temp in docs)
                 {
                     Permission perm = ct.Permissions.Where(i => i.UserOrGroupId == userOrGroupId
-                        && i.CommonAncestorId == temp.Id).FirstOrDefault();
+                        && i.Id == temp.Id).FirstOrDefault();
 
                     if (perm != null)
                     {
@@ -201,11 +198,13 @@ namespace PocsKft.Models
                     }
                 }
             }
-            if (f.Children != null)
+
+            List<Folder> folders = ct.Folders.Where(i => i.ParentFolderId == folderId).ToList();
+            if (folders != null)
             {
-                foreach (Folder temp in f.Children)
+                foreach (Folder temp in folders)
                 {
-                    GrantRightOnAllChildren(ct, temp.Id, userOrGroupId);
+                    RevokeRightOnAllChildren(ct, temp.Id, userOrGroupId);
                 }
             }
         }

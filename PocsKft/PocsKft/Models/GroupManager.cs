@@ -26,11 +26,12 @@ namespace PocsKft.Models
             }
         }
 
-        public UserProfile GetUserById(int id)
+        public Group GetGRoupById(int id)
         {
             using (UsersContext ct = new UsersContext())
             {
-                return ct.UserProfiles.Where(i => i.UserId == id).FirstOrDefault();
+                Group g = ct.Groups.Where(i => i.Id == id).FirstOrDefault();
+                return g;
             }
         }
 
@@ -45,9 +46,9 @@ namespace PocsKft.Models
 
         public bool DeleteGroupById(int id)
         {
+            Group g = GetGRoupById(id);
             using (UsersContext ct = new UsersContext())
             {
-                Group g = ct.Groups.Where(i => i.GroupId == id).FirstOrDefault();
                 if (g != null)
                 {
                     ct.Groups.Remove(g);
@@ -75,10 +76,11 @@ namespace PocsKft.Models
         {
             using (UsersContext ct = new UsersContext())
             {
-                if (g != null)
+                GroupMembership gm = ct.GroupMemberships.Where(i => i.UserId == user.UserId
+                    && i.GroupId == g.Id).FirstOrDefault();
+                if (gm != null)
                 {
-                    UserProfile u = g.Users.Where(i => i.UserId == user.UserId).FirstOrDefault();
-                    g.Users.Remove(u);
+                    ct.GroupMemberships.Remove(gm);
                     ct.SaveChanges();
                     return true;
                 }
@@ -88,29 +90,37 @@ namespace PocsKft.Models
 
         public bool DeleteUserFromGroupById(int id, UserProfile user)
         {
+            Group g = GetGRoupById(id);
+
             using (UsersContext ct = new UsersContext())
             {
-                Group g = ct.Groups.Where(i => i.GroupId == id).FirstOrDefault();
-                if (g != null)
+                GroupMembership gm = ct.GroupMemberships.Where(i => i.UserId == user.UserId
+                    && i.GroupId == g.Id).FirstOrDefault();
+                if (gm != null)
                 {
-                    UserProfile u = g.Users.Where(i => i.UserId == user.UserId).FirstOrDefault();
-                    g.Users.Remove(u);
+                    ct.GroupMemberships.Remove(gm);
                     ct.SaveChanges();
                     return true;
                 }
-                else
-                    return false;
             }
+            return false;
         }
 
         public bool AddUserToGroup(Group g, UserProfile user)
         {
             using (UsersContext ct = new UsersContext())
             {
-                if (g != null)
+                GroupMembership gm = ct.GroupMemberships.Where(i => i.UserId == user.UserId
+    && i.GroupId == g.Id).FirstOrDefault();
+
+                if (gm != null)
                 {
-                    UserProfile u = g.Users.Where(i => i.UserId == user.UserId).FirstOrDefault();
-                    g.Users.Add(u);
+
+                    ct.GroupMemberships.Add(new GroupMembership
+                    {
+                        GroupId = g.Id,
+                        UserId = user.UserId
+                    });
                     ct.SaveChanges();
                     return true;
                 }
@@ -120,31 +130,40 @@ namespace PocsKft.Models
 
         public bool AddUserToGroupById(int id, UserProfile user)
         {
+            Group g = GetGRoupById(id);
+
             using (UsersContext ct = new UsersContext())
             {
-                Group g = ct.Groups.Where(i => i.GroupId == id).FirstOrDefault();
-                if (g != null)
+                GroupMembership gm = ct.GroupMemberships.Where(i => i.UserId == user.UserId
+    && i.GroupId == g.Id).FirstOrDefault();
+
+                if (gm != null)
                 {
-                    UserProfile u = g.Users.Where(i => i.UserId == user.UserId).FirstOrDefault();
-                    g.Users.Add(u);
+
+                    ct.GroupMemberships.Add(new GroupMembership
+                    {
+                        GroupId = g.Id,
+                        UserId = user.UserId
+                    });
                     ct.SaveChanges();
                     return true;
                 }
-                else
-                    return false;
             }
+            return false;
         }
 
         public List<Group> GetGroupsOfUser(int userId)
         {
-            UserProfile user = GetUserById(userId);
-            
-            List<Group> list = new List<Group>();
             using (UsersContext ct = new UsersContext())
             {
-                return ct.Groups.Where(i => i.Users.Select( x => x.UserId).Contains(user.UserId)  == true).ToList();
+                List<Group> groups = new List<Group>();
+                List<int> ints =  ct.GroupMemberships.Where(j => j.UserId == userId).Select(i => i.GroupId).ToList();
+                foreach(int i in ints)
+                {
+                    groups.Add( ct.Groups.Where(j => j.Id == i).FirstOrDefault() );
+                }
+                return groups;
             }
-
         }
     }
 }

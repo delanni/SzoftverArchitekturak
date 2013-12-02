@@ -36,6 +36,16 @@ namespace PocsKft.Models
             }
         }
 
+        public UserProfile GetUserById(int id)
+        {
+            using (UsersContext ct = new UsersContext())
+            {
+                UserProfile user =
+                    ct.UserProfiles.Where(i => i.UserId == id).FirstOrDefault();
+                return user;
+            }
+        }
+
         public string GetUserNameById(int id)
         {
             using (UsersContext ct = new UsersContext())

@@ -59,38 +59,18 @@ namespace PocsKft.Models
 
         public List<Folder> ListChildrenFolders(int id)
         {
-            Folder g = GetFolderById(id);
-            List<Folder> list = null;
             using (UsersContext ct = new UsersContext())
             {
-                list = new List<Folder>();
-                if (g.Children != null)
-                {
-                    foreach (Folder c in g.Children)
-                    {
-                        list.Add(c);
-                    }
-                }
+                return ct.Folders.Where(i => i.ParentFolderId == id).ToList();
             }
-            return list;
         }
 
         public List<Document> ListDocumentsInFolder(int id)
         {
-            Folder g = GetFolderById(id);
-            List<Document> list = null;
             using (UsersContext ct = new UsersContext())
             {
-                list = new List<Document>();
-                if (g.Documents != null)
-                {
-                    foreach (Document c in g.Documents)
-                    {
-                        list.Add(c);
-                    }
-                }
+                return ct.Documents.Where(i => i.ParentFolderId == id).ToList();
             }
-            return list;
         }
 
         public List<Folder> SearchFoldersByName(string name)
@@ -102,25 +82,11 @@ namespace PocsKft.Models
             }
         }
 
-        public int  CreateFolder(Folder f, int parentfolderId)
+        public int  CreateFolder(Folder f)
         {
             using (UsersContext ct = new UsersContext())
             {
                 Folder temp = ct.Folders.Add(f);
-                Metadata met = ct.Metadatas.Add( new Metadata
-                {
-                    createdDate = DateTime.Now,
-                    lastModifiedDate = DateTime.Now
-                });
-                ct.SaveChanges();
-                temp.Metadata = met;
-                ct.Entry(temp).State = EntityState.Modified;
-
-                Folder parent = ct.Folders.Where(i => i.Id == parentfolderId).FirstOrDefault();
-                if (parent.Children == null) parent.Children = new List<Folder>();
-                parent.Children.Add(temp);
-
-                ct.Entry(parent).State = EntityState.Modified;
 
                 ct.SaveChanges();
 
@@ -128,23 +94,6 @@ namespace PocsKft.Models
             }
         }
 
-        public int CreateRootFolder(Folder f)
-        {
-            using (UsersContext ct = new UsersContext())
-            {
-                Folder temp = ct.Folders.Add(f);
-                Metadata met = ct.Metadatas.Add(new Metadata
-                {
-                    createdDate = DateTime.Now,
-                    lastModifiedDate = DateTime.Now
-                });
-                temp.Metadata = met;
-                ct.Entry(temp).State = EntityState.Modified;
-                ct.SaveChanges();
-
-                return temp.Id;
-            }
-        }
 
         public void EditFolder(int id)
         {
@@ -156,39 +105,39 @@ namespace PocsKft.Models
             }
         }
 
-        public bool AddDocumentToFolder(int folderId, Document document)
-        {
-            Folder g = GetFolderById(folderId);
-            using (UsersContext ct = new UsersContext())
-            {
-                if (g != null)
-                {
-                    if (g.Documents == null)
-                        g.Documents = new List<Document>();
-                    g.Documents.Add(document);
-                    ct.SaveChanges();
-                    return true;
-                }
-            }
-            return false;
-        }
+        //public bool AddDocumentToFolder(int folderId, Document document)
+        //{
+        //    Folder g = GetFolderById(folderId);
+        //    using (UsersContext ct = new UsersContext())
+        //    {
+        //        if (g != null)
+        //        {
+        //            if (g.Documents == null)
+        //                g.Documents = new List<Document>();
+        //            g.Documents.Add(document);
+        //            ct.SaveChanges();
+        //            return true;
+        //        }
+        //    }
+        //    return false;
+        //}
 
-        public bool RemoveDocumentFromFolder(int folderId, Document document)
-        {
-            Folder g = GetFolderById(folderId);
-            using (UsersContext ct = new UsersContext())
-            {
-                if (g != null)
-                {
-                    if (g.Documents == null)
-                        g.Documents = new List<Document>();
-                    g.Documents.Remove(document);
-                    ct.SaveChanges();
-                    return true;
-                }
-            }
-            return false;
-        }
+        //public bool RemoveDocumentFromFolder(int folderId, Document document)
+        //{
+        //    Folder g = GetFolderById(folderId);
+        //    using (UsersContext ct = new UsersContext())
+        //    {
+        //        if (g != null)
+        //        {
+        //            if (g.Documents == null)
+        //                g.Documents = new List<Document>();
+        //            g.Documents.Remove(document);
+        //            ct.SaveChanges();
+        //            return true;
+        //        }
+        //    }
+        //    return false;
+        //}
 
         public bool AddDescriptionToFolder(int folderId, string description)
         {
