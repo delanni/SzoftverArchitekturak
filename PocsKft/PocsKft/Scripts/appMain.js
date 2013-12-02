@@ -159,92 +159,12 @@ HBMAIN.factory("TestUser", function () {
     return user;
 });
 
-HBMAIN.factory("TestData", function () {
-    /// FILES ///
-    var alma = new File({
-        fileName: "alma.txt",
-        projectName: "almaproject",
-        filePath: "/almaproject/korte/alma",
-        properties: Property.fromObject(window)
-    });
-    var banan = new File({
-        fileName: "banan.dat",
-        projectName: "almaproject",
-        lockStatus: "LOCKED",
-        filePath: "/almaproject/korte",
-        properties: Property.fromObject({ "anyja neve": "ban'nos joe", "apja neve": "bananos janka" })
-    });
-    var csutka = new File({
-        fileName: "almacsutka",
-        projectName: "almaproject",
-        lockStatus: "UNLOCKED",
-        filePath: "/almaproject/korte/barack/",
-        properties: Property.fromObject(new Date())
-    });
-    /// selif ///
-
-    /// FOLDERS ///
-    var almaFolder = new File({
-        fileName: "alma",
-        filePath: "/almaproject/korte/",
-        projectName: "almaproject",
-        isRealFile: false
-    });
-    var barackFolder = new File({
-        fileName: "barack",
-        filePath: "/almaproject/korte",
-        projectName: "almaproject",
-        isRealFile: false
-    });
-    var korte = new File({
-        fileName: "korte",
-        filePath: "/almaproject",
-        projectName: "almaproject",
-        isRealFile: false
-    });
-    var almaproject = new Project({
-        projectName: "almaproject",
-        ownerName: "alex",
-    });
-    /// sredlof ///
-
-    var root = { files: [almaproject] };
-    almaproject.files = [korte];
-    korte.files = [barackFolder, almaFolder, banan];
-    barackFolder.files = [csutka];
-    almaFolder.files = [alma];
-
-    return {
-        listFolder: function (folderName) {
-            var current = root;
-            folderName = folderName.substring(1, folderName.length);
-            var path = folderName.split("/");
-            for (var i = 0; i < path.length; i++) {
-                var name = path[i];
-                if (name === "") {
-                    return current.files;
-                } else {
-                    current = current.files[current.files.map(function (e) { return e.fileName || e.projectName; }).indexOf(name)];
-                }
-            }
-            return current.files;
-        }
-    };
-});
-
-HBMAIN.factory("Communicator", function ($http, $q, TestData) {
+HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
     var c = {};
-    var fakeList = function (scope, folderName) {
-        var deferred = $q.defer();
 
-        setTimeout(function () {
-            scope.$apply(function () {
-                deferred.resolve(TestData.listFolder(folderName));
-            });
-        }, 500);
-        HBMAIN.setLoading(true);
-        return deferred.promise;
-    };
+    var notifyFS = function () {
+        $rootScope.$broadcast("fileStructureChanged");
+    }
 
     var listAsync = function (scope, folderName) {
         var deferred = $q.defer();
@@ -279,8 +199,8 @@ HBMAIN.factory("Communicator", function ($http, $q, TestData) {
                         type: "PUT",
                         url: putUrl,
                         beforeSend: function () { },
-                        success: function () { $(this).dialog("close"); $("#folderNameBox").val(""); },
-                        error: function (e) { alert("Error during creating folder, please try again.\n The message is " + e); },
+                        success: function () { $("#folderDialog").dialog("close"); $("#folderNameBox").val(""); notifyFS(); },
+                        error: function (e) { alert("Error during creating folder, please try again."); },
                         cache: false,
                         contentType: false,
                         processData: false
@@ -305,8 +225,12 @@ HBMAIN.factory("Communicator", function ($http, $q, TestData) {
                         type: "PUT",
                         url: putUrl,
                         beforeSend: function () { },
-                        success: function () { $(this).dialog("close"); $("#projectNameBox").val(""); },
-                        error: function (e) { alert("Error during creating project, please try again.\n The message is " + e); },
+                        success: function () {
+                            $("#projectDialog").dialog("close");
+                            $("#projectNameBox").val("");
+                            notifyFS();
+                        },
+                        error: function (e) { alert("Error during creating project, please try again."); },
                         cache: false,
                         contentType: false,
                         processData: false
@@ -349,8 +273,11 @@ HBMAIN.factory("Communicator", function ($http, $q, TestData) {
                         },
                         //Ajax events
                         beforeSend: function () { },
-                        success: function () { $(this).dialog("close"); },
-                        error: function (e) { alert("Error during uploading, please try again.\n The message is " + e); },
+                        success: function () {
+                            $("#fileUploadDialog").dialog("close");
+                            notifyFS();
+                        },
+                        error: function (e) { alert("Error during uploading, please try again."); },
                         // Form data
                         data: formData,
                         //Options to tell jQuery not to process data or worry about content-type.
@@ -375,9 +302,10 @@ HBMAIN.factory("Communicator", function ($http, $q, TestData) {
             url: resourceUrl,
             success: function () {
                 deferred.resolve(true);
+                notifyFS();
             },
             error: function (e) {
-                deferred.reject(false); alert("Error during creating folder, please try again.\n The message is " + e);
+                deferred.reject(false); alert("Error during creating folder, please try again.");
             },
         });
 
@@ -412,6 +340,10 @@ HBMAIN.controller("BrowserController", ["$scope", "$rootScope", "Communicator", 
                 HBMAIN.setLoading(false);
             });
         };
+
+        $scope.$on("fileStructureChanged", function () {
+            $scope.reload();
+        });
 
         $scope.select = function (selected, event) {
             if (selected.selected && !selected.isRealFile) {

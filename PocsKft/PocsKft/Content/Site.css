@@ -13,6 +13,19 @@ body {
     width: 100%;
 }
 
+#legacyWrapper{
+    padding:24px;
+}
+
+#legacyWrapper input{
+    width:100%;
+}
+
+#legacyWrapper label{
+    display:block;
+}
+
+
 a {
     text-decoration: none;
     font-weight: bold;

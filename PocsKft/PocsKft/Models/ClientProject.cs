@@ -12,6 +12,7 @@ namespace PocsKft.Models
         public DateTime CreationDate { get; set; }
         public string Right { get; set; }
 
+
         public object toJSON()
         {
             /**
@@ -25,7 +26,9 @@ namespace PocsKft.Models
                 projectName = Name,
                 creationDate = CreationDate,
                 ownerName = OwnerName,
-                rights = Right
+                rights = Right,
+                filePath = "/",
+                isProject = true
             };
         }
     }

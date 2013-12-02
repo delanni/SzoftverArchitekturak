@@ -108,6 +108,7 @@ namespace PocsKft.Models
             {
                 Folder temp = ct.Folders.Add(f);
                 Folder parent = ct.Folders.Where(i => i.Id == parentfolderId).FirstOrDefault();
+                if (parent.Children == null) parent.Children = new List<Folder>();
                 parent.Children.Add(temp);
                 ct.Entry(parent).State = EntityState.Modified;
                 ct.SaveChanges();
@@ -205,7 +206,7 @@ namespace PocsKft.Models
             using (UsersContext ct = new UsersContext())
             {
                 Folder f = ct.Folders.Where(i => i.IsRootFolder == true
-                    && i.Name.Equals(remFolderNames.First())).FirstOrDefault();
+                    && i.Name.Equals(remFolderNames.FirstOrDefault())).FirstOrDefault();
 
                 if (f == null) return null;
 
