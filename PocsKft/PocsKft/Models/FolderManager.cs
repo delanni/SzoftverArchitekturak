@@ -112,6 +112,7 @@ namespace PocsKft.Models
                     createdDate = DateTime.Now,
                     lastModifiedDate = DateTime.Now
                 });
+                ct.SaveChanges();
                 temp.Metadata = met;
                 ct.Entry(temp).State = EntityState.Modified;
 
