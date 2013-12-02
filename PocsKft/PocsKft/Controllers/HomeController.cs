@@ -5,25 +5,55 @@ using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.Mvc;
 using PocsKft.Models;
+using PocsKft.Models.PocsKft.Models;
+using System.IO;
 
 namespace PocsKft.Controllers
 {
     public class HomeController : Controller
     {
+        [HttpPost]
+        public ActionResult Index(HttpPostedFileBase file, string path)
+        {
+            var fileName = Guid.NewGuid().ToString();
+            // Verify that the user selected a file
+            if (file != null && file.ContentLength > 0)
+            {
+                // extract only the fielname
+                var oldFileName = Path.GetFileName(file.FileName);
+                // store the file inside ~/App_Data/uploads folder
+                if (!Directory.Exists(Server.MapPath("~/App_Data/uploads")))
+                {
+                    Directory.CreateDirectory(Server.MapPath("~/App_Data/uploads"));
+                }
+                var newPath = Path.Combine(Server.MapPath("~/App_Data/uploads"), fileName);
+                file.SaveAs(newPath);
+            }
+            // redirect back to the index action to show the form once again
+            return RedirectToAction("Index", new { path = path });
+        }
+
         public ActionResult Index(string path)
         {
             var type = Request.RequestType;
             if (type == "PUT")
             {
-                CreateFolder(path);
+                return CreateFolder(path);
             }
-            var headerAccepts = Request.Headers["Accept"];
-            if (headerAccepts.ToLower().Contains("json"))
+            else if (type == "DELETE")
             {
-                var x=  List(path);
-                return x;
+                return DeleteFolder(path);
             }
-            return View();
+            else
+            {
+                var headerAccepts = Request.Headers["Accept"];
+                if (headerAccepts.ToLower().Contains("json"))
+                {
+                    var x = List(path);
+                    return x;
+                }
+                return View();
+            }
         }
 
         public JsonResult List(string path)
@@ -40,7 +70,8 @@ namespace PocsKft.Controllers
                 {
                     if (PermissionManager.Instance.DoesUserHavePermissionOnDocumentOrFolder(userId, f.Id))
                     {
-                        projectsWithPermission.Add(new ClientProject {  
+                        projectsWithPermission.Add(new ClientProject
+                        {
                             //CreationDate = f.Metadata.createdDate,
                             Name = f.Name,
                             OwnerName = UserManager.Instance.GetUserNameById(f.CreatorId),
@@ -52,7 +83,8 @@ namespace PocsKft.Controllers
                 return Json(projectsWithPermission, JsonRequestBehavior.AllowGet);
 
             }
-            else {
+            else
+            {
 
                 Folder folder = FolderManager.Instance.GetFolderByPath(path);
 
@@ -112,8 +144,6 @@ namespace PocsKft.Controllers
             }
         }
 
-
-
         public ActionResult About()
         {
             ViewBag.Message = "Your app description page.";
@@ -136,7 +166,7 @@ namespace PocsKft.Controllers
 
             if (true)//regex.IsMatch(folderName))
             {
-                Folder f =  FolderManager.Instance.GetFolderByPath(remFolderNames);
+                Folder f = FolderManager.Instance.GetFolderByPath(remFolderNames);
 
                 if (f != null)
                 {
@@ -178,7 +208,24 @@ namespace PocsKft.Controllers
 
             ViewBag.Message = "Your contact page.";
 
-            return View();
+            return Json(true);
+        }
+
+        [HttpDelete]
+        public ActionResult DeleteFolder(string path)
+        {
+            int userId = UserManager.Instance.GetUserIdByName(HttpContext.User.Identity.Name);
+            int folderId = FolderManager.Instance.GetFolderByPath(path).Id;
+            if (true /*has right*/)
+            {
+                FolderManager.Instance.DeleteFolderById(folderId);
+                return Json(true);
+            }
+            else
+            {
+                Response.StatusCode = 403;
+                return View("Error");
+            }
         }
     }
 }

@@ -17,6 +17,7 @@ namespace PocsKft.Models
         {
             private static volatile DocumentManager instance;
             private static object syncRoot = new Object();
+            public static string FILES_PATH = "D:\\var\\FILES";
             private DocumentManager() { }
 
             public static DocumentManager DocumentManagerInstance
@@ -92,6 +93,13 @@ namespace PocsKft.Models
                 }
                 else
                     return false;
+            }
+
+            public void AddDocumentAsFile(System.IO.Stream file, string path)
+            {
+                var document = new Document();
+                document.IsFolder = false;
+                document.PathOnServer = path;
             }
         }
     }
