@@ -7,6 +7,7 @@ namespace PocsKft.Models
 {
     using System;
     using System.Collections.Generic;
+    using System.Data;
     using System.Linq;
     using System.Web;
 
@@ -65,19 +66,53 @@ namespace PocsKft.Models
                 return false;
             }
 
-            public void AddDocument(Document g)
+            public void AddNewVersionFromDocument(Document doc, int documentId)
             {
                 using (UsersContext ct = new UsersContext())
                 {
-                    var siblings = ct.Documents.Where(x => x.ParentFolderId == g.ParentFolderId);
-                    if (siblings.Any(w => w.Name == g.Name))
-                    {
+                    Document d = GetDocumentById(documentId);
+                    d.Status = Status.Archive;
+                    
+                    doc.VersionNumber = d.VersionNumber + 1;
+                    doc.PreviousVersionDocumentId = d.Id;
 
+                    ct.Entry(d).State = EntityState.Modified;
+                    doc.Status = Status.Active;
+                    //Document temp = 
+                    Metadata m = ct.Metadatas.Add(new Metadata
+                    {
+                        UserDefinedProperties = ""
+                    });
+                    doc.MetadataId = m.Id;
+                    ct.Documents.Add(doc);
+                    ct.SaveChanges();
+                }
+            }
+
+            public bool AddDocument(Document g)
+            {
+                using (UsersContext ct = new UsersContext())
+                {
+                    var siblings = ct.Documents.Where(x => x.ParentFolderId == g.ParentFolderId
+                        && x.Name.Equals(g.Name));
+
+                    //ha van ugyanilyen nevű -> false
+                    if (siblings != null)
+                    {
+                        return false;
                     }
                     else
                     {
+                        Metadata m = ct.Metadatas.Add(new Metadata
+                        {
+                            UserDefinedProperties = ""
+                        });
+                        g.MetadataId = m.Id;
+                        g.VersionNumber = 1;
+                        g.PreviousVersionDocumentId = -1;
                         ct.Documents.Add(g);
                         ct.SaveChanges();
+                        return true;
                     }
                 }
             }

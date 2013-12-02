@@ -46,6 +46,7 @@ namespace PocsKft.Models
     public class Document : CommonAncestor
     {
         public int VersionNumber { get; set; }
+        public int PreviousVersionDocumentId { get; set; } // ha ő az első verzió, akkor -1
         public int LockedByUserId { get; set; }
         public Status Status { get; set; } // Archived or Active
         public DocumentType DocumentType { get; set; }

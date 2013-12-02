@@ -73,7 +73,8 @@ namespace PocsKft.Models
         {
             using (UsersContext ct = new UsersContext())
             {
-                return ct.Documents.Where(i => i.ParentFolderId == id).ToList();
+                return ct.Documents.Where(i => i.ParentFolderId == id 
+                    && i.Status == Status.Active).ToList();
             }
         }
 

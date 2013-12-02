@@ -72,12 +72,13 @@ namespace PocsKft.Controllers
             return RedirectToAction("Index", new { path = path });
         }
 
+
+
         public JsonResult List(string path)
         {
-            ViewBag.Message = "Modify this template to jump-start your ASP.NET MVC application.";
-
             int userId = UserManager.Instance.GetUserIdByName(HttpContext.User.Identity.Name);
 
+            //project-ről van szó
             if (String.IsNullOrEmpty(path))
             {
                 List<Folder> projects = FolderManager.Instance.GetProjects();
@@ -100,7 +101,7 @@ namespace PocsKft.Controllers
                 return Json(projectsWithPermission, JsonRequestBehavior.AllowGet);
 
             }
-            else
+            else //new project
             {
 
                 Folder folder = FolderManager.Instance.GetFolderByPath(path);
