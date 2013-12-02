@@ -137,7 +137,8 @@ csx
 *.build.csdef
 
 # Windows Store app package directory
-AppPackages/
+AppPackages
+App_Data/*
 
 # Others
 sql/

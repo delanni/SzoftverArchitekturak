@@ -84,11 +84,11 @@ namespace PocsKft.Models
             }
         }
 
-        public void GrantRightOnFolder(int userOrGroupId, int folderId, PermissionType Type)
+        public void GrantRightOnFolder(int userOrGroupId, int folderId, PermissionType Type, bool isRecursive)
         {
             using (UsersContext ct = new UsersContext())
             {
-                GrantRightOnAllChildren(ct, folderId, userOrGroupId, Type);
+                GrantRightOnAllChildren(ct, folderId, userOrGroupId, Type, isRecursive);
 
                 ct.SaveChanges();
             }
@@ -101,7 +101,7 @@ namespace PocsKft.Models
         /// <param name="ct"></param>
         /// <param name="folderId"></param>
         /// <param name="userOrGroupId"></param>
-        public void GrantRightOnAllChildren(UsersContext ct, int folderId, int userOrGroupId, PermissionType Type)
+        public void GrantRightOnAllChildren(UsersContext ct, int folderId, int userOrGroupId, PermissionType Type, bool isRecursive)
         {
             Folder f = FolderManager.Instance.GetFolderById(folderId);
 
@@ -117,32 +117,37 @@ namespace PocsKft.Models
                 });
             }
 
-            //Minden dokumentumra van-e már bejegyzés. Ha nincs -> új rekord.
-            List<Document> docs = ct.Documents.Where(i => i.ParentFolderId == folderId).ToList();
-            if (docs != null)
+            // Ha rekurzív
+            if (isRecursive)
             {
-                foreach (Document temp in docs)
+
+                //Minden dokumentumra van-e már bejegyzés. Ha nincs -> új rekord.
+                List<Document> docs = ct.Documents.Where(i => i.ParentFolderId == folderId).ToList();
+                if (docs != null)
                 {
-                    if (ct.Permissions.Where(i => i.UserOrGroupId == userOrGroupId
-                        && i.FolderOrDocumentId == temp.Id) == null)
+                    foreach (Document temp in docs)
                     {
-                        ct.Permissions.Add(new Permission
+                        if (ct.Permissions.Where(i => i.UserOrGroupId == userOrGroupId
+                            && i.FolderOrDocumentId == temp.Id) == null)
                         {
-                            FolderOrDocumentId = temp.Id,
-                            UserOrGroupId = userOrGroupId,
-                            IsFolder = false,
-                            Type = Type
-                        });
+                            ct.Permissions.Add(new Permission
+                            {
+                                FolderOrDocumentId = temp.Id,
+                                UserOrGroupId = userOrGroupId,
+                                IsFolder = false,
+                                Type = Type
+                            });
+                        }
                     }
                 }
-            }
-            //Minden gyerek-mappára van-e már bejegyzés. Ha nincs -> új rekord.
-            List<Folder> folders = ct.Folders.Where(i => i.ParentFolderId == folderId).ToList();
-            if (folders != null)
-            {
-                foreach (Folder temp in folders)
+                //Minden gyerek-mappára van-e már bejegyzés. Ha nincs -> új rekord.
+                List<Folder> folders = ct.Folders.Where(i => i.ParentFolderId == folderId).ToList();
+                if (folders != null)
                 {
-                    GrantRightOnAllChildren(ct, temp.Id, userOrGroupId, Type);
+                    foreach (Folder temp in folders)
+                    {
+                        GrantRightOnAllChildren(ct, temp.Id, userOrGroupId, Type, isRecursive);
+                    }
                 }
             }
         }

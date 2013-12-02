@@ -5,7 +5,6 @@ using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.Mvc;
 using PocsKft.Models;
-using PocsKft.Models.PocsKft.Models;
 using System.IO;
 
 namespace PocsKft.Controllers
@@ -21,10 +20,8 @@ namespace PocsKft.Controllers
                 {
                     case "PUT":
                         return CreateFolder(path);
-                        break;
                     case "DELETE":
                         return DeleteResource(path);
-                        break;
                     case "GET":
                         var headerAccepts = Request.Headers["Accept"];
                         if (headerAccepts.ToLower().Contains("json"))
@@ -32,10 +29,8 @@ namespace PocsKft.Controllers
                             return List(path);
                         }
                         return View();
-                        break;
                     default:
                         return View();
-                        break;
                 }
             }
             catch (Exception ex)
@@ -63,7 +58,7 @@ namespace PocsKft.Controllers
             }
             else
             {
-                var document = DocumentManager.DocumentManagerInstance.GetDocumentByPath(path);
+                var document = DocumentManager.Instance.GetDocumentByPath(path);
                 if (document == null) throw new Exception("There is no such document");
                 if (!PermissionManager.Instance.HasRights(getUserId(), document.Id)) throw new Exception("You have no rights to download the file");
                 var virtualFileName = document.VirtualFileName;
@@ -126,7 +121,7 @@ namespace PocsKft.Controllers
                     VersionNumber = 1,
                     VirtualFileName = virtualFileName
                 };
-                DocumentManager.DocumentManagerInstance.AddDocument(document);
+                DocumentManager.Instance.AddDocument(document);
             }
         }
 
@@ -144,10 +139,13 @@ namespace PocsKft.Controllers
             }
         }
 
+
+
         public JsonResult List(string path)
         {
             int userId = UserManager.Instance.GetUserIdByName(HttpContext.User.Identity.Name);
 
+            //project-ről van szó
             if (String.IsNullOrEmpty(path))
             {
                 List<Folder> projects = FolderManager.Instance.GetProjects();
@@ -170,7 +168,7 @@ namespace PocsKft.Controllers
                 return Json(projectsWithPermission, JsonRequestBehavior.AllowGet);
 
             }
-            else
+            else //new project
             {
 
                 Folder folder = FolderManager.Instance.GetFolderByPath(path);
@@ -280,7 +278,7 @@ namespace PocsKft.Controllers
                 };
 
                 int newFolderId = FolderManager.Instance.CreateFolder(newFolder);
-                PermissionManager.Instance.GrantRightOnFolder(userId, newFolderId, PermissionType.WRITE);
+                PermissionManager.Instance.GrantRightOnFolder(userId, newFolderId, PermissionType.WRITE , true);
             }
             else
             {
@@ -306,7 +304,7 @@ namespace PocsKft.Controllers
                 };
 
                 int newFolderId = FolderManager.Instance.CreateFolder(newFolder);
-                PermissionManager.Instance.GrantRightOnFolder(userId, newFolderId, PermissionType.WRITE);
+                PermissionManager.Instance.GrantRightOnFolder(userId, newFolderId, PermissionType.WRITE,true);
             }
             else
             {
@@ -331,10 +329,10 @@ namespace PocsKft.Controllers
         private ActionResult deleteDocument(string path)
         {
             int userId = UserManager.Instance.GetUserIdByName(HttpContext.User.Identity.Name);
-            var fileToDelete = DocumentManager.DocumentManagerInstance.GetDocumentByPath(path);
+            var fileToDelete = DocumentManager.Instance.GetDocumentByPath(path);
             if (fileToDelete != null
                 && PermissionManager.Instance.HasRights(userId, fileToDelete.Id)
-                && DocumentManager.DocumentManagerInstance.DeleteDocumentById(fileToDelete.Id))
+                && DocumentManager.Instance.DeleteDocumentById(fileToDelete.Id))
             {
                 return Json(true);
             }

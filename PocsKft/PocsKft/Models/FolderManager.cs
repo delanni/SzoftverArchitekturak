@@ -1,5 +1,4 @@
-﻿using PocsKft.Models.PocsKft.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -42,7 +41,7 @@ namespace PocsKft.Models
                     DeleteFolder(kid);
                 }
                 foreach (var kid in ct.Documents.Where(x=>x.ParentFolderId==g.Id)){
-                    DocumentManager.DocumentManagerInstance.DeleteDocumentById(kid.Id);
+                    DocumentManager.Instance.DeleteDocumentById(kid.Id);
                 }
                 ct.Folders.Remove(g);
                 ct.SaveChanges();
@@ -80,7 +79,8 @@ namespace PocsKft.Models
         {
             using (UsersContext ct = new UsersContext())
             {
-                return ct.Documents.Where(i => i.ParentFolderId == id).ToList();
+                return ct.Documents.Where(i => i.ParentFolderId == id 
+                    && i.Status == Status.Active).ToList();
             }
         }
 
