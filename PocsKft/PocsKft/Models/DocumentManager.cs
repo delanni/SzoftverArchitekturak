@@ -72,7 +72,7 @@ namespace PocsKft.Models
                     var siblings = ct.Documents.Where(x => x.ParentFolderId == g.ParentFolderId);
                     if (siblings.Any(w => w.Name == g.Name))
                     {
-
+                        throw new Exception("The file already exists, try locking then updating the file");
                     }
                     else
                     {

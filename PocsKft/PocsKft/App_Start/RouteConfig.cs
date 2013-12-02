@@ -14,6 +14,12 @@ namespace PocsKft
             routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
 
             routes.MapRoute(
+                name: "Download",
+                url: "Download/{*path}",
+                defaults: new { controller = "Home", action = "Download" }
+            );
+
+            routes.MapRoute(
                 name: "Default",
                 url: "Account/{action}/{id}",
                 defaults: new { controller = "Account", action = "Login", id = UrlParameter.Optional }

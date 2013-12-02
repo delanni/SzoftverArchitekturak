@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PocsKft.Models.PocsKft.Models;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -37,6 +38,12 @@ namespace PocsKft.Models
         {
             using (UsersContext ct = new UsersContext())
             {
+                foreach (var kid in ct.Folders.Where(x=>x.ParentFolderId == g.Id)){
+                    DeleteFolder(kid);
+                }
+                foreach (var kid in ct.Documents.Where(x=>x.ParentFolderId==g.Id)){
+                    DocumentManager.DocumentManagerInstance.DeleteDocumentById(kid.Id);
+                }
                 ct.Folders.Remove(g);
                 ct.SaveChanges();
             }
@@ -90,10 +97,12 @@ namespace PocsKft.Models
         {
             using (UsersContext ct = new UsersContext())
             {
+                var siblings = ct.Folders.Where(x => x.ParentFolderId == f.ParentFolderId);
+                if (siblings.Any(x=>x.Name == f.Name)){
+                    throw new Exception("The folder already exists, try a different name.");
+                }
                 Folder temp = ct.Folders.Add(f);
-
                 ct.SaveChanges();
-
                 return temp.Id;
             }
         }

@@ -4,6 +4,9 @@ var HBMAIN = angular.module("heribolz", function () {
     // Configure
 });
 
+/**
+*  Sets the cursor to loading state or normal
+*/
 HBMAIN.setLoading = function (onOff) {
     if (onOff) {
         $(document.body).css("cursor", "progress");
@@ -201,7 +204,7 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
         return deferred.promise;
     };
 
-    var createFolderFake = function (currentPath) {
+    var createFolder = function (currentPath) {
         $("#folderDialog").dialog({
             resizable: false,
             modal: true,
@@ -214,7 +217,7 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
                         url: putUrl,
                         beforeSend: function () { },
                         success: function () { $("#folderDialog").dialog("close"); $("#folderNameBox").val(""); notifyFS(); },
-                        error: function (e) { alert("Error during creating folder, please try again."); },
+                        error: function (e) { alert("Error:\n" + JSON.stringify(e)) },
                         cache: false,
                         contentType: false,
                         processData: false
@@ -227,7 +230,7 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
         });
     };
 
-    var createProjectFake = function () {
+    var createProject = function () {
         $("#projectDialog").dialog({
             resizable: false,
             modal: true,
@@ -244,7 +247,7 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
                             $("#projectNameBox").val("");
                             notifyFS();
                         },
-                        error: function (e) { alert("Error during creating project, please try again."); },
+                        error: function (e) { alert("Error:\n" + JSON.stringify(e)) },
                         cache: false,
                         contentType: false,
                         processData: false
@@ -257,7 +260,7 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
         });
     };
 
-    var uploadFileFake = function (filePath) {
+    var uploadFile = function (filePath) {
         $("#fileUploadDialog").dialog({
             resizable: false,
             modal: true,
@@ -277,32 +280,6 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
                     var form = $(this).find("form");
                     form.attr("action", filePath);
                     form.submit();
-
-                    //var formData = new FormData($('form')[0]);
-                    //$.ajax({
-                    //    url: filePath,  //Server side action to process
-                    //    type: 'POST',
-                    //    xhr: function () {  // Custom XMLHttpRequest
-                    //        var myXhr = $.ajaxSettings.xhr();
-                    //        if (myXhr.upload) { // Check if upload property exists
-                    //            myXhr.upload.addEventListener('progress', progressHandlingFunction, false); // For handling the progress of the upload
-                    //        }
-                    //        return myXhr;
-                    //    },
-                    //    //Ajax events
-                    //    beforeSend: function () { },
-                    //    success: function () {
-                    //        $("#fileUploadDialog").dialog("close");
-                    //        notifyFS();
-                    //    },
-                    //    error: function (e) { alert("Error during uploading, please try again."); },
-                    //    // Form data
-                    //    data: formData,
-                    //    //Options to tell jQuery not to process data or worry about content-type.
-                    //    cache: false,
-                    //    contentType: false,
-                    //    processData: false
-                    //});
                 },
                 Cancel: function () {
                     $(this).dialog("close");
@@ -311,9 +288,11 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
         });
     };
 
-    var deleteResourceFake = function (file) {
+    var deleteResource = function (file) {
         var deferred = $q.defer();
-        var resourceUrl = file.isProject ? file.projectName : (file.filePath + file.fileName) + "/";
+        var resourceUrl = file.isProject ? file.projectName : (file.filePath + file.fileName);
+        if (!file.isRealFile) resourceUrl += "/";
+        if (!confirm("Do you really want to delete the following :\n" + resourceUrl + "?")) { return; }
         HBMAIN.setLoading(false);
         $.ajax({
             type: "DELETE",
@@ -323,7 +302,7 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
                 notifyFS();
             },
             error: function (e) {
-                deferred.reject(false); alert("Error during creating folder, please try again.");
+                deferred.reject(false); alert("Error:\n" + JSON.stringify(e));
             },
         });
 
@@ -344,7 +323,7 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
                             $("#revertDialog").dialog("close");
                             notifyFS();
                         },
-                        error: function (e) { alert("Error during reverting, please try again."); },
+                        error: function (e) { alert("Error:\n" + JSON.stringify(e)) },
                     });
                 },
                 Cancel: function () {
@@ -369,7 +348,7 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
                 notifyFS();
             },
             error: function (e) {
-                alert("Error during uploading, please try again.");
+                alert("Error:\n" + JSON.stringify(e))
                 deferred.reject();
             },
             // Form data
@@ -377,17 +356,21 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
         });
     };
 
+    var downloadFile = function (file) {
+        $http.get("Download/" + file.filePath + file.fileName);
+    };
+
     return {
         listFolder: listAsync,
-        delete: deleteResourceFake,
-        updateFile: uploadFileFake,
-        uploadFile: uploadFileFake,
+        delete: deleteResource,
+        updateFile: uploadFile,
+        uploadFile: uploadFile,
         updateMeta: updateFileProperties,
-        download: angular.noop,
+        download: downloadFile,
         tryLock: angular.noop,
         unlock: angular.noop,
-        createProject: createProjectFake,
-        createFolder: createFolderFake
+        createProject: createProject,
+        createFolder: createFolder
     };
 });
 
