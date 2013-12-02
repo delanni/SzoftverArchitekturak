@@ -57,20 +57,37 @@ namespace PocsKft.Models
             return false;
         }
 
-        public List<CommonAncestor> ListFolderItems(int id)
+        public List<Folder> ListChildrenFolders(int id)
         {
             Folder g = GetFolderById(id);
-            List<CommonAncestor> list = null;
+            List<Folder> list = null;
             using (UsersContext ct = new UsersContext())
             {
-                list = new  List<CommonAncestor>();
-                foreach (CommonAncestor c in g.Children)
+                list = new List<Folder>();
+                if (g.Children != null)
                 {
-                    list.Add(c);
+                    foreach (Folder c in g.Children)
+                    {
+                        list.Add(c);
+                    }
                 }
-                foreach (CommonAncestor c in g.Documents)
+            }
+            return list;
+        }
+
+        public List<Document> ListDocumentsInFolder(int id)
+        {
+            Folder g = GetFolderById(id);
+            List<Document> list = null;
+            using (UsersContext ct = new UsersContext())
+            {
+                list = new List<Document>();
+                if (g.Documents != null)
                 {
-                    list.Add(c);
+                    foreach (Document c in g.Documents)
+                    {
+                        list.Add(c);
+                    }
                 }
             }
             return list;
@@ -81,17 +98,21 @@ namespace PocsKft.Models
             using (UsersContext ct = new UsersContext())
             {
                 var folders = ct.Folders.Where(i => i.Name.Contains(name));
-                return  folders.ToList();
+                return folders.ToList();
             }
         }
 
-        public void CreateFolder(Folder f, int parentfolderId)
+        public int  CreateFolder(Folder f, int parentfolderId)
         {
             using (UsersContext ct = new UsersContext())
             {
+                Folder temp = ct.Folders.Add(f);
                 Folder parent = ct.Folders.Where(i => i.Id == parentfolderId).FirstOrDefault();
-                parent.Children.Add(f);
+                parent.Children.Add(temp);
+                ct.Entry(parent).State = EntityState.Modified;
                 ct.SaveChanges();
+
+                return temp.Id;
             }
         }
 
@@ -162,6 +183,56 @@ namespace PocsKft.Models
                 list = ct.Folders.Where(i => i.IsRootFolder == true).ToList();
             }
             return list;
+        }
+
+        public Folder GetFolderByPath(string path)
+        {
+            string[] folderNames = path.Split('/');
+
+            IEnumerable<string> remFolderNames = folderNames.Take(folderNames.Length - 1);
+
+            using (UsersContext ct = new UsersContext())
+            {
+                Folder f = ct.Folders.Where(i => i.IsRootFolder == true
+                    && i.Name.Equals(remFolderNames.First())).FirstOrDefault();
+
+                if (f == null) return null;
+
+                foreach (string s in remFolderNames.Skip(1) )
+                {
+                    if (String.IsNullOrEmpty(s)) break;
+
+                    f = ct.Folders.Where( i => i.IsRootFolder == false
+                    && i.Name.Equals(s) && i.ParentFolderId == f.Id ).FirstOrDefault();
+
+                    if (f == null) return null;
+                }
+
+                return f;
+            }
+        }
+
+        public Folder GetFolderByPath(IEnumerable<string> path)
+        {
+            using (UsersContext ct = new UsersContext())
+            {
+                Folder f = ct.Folders.Where(i => i.IsRootFolder == true
+                    && i.Name.Equals(path.First())).FirstOrDefault();
+
+                if (f == null) return null;
+
+                foreach (string s in path.Skip(1))
+                {
+                    if (String.IsNullOrEmpty(s)) break;
+
+                    f = ct.Folders.Where(i => i.IsRootFolder == false
+                    && i.Name.Equals(s) && i.ParentFolderId == f.Id).FirstOrDefault();
+
+                    if (f == null) return null;
+                }
+
+                return f;
+            }
         }
     }
 }

@@ -21,14 +21,8 @@ namespace PocsKft
 
             routes.MapRoute(
                 name: null,
-                url: "",
-                defaults: new { controller = "Home", action = "Index" }
-            );
-
-            routes.MapRoute(
-                name: null,
                 url: "{*path}",
-                defaults: new { controller = "Home", action = "List" }
+                defaults: new { controller = "Home", action = "Index" }
             );
         }
     }

@@ -51,7 +51,7 @@ namespace PocsKft.Models
                 //valamely, a user-t tartalmazó csoport-ra
                 else
                 {
-                    List<Group> list = GroupManager.GroupManagerInstance.GetGroupsOfUser(userId);
+                    List<Group> list = GroupManager.Instance.GetGroupsOfUser(userId);
                     if (list != null)
                     {
                         foreach (Group g in list)

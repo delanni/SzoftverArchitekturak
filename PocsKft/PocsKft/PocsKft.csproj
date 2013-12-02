@@ -190,12 +190,17 @@
     <Compile Include="Migrations\201312012003450_masodik.Designer.cs">
       <DependentUpon>201312012003450_masodik.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201312012303528_harmadik.cs" />
+    <Compile Include="Migrations\201312012303528_harmadik.Designer.cs">
+      <DependentUpon>201312012303528_harmadik.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\ClientFile.cs" />
     <Compile Include="Models\ClientProject.cs" />
     <Compile Include="Models\DocumentManager.cs" />
     <Compile Include="Models\FolderManager.cs" />
     <Compile Include="Models\GroupManager.cs" />
+    <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Filters\InitializeSimpleMembershipAttribute.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -204,6 +209,7 @@
     <Compile Include="Models\LockManager.cs" />
     <Compile Include="Models\MyModels.cs" />
     <Compile Include="Models\PermissionManager.cs" />
+    <Compile Include="Models\UserManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -344,6 +350,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201312012003450_masodik.resx">
       <DependentUpon>201312012003450_masodik.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201312012303528_harmadik.resx">
+      <DependentUpon>201312012303528_harmadik.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
