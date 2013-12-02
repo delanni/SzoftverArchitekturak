@@ -15,59 +15,104 @@ namespace PocsKft.Controllers
         public ActionResult Index(string path)
         {
             var type = Request.RequestType;
-            if (type == "PUT")
+            try
             {
-                return CreateFolder(path);
+                switch (type)
+                {
+                    case "PUT":
+                        return CreateFolder(path);
+                        break;
+                    case "DELETE":
+                        return DeleteResource(path);
+                        break;
+                    case "GET":
+                        var headerAccepts = Request.Headers["Accept"];
+                        if (headerAccepts.ToLower().Contains("json"))
+                        {
+                            return List(path);
+                        }
+                        return View();
+                        break;
+                    default:
+                        return View();
+                        break;
+                }
             }
-            else if (type == "DELETE")
+            catch (Exception ex)
             {
-                return DeleteFolder(path);
+                if (ex.GetType().Equals(typeof(Exception)))
+                {
+                    if (ex.Message.Contains("right")) Response.StatusCode = 503;
+                    else Response.StatusCode = 500;
+                    return Json(ex.Message);
+                }
+                else
+                {
+                    Response.StatusCode = 500;
+                    return Json("An error ocurred, try again");
+                }
+            }
+        }
+
+        [HttpGet]
+        public FileResult Download(string path)
+        {
+            if (path.EndsWith("/"))
+            {
+                throw new Exception("WAT");
             }
             else
             {
-                var headerAccepts = Request.Headers["Accept"];
-                if (headerAccepts.ToLower().Contains("json"))
-                {
-                    var x = List(path);
-                    return x;
-                }
-                return View();
+                var document = DocumentManager.DocumentManagerInstance.GetDocumentByPath(path);
+                if (document == null) throw new Exception("There is no such document");
+                if (!PermissionManager.Instance.HasRights(getUserId(), document.Id)) throw new Exception("You have no rights to download the file");
+                var virtualFileName = document.VirtualFileName;
+                var fileName = document.Name;
+                var fileStream = System.IO.File.OpenRead(Path.Combine(Server.MapPath("~/App_Data/uploads"), virtualFileName));
+                return File(fileStream, "application/octet-stream", fileName);
             }
         }
+
+        private int getUserId() { return UserManager.Instance.GetUserIdByName(HttpContext.User.Identity.Name); }
 
         [HttpPost]
         public ActionResult Index(HttpPostedFileBase file, string path)
         {
-            var fileName = Guid.NewGuid().ToString();
+            // case "POST":
+            var virtualFileName = Guid.NewGuid().ToString();
+            var userId = getUserId();
             var parentFolderId = FolderManager.Instance.GetFolderByPath(path).Id;
+
+            if (!PermissionManager.Instance.HasRights(userId, parentFolderId)) throw new Exception("You have no right to create a file here");
 
             if (file != null && file.ContentLength > 0)
             {
-                var oldFileName = Path.GetFileName(file.FileName);
+                var originalFileName = Path.GetFileName(file.FileName);
                 // store the file inside ~/App_Data/uploads folder
                 if (!Directory.Exists(Server.MapPath("~/App_Data/uploads")))
                 {
                     Directory.CreateDirectory(Server.MapPath("~/App_Data/uploads"));
                 }
-                var newPath = Path.Combine(Server.MapPath("~/App_Data/uploads"), fileName);
+                var newPath = Path.Combine(Server.MapPath("~/App_Data/uploads"), virtualFileName);
                 file.SaveAs(newPath);
 
-                DocumentManager.DocumentManagerInstance.AddDocument(new Document()
+                Document document = new Document()
                 {
                     CreatedDate = DateTime.Now,
-                    CreatorId = UserManager.Instance.GetUserIdByName(HttpContext.User.Identity.Name),
+                    CreatorId = userId,
                     IsFolder = false,
-                    LastModifiedbyId = UserManager.Instance.GetUserIdByName(HttpContext.User.Identity.Name),
+                    LastModifiedbyId = userId,
                     LastModifiedDate = DateTime.Now,
                     Locked = false,
                     LockedByUserId = -1,
-                    Name = oldFileName,
+                    Name = originalFileName,
                     ParentFolderId = parentFolderId,
                     PathOnServer = path,
                     Status = Status.Active,
                     VersionNumber = 1,
-                    VirtualFileName = fileName
-                });
+                    VirtualFileName = virtualFileName
+                };
+                DocumentManager.DocumentManagerInstance.AddDocument(document);
             }
             return RedirectToAction("Index", new { path = path });
         }
@@ -86,7 +131,7 @@ namespace PocsKft.Controllers
 
                 foreach (Folder f in projects)
                 {
-                    if (PermissionManager.Instance.DoesUserHavePermissionOnDocumentOrFolder(userId, f.Id))
+                    if (PermissionManager.Instance.HasRights(userId, f.Id))
                     {
                         projectsWithPermission.Add(new ClientProject
                         {
@@ -115,7 +160,7 @@ namespace PocsKft.Controllers
                 {
                     foreach (Folder f in children)
                     {
-                        if (PermissionManager.Instance.DoesUserHavePermissionOnDocumentOrFolder(userId, f.Id))
+                        if (PermissionManager.Instance.HasRights(userId, f.Id))
                         {
                             Folder parentFolder = FolderManager.Instance.GetFolderById(f.ParentFolderId);
 
@@ -139,7 +184,7 @@ namespace PocsKft.Controllers
                 {
                     foreach (Document f in documents)
                     {
-                        if (PermissionManager.Instance.DoesUserHavePermissionOnDocumentOrFolder(userId, f.Id))
+                        if (PermissionManager.Instance.HasRights(userId, f.Id))
                         {
                             documentsAndFoldersWithPermission.Add(new ClientFile
                             {
@@ -165,112 +210,130 @@ namespace PocsKft.Controllers
 
         public ActionResult About()
         {
-            ViewBag.Message = "Your app description page.";
-
             return View();
         }
 
         [HttpPut]
         public ActionResult CreateFolder(string path)
         {
-            int userId = UserManager.Instance.GetUserIdByName(HttpContext.User.Identity.Name);
-
-            string[] folderNames = path.Split('/');
-
-            string folderName = folderNames.Last();
-
-            IEnumerable<string> remFolderNames = folderNames.Take(folderNames.Length - 1);
+            IEnumerable<string> parentNames = path.Split('/');
+            string folderName = parentNames.Last();
+            parentNames = parentNames.Take(parentNames.Count() - 1);
 
             //Regex regex = new Regex(@"^[0-9A-Za-Z_-]{3,20}$");
 
             if (true)//regex.IsMatch(folderName))
             {
-                Folder f = FolderManager.Instance.GetFolderByPath(remFolderNames);
-
-                if (f != null)
+                Folder parent = FolderManager.Instance.GetFolderByPath(parentNames);
+                if (parent != null)
                 {
-                    if (PermissionManager.Instance.DoesUserHavePermissionOnDocumentOrFolder(userId, f.Id))
-                    {
-                        Folder newFolder = new Folder
-                        {
-                            Name = folderName,
-                            CreatedDate = DateTime.Now,
-                            LastModifiedDate = DateTime.Now,
-                            IsFolder = true,
-                            CreatorId = userId,
-                            ParentFolderId = f.Id,
-                            PathOnServer = path
-                        };
-
-                        int newFolderId = FolderManager.Instance.CreateFolder(newFolder);
-
-                        PermissionManager.Instance.GrantRightOnFolder(userId, newFolderId, PermissionType.WRITE);
-                    }
+                    createFolder(folderName, parent);
                 }
                 else
                 {
-                    Folder newFolder = new Folder
-                    {
-                        Name = folderName,
-                        IsRootFolder = true,
-                        CreatedDate = DateTime.Now,
-                        LastModifiedDate = DateTime.Now,
-                        CreatorId = userId,
-                        IsFolder = true,
-                        PathOnServer = path
-                    };
-
-                    int newFolderId = FolderManager.Instance.CreateFolder(newFolder);
-
-                    PermissionManager.Instance.GrantRightOnFolder(userId, newFolderId, PermissionType.WRITE);
+                    createProject(folderName);
                 }
             }
-
-            ViewBag.Message = "Your contact page.";
 
             return Json(true);
         }
 
-        [HttpDelete]
-        public ActionResult DeleteFolder(string path)
+        private void createFolder(string folderName, Folder parent)
         {
             int userId = UserManager.Instance.GetUserIdByName(HttpContext.User.Identity.Name);
-            if (path.EndsWith("/"))
+            if (PermissionManager.Instance.HasRights(userId, parent.Id))
             {
-                int folderId = FolderManager.Instance.GetFolderByPath(path).Id;
-                if (true /*has right*/)
+                Folder newFolder = new Folder
                 {
-                    FolderManager.Instance.DeleteFolderById(folderId);
-                    return Json(true);
-                }
-                else
-                {
-                    Response.StatusCode = 403;
-                    return View("Error");
-                }
+                    Name = folderName,
+                    CreatedDate = DateTime.Now,
+                    LastModifiedDate = DateTime.Now,
+                    IsRootFolder = false,
+                    IsFolder = true,
+                    CreatorId = userId,
+                    ParentFolderId = parent.Id,
+                    PathOnServer = (parent.PathOnServer + parent.Name + "/")
+                };
+
+                int newFolderId = FolderManager.Instance.CreateFolder(newFolder);
+                PermissionManager.Instance.GrantRightOnFolder(userId, newFolderId, PermissionType.WRITE);
             }
             else
             {
-                var file = DocumentManager.DocumentManagerInstance.GetDocumentByPath(path);
-                if (true /*has rights*/)
-                {
-                    if (DocumentManager.DocumentManagerInstance.DeleteDocumentById(file.Id))
-                    {
-                        return Json(true);
-                    }
-                    else
-                    {
-                        return View("Error");
-                    }
-                }
-                else
-                {
-                    Response.StatusCode = 403;
-                    return View("Error");
-                }
+                throw new Exception("No rights for creating folder here");
             }
+        }
 
+        private void createProject(string folderName)
+        {
+            int userId = UserManager.Instance.GetUserIdByName(HttpContext.User.Identity.Name);
+            if (PermissionManager.Instance.HasRights(userId, 0))
+            {
+                Folder newFolder = new Folder
+                {
+                    Name = folderName,
+                    CreatedDate = DateTime.Now,
+                    LastModifiedDate = DateTime.Now,
+                    IsRootFolder = true,
+                    IsFolder = false,
+                    CreatorId = userId,
+                    ParentFolderId = 0,
+                    PathOnServer = "/"
+                };
 
+                int newFolderId = FolderManager.Instance.CreateFolder(newFolder);
+                PermissionManager.Instance.GrantRightOnFolder(userId, newFolderId, PermissionType.WRITE);
+            }
+            else
+            {
+                throw new Exception("No rights for creating folder here");
+            }
+        }
+
+        [HttpDelete]
+        public ActionResult DeleteResource(string path)
+        {
+
+            if (path.EndsWith("/"))
+            {
+                return deleteFolder(path);
+            }
+            else
+            {
+                return deleteDocument(path);
+            }
+        }
+
+        private ActionResult deleteDocument(string path)
+        {
+            int userId = UserManager.Instance.GetUserIdByName(HttpContext.User.Identity.Name);
+            var fileToDelete = DocumentManager.DocumentManagerInstance.GetDocumentByPath(path);
+            if (fileToDelete != null
+                && PermissionManager.Instance.HasRights(userId, fileToDelete.Id)
+                && DocumentManager.DocumentManagerInstance.DeleteDocumentById(fileToDelete.Id))
+            {
+                return Json(true);
+            }
+            else
+            {
+                throw new Exception("You have no right to delete that document");
+            }
+        }
+
+        private ActionResult deleteFolder(string path)
+        {
+            int userId = UserManager.Instance.GetUserIdByName(HttpContext.User.Identity.Name);
+            Folder folderToDelete = FolderManager.Instance.GetFolderByPath(path);
+            if (folderToDelete != null
+                && PermissionManager.Instance.HasRights(userId, folderToDelete.Id)
+                && FolderManager.Instance.DeleteFolderById(folderToDelete.Id))
+            {
+                return Json(true);
+            }
+            else
+            {
+                throw new Exception("You have no right to delete that folder");
+            }
         }
     }
 }

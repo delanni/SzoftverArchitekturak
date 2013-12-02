@@ -30,8 +30,9 @@ namespace PocsKft.Models
         /// <param name="userId"></param>
         /// <param name="documentId"></param>
         /// <returns></returns>
-        public bool DoesUserHavePermissionOnDocumentOrFolder(int userId, int documentId)
+        public bool HasRights(int userId, int documentId)
         {
+            if (documentId == 0) return true; // a root-ban mindenki tud projektet csinalni
             using (UsersContext ct = new UsersContext())
             {
                 //magára a user-re

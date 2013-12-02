@@ -81,6 +81,7 @@ namespace PocsKft.Models
                     //Document temp = 
                     Metadata m = ct.Metadatas.Add(new Metadata
                     {
+<<<<<<< HEAD
                         UserDefinedProperties = ""
                     });
                     doc.MetadataId = m.Id;
@@ -100,6 +101,9 @@ namespace PocsKft.Models
                     if (siblings != null)
                     {
                         return false;
+=======
+                        throw new Exception("The file already exists, try locking then updating the file");
+>>>>>>> 531f6bc4fa0d130016176853ad1b051bdaa92ef0
                     }
                     else
                     {
