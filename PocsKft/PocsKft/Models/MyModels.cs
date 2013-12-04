@@ -13,7 +13,6 @@ namespace PocsKft.Models
         public string Name { get; set; }
         public int CreatorId { get; set; }
         public bool IsFolder { get; set; }
-        public int MetadataId { get; set; }
         public int ParentFolderId { get; set; }
         public string PathOnServer { get; set; }
         public DateTime CreatedDate { get; set; }
@@ -32,7 +31,6 @@ namespace PocsKft.Models
     {
         public int Id { get; set; }
         public string GroupName { get; set; }
-        public int MetadataId { get; set; }
     }
 
     public class GroupMembership
@@ -52,6 +50,7 @@ namespace PocsKft.Models
         public DocumentType DocumentType { get; set; }
         public bool Locked { get; set; }
         public string VirtualFileName { get; set; }
+        public int MetadataId { get; set; }
     }
 
 

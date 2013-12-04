@@ -118,18 +118,6 @@ namespace PocsKft.Models
             }
         }
 
-        public bool LockDocument(int id)
-        {
-            Document g = GetDocumentById(id);
-            if (g.Locked == false)
-            {
-                g.Locked = true;
-                return true;
-            }
-            else
-                return false;
-        }
-
         public Document GetDocumentByPath(string path)
         {
             var folderPath = path.Substring(0, path.LastIndexOf('/')+1);
@@ -150,7 +138,7 @@ namespace PocsKft.Models
                 if (fileToUpdate == null) return;
 
                 var metaData = ct.Metadatas.SingleOrDefault(x => x.Id == fileToUpdate.MetadataId);
-                if (metaData == null)
+                if (metaData == null) // Because the default value for an integer is 0
                 {
                     metaData = ct.Metadatas.Add(new Metadata()
                     {
@@ -158,6 +146,7 @@ namespace PocsKft.Models
                     });
                     ct.SaveChanges();
                     fileToUpdate.MetadataId = metaData.Id;
+                    ct.Entry(fileToUpdate).State = EntityState.Modified;
                 }
                 var remoteObj = Json.Decode(fileJson);
                 var properties = remoteObj.properties;
@@ -165,6 +154,7 @@ namespace PocsKft.Models
                 if (!String.IsNullOrEmpty(propsString))
                 {
                     metaData.UserDefinedProperties = propsString;
+                    ct.Entry(metaData).State = EntityState.Modified;
                 }
 
                 ct.SaveChanges();
@@ -181,6 +171,8 @@ namespace PocsKft.Models
                 return metaData;
             }
         }
+
+
     }
 
 }

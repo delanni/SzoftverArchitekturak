@@ -25,6 +25,9 @@ namespace PocsKft.Models
         }
 
 
+        // Az adott dokumentumon a User helyezett-e el Lock-ot ?
+        // igen -> true
+        // nem -> false
         public bool DoesUserHaveLockOnDocument(int userId, int documnetId)
         {
             using (UsersContext ct = new UsersContext())
@@ -39,6 +42,9 @@ namespace PocsKft.Models
             }
         }
 
+        // Az adott dokumentumon valaki aki nem a User helyezett-e el Lock-ot ?
+        // igen -> true
+        // nem -> false
         public bool DoesAybodyButUserHaveLockOnDocument(int userId, int documnetId)
         {
             using (UsersContext ct = new UsersContext())
@@ -53,6 +59,9 @@ namespace PocsKft.Models
             }
         }
 
+        // Az adott dokumentumon van-e Lock?
+        // igen -> true
+        // nem -> false
         public bool DoesAybodyHaveLockOnDocument(int documnetId)
         {
             using (UsersContext ct = new UsersContext())
@@ -67,6 +76,8 @@ namespace PocsKft.Models
             }
         }
 
+
+        //Elhelyez egy lock-ot a 
         public void AcquireLockOnDocument(int userId, int documnetId)
         {
             using (UsersContext ct = new UsersContext())
