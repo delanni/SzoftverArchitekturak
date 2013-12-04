@@ -47,8 +47,6 @@ namespace PocsKft.Models
              * comments:[array{name:string,date:string,message:string}];
              **/
 
-            var propertiesJson = Json.Decode(MetaData!=null?MetaData.UserDefinedProperties:"[]");
-
             return new
             {
                 isRealFile = !IsFolder,
@@ -58,7 +56,7 @@ namespace PocsKft.Models
                 lastModificationDate = LastModifiedDate,
                 lockStatus = Locked?UserHasLock?"UNDERCONTROL":"LOCKED":"UNLOCKED",
                 rights = Right,
-                properties = propertiesJson
+                properties = MetaData==null?"[]":MetaData.UserDefinedProperties
             };
         }
 

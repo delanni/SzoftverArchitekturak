@@ -36,8 +36,8 @@
         <h2>{{global.selectedFile.fileName || global.selectedFile.projectName}}</h2>
         <propertyfield ng-repeat="property in global.selectedFile.properties" property="property"></propertyfield>
         <button class="edit" ng-click="addNewProperty()">New Property</button>
-        <button id="saveChangesButton" class="edit">Save changes</button>
-        <button id="discardChangesButton" class="edit">Discard changes</button>
+        <button id="saveChangesButton" class="edit" ng-click="save()">Save changes</button>
+        <button id="discardChangesButton" class="edit" ng-click="discard()">Discard changes</button>
     </div>
     <div class="browseHelp" ng-if="!global.selectedFile">
         Select a file on the left.

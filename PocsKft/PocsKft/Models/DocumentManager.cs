@@ -3,21 +3,12 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Web;
+using System.Web.Helpers;
 
 namespace PocsKft.Models
 {
-<<<<<<< HEAD
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Web;
-    using System.Web.Helpers;
-
-    namespace PocsKft.Models
-=======
     //Singleton
     public class DocumentManager
->>>>>>> 80a34c0689574039764360e5da83f0b709524635
     {
         private static volatile DocumentManager instance;
         private static object syncRoot = new Object();
@@ -96,11 +87,9 @@ namespace PocsKft.Models
         {
             using (UsersContext ct = new UsersContext())
             {
-                var siblings = ct.Documents.Where(x => x.ParentFolderId == g.ParentFolderId
-                    && x.Name.Equals(g.Name));
-
                 //ha van ugyanilyen nevű -> false
-                if (siblings != null)
+                if (ct.Documents.Any(x => x.ParentFolderId == g.ParentFolderId
+                    && x.Name.Equals(g.Name)))
                 {
                     return false;
                 }
@@ -143,54 +132,55 @@ namespace PocsKft.Models
 
         public Document GetDocumentByPath(string path)
         {
-            var folderPath = path.Substring(0, path.LastIndexOf('/'));
-            var fileName = path.Substring(path.LastIndexOf('/'));
+            var folderPath = path.Substring(0, path.LastIndexOf('/')+1);
+            var fileName = path.Substring(path.LastIndexOf('/')+1);
             int folderId = FolderManager.Instance.GetFolderByPath(folderPath).Id;
             using (UsersContext ct = new UsersContext())
             {
-<<<<<<< HEAD
-                var folderPath = path.Substring(0, path.LastIndexOf('/') + 1);
-                var fileName = path.Substring(path.LastIndexOf('/') + 1);
-                int folderId = FolderManager.Instance.GetFolderByPath(folderPath).Id;
-                using (UsersContext ct = new UsersContext())
-                {
-                    var doc = ct.Documents.SingleOrDefault(x => x.ParentFolderId == folderId && x.Name == fileName);
-                    return doc;
-                }
-=======
                 var doc = ct.Documents.SingleOrDefault(x => x.ParentFolderId == folderId && x.Name == fileName);
                 return doc;
->>>>>>> 80a34c0689574039764360e5da83f0b709524635
             }
+        }
 
-            public void UpdateMeta(int fileId, string fileJson)
+        public void UpdateMeta(int fileId, string fileJson)
+        {
+            using (UsersContext ct = new UsersContext())
             {
-                using (UsersContext ct = new UsersContext())
+                var fileToUpdate = ct.Documents.SingleOrDefault(x => x.Id == fileId);
+                if (fileToUpdate == null) return;
+
+                var metaData = ct.Metadatas.SingleOrDefault(x => x.Id == fileToUpdate.MetadataId);
+                if (metaData == null)
                 {
-                    var fileToUpdate = ct.Documents.SingleOrDefault(x => x.Id == fileId);
-                    if (fileToUpdate == null) return;
-
-                    var metaData = ct.Metadatas.SingleOrDefault(x => x.Id == fileToUpdate.MetadataId);
-                    if (metaData == null)
+                    metaData = ct.Metadatas.Add(new Metadata()
                     {
-                        metaData = ct.Metadatas.Add(new Metadata()
-                        {
-                            UserDefinedProperties = "{}"
-                        });
-                        ct.SaveChanges();
-                        fileToUpdate.MetadataId = metaData.Id;
-                    }
-                    var remoteObj = Json.Decode(fileJson);
-                    var properties = remoteObj.properties;
-                    var propsString = Json.Encode(properties);
-                    if (!String.IsNullOrEmpty(propsString))
-                    {
-                        metaData.UserDefinedProperties = propsString;
-                    }
-
+                        UserDefinedProperties = "{}"
+                    });
                     ct.SaveChanges();
+                    fileToUpdate.MetadataId = metaData.Id;
                 }
+                var remoteObj = Json.Decode(fileJson);
+                var properties = remoteObj.properties;
+                var propsString = Json.Encode(properties);
+                if (!String.IsNullOrEmpty(propsString))
+                {
+                    metaData.UserDefinedProperties = propsString;
+                }
+
+                ct.SaveChanges();
+            }
+        }
+
+        public Metadata GetMetadataFor(int documentId)
+        {
+            using (UsersContext ct = new UsersContext())
+            {
+                var document = ct.Documents.SingleOrDefault(x => x.Id == documentId);
+                if (document == null) return null;
+                var metaData = ct.Metadatas.SingleOrDefault(x => x.Id == document.MetadataId);
+                return metaData;
             }
         }
     }
+
 }

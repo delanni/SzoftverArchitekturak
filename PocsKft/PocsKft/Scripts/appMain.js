@@ -17,7 +17,7 @@ HBMAIN.setLoading = function (onOff) {
 
 HBMAIN.factory("GlobalService", function (Communicator) {
     var returnObject = {};
-    ACTIONS = {
+    var ACTIONS = {
         REVERT: {
             name: "Revert file to an older version",
             type: "history",
@@ -452,11 +452,11 @@ HBMAIN.controller("PropertiesController", ["$scope", "$rootScope", "Communicator
         };
 
         $scope.save = function () {
-
+            GlobalService.ACTIONS.SAVE.execute();
         };
 
         $scope.discard = function () {
-
+            $rootScope.$broadcast("fileSelectionChanged");
         };
     }]);
 
@@ -465,7 +465,7 @@ HBMAIN.controller("ActionBarController", ["$scope", "Communicator", "GlobalServi
 
     ACTIONS = GlobalService.ACTIONS;
 
-    $scope.$on("fileSelectionChanged", function (event) {
+    $scope.$on("fileSelectionChanged", function () {
         if (GlobalService.selectedFile) {
             if (GlobalService.selectedFile.isRealFile) {
                 setFileActions(GlobalService.selectedFile);

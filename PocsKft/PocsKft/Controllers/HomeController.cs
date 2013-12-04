@@ -20,8 +20,10 @@ namespace PocsKft.Controllers
                 {
                     case "PUT":
                         return CreateFolder(path);
+                        break;
                     case "DELETE":
                         return DeleteResource(path);
+                        break;
                     case "GET":
                         var headerAccepts = Request.Headers["Accept"];
                         if (headerAccepts.ToLower().Contains("json"))
@@ -29,8 +31,10 @@ namespace PocsKft.Controllers
                             return List(path);
                         }
                         return View();
+                        break;
                     default:
                         return View();
+                        break;
                 }
             }
             catch (Exception ex)
@@ -76,8 +80,14 @@ namespace PocsKft.Controllers
             // case "POST":
             if (file == null)
             {
-                var fileJson = Request.Form["data"];
-                handleFileUpdate(fileJson, path);
+                try
+                {
+                    var fileJson = Request.Form["data"];
+                    handleFileUpdate(fileJson, path);
+                }
+                catch (Exception e)
+                {
+                }
             }
             else
             {
@@ -127,25 +137,37 @@ namespace PocsKft.Controllers
 
         private void handleFileUpdate(string fileJSON, string path)
         {
-            var fileToUpdate = DocumentManager.DocumentManagerInstance.GetDocumentByPath(path);
-            if (PermissionManager.Instance.HasRights(getUserId(), fileToUpdate.Id))
-            {
-                dynamic file = Json(fileJSON).Data;
-                DocumentManager.DocumentManagerInstance.UpdateMeta(fileToUpdate.Id, fileJSON);
-            }
+            var fileToUpdate = DocumentManager.Instance.GetDocumentByPath(path);
+            if (fileToUpdate != null)
+                if (PermissionManager.Instance.HasRights(getUserId(), fileToUpdate.Id))
+                {
+                    DocumentManager.Instance.UpdateMeta(fileToUpdate.Id, fileJSON);
+                }
+                else
+                {
+                    throw new Exception("You have no rights to modify the file");
+                }
             else
             {
-                throw new Exception("You have no rights to modify the file");
+                var folderToUpdate = FolderManager.Instance.GetFolderByPath(path);
+                if (folderToUpdate != null)
+                {
+                    if (PermissionManager.Instance.HasRights(getUserId(), folderToUpdate.Id))
+                    {
+                        FolderManager.Instance.UpdateMeta(folderToUpdate.Id, fileJSON);
+                    }
+                    else
+                    {
+                        throw new Exception("You have no rights to modify the file");
+                    }
+                }
             }
         }
-
-
 
         public JsonResult List(string path)
         {
             int userId = UserManager.Instance.GetUserIdByName(HttpContext.User.Identity.Name);
 
-            //project-ről van szó
             if (String.IsNullOrEmpty(path))
             {
                 List<Folder> projects = FolderManager.Instance.GetProjects();
@@ -168,7 +190,7 @@ namespace PocsKft.Controllers
                 return Json(projectsWithPermission, JsonRequestBehavior.AllowGet);
 
             }
-            else //new project
+            else
             {
 
                 Folder folder = FolderManager.Instance.GetFolderByPath(path);
@@ -184,8 +206,6 @@ namespace PocsKft.Controllers
                     {
                         if (PermissionManager.Instance.HasRights(userId, f.Id))
                         {
-                            Folder parentFolder = FolderManager.Instance.GetFolderById(f.ParentFolderId);
-
                             documentsAndFoldersWithPermission.Add(new ClientFile
                             {
                                 CreatorId = f.CreatorId,
@@ -197,7 +217,8 @@ namespace PocsKft.Controllers
                                 ParentFolderId = f.ParentFolderId,
                                 //VersionNumber = ,
                                 //UserHasLock = ,
-                                PathOnServer = f.PathOnServer
+                                PathOnServer = f.PathOnServer,
+                                MetaData = FolderManager.Instance.GetMetadataFor(f.Id)
                             }.toJSON());
                         }
                     }
@@ -220,7 +241,8 @@ namespace PocsKft.Controllers
                                 ParentFolderId = f.ParentFolderId,
                                 VersionNumber = f.VersionNumber,
                                 UserHasLock = f.LockedByUserId == userId,
-                                PathOnServer = f.PathOnServer
+                                PathOnServer = f.PathOnServer,
+                                MetaData = DocumentManager.Instance.GetMetadataFor(f.Id)
                             }.toJSON());
                         }
                     }
@@ -278,7 +300,7 @@ namespace PocsKft.Controllers
                 };
 
                 int newFolderId = FolderManager.Instance.CreateFolder(newFolder);
-                PermissionManager.Instance.GrantRightOnFolder(userId, newFolderId, PermissionType.WRITE , true);
+                PermissionManager.Instance.GrantRightOnFolder(userId, newFolderId, PermissionType.WRITE);
             }
             else
             {
@@ -304,7 +326,7 @@ namespace PocsKft.Controllers
                 };
 
                 int newFolderId = FolderManager.Instance.CreateFolder(newFolder);
-                PermissionManager.Instance.GrantRightOnFolder(userId, newFolderId, PermissionType.WRITE,true);
+                PermissionManager.Instance.GrantRightOnFolder(userId, newFolderId, PermissionType.WRITE);
             }
             else
             {

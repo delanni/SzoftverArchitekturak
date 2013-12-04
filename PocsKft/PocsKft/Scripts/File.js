@@ -35,7 +35,15 @@ var File = (function () {
             this.filePath += "/";
         }
 
-        this.properties = opts.properties || [];
+        if (opts.properties) {
+            try{
+                this.properties = JSON.parse(opts.properties);
+            } catch (e) {
+                this.properties = [];
+            }
+        } else {
+            this.properties = [];
+        }
     }
 
     /**

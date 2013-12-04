@@ -84,7 +84,7 @@ namespace PocsKft.Models
             }
         }
 
-        public void GrantRightOnFolder(int userOrGroupId, int folderId, PermissionType Type, bool isRecursive)
+        public void GrantRightOnFolder(int userOrGroupId, int folderId, PermissionType Type, bool isRecursive=true)
         {
             using (UsersContext ct = new UsersContext())
             {
