@@ -238,34 +238,24 @@ namespace PocsKft.Models
                 var folderToUpdate = ct.Folders.SingleOrDefault(x => x.Id == folderId);
                 if (folderToUpdate == null) return;
 
-                var metaData = ct.Metadatas.SingleOrDefault(x => x.Id == folderToUpdate.MetadataId);
-                if (metaData == null)
-                {
-                    metaData = ct.Metadatas.Add(new Metadata()
-                    {
-                        UserDefinedProperties = "{}"
-                    });
-                    ct.SaveChanges();
-                    folderToUpdate.MetadataId = metaData.Id;
-                }
                 var remoteObj = Json.Decode(fileJson);
                 var properties = remoteObj.properties;
                 var propsString = Json.Encode(properties);
                 if (!String.IsNullOrEmpty(propsString))
                 {
-                    metaData.UserDefinedProperties = propsString;
+                    folderToUpdate.MetaData = propsString;
                 }
                 ct.SaveChanges();
             }
         }
 
-        public Metadata GetMetadataFor(int folderId)
+        public string GetMetadataFor(int folderId)
         {
             using (UsersContext ct = new UsersContext())
             {
                 var folder = ct.Folders.SingleOrDefault(x => x.Id == folderId);
                 if (folder == null) return null;
-                var metaData = ct.Metadatas.SingleOrDefault(x => x.Id == folder.MetadataId);
+                var metaData = "[]";
                 return metaData;
             }
         }

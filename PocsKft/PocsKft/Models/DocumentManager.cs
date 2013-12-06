@@ -73,38 +73,30 @@ namespace PocsKft.Models
 
                 ct.Entry(d).State = EntityState.Modified;
                 doc.Status = Status.Active;
-                //Document temp = 
-                Metadata m = ct.Metadatas.Add(new Metadata
-                {
-                    UserDefinedProperties = ""
-                });
-                doc.MetadataId = m.Id;
+                doc.MetaData = d.MetaData;
+
                 ct.Documents.Add(doc);
                 ct.SaveChanges();
             }
         }
 
-        public bool AddDocument(Document g)
+        public bool AddDocument(Document document)
         {
-            using (UsersContext ct = new UsersContext())
+            // TODO: miért van néhány property beállítva rajta, és néhány nem?
+            using (UsersContext context = new UsersContext())
             {
-                //ha van ugyanilyen nevű -> false
-                if (ct.Documents.Any(x => x.ParentFolderId == g.ParentFolderId
-                    && x.Name.Equals(g.Name)))
+                if (context.Documents.Any(x => x.ParentFolderId == document.ParentFolderId
+                    && x.Name == document.Name))
                 {
                     return false;
                 }
                 else
                 {
-                    Metadata m = ct.Metadatas.Add(new Metadata
-                    {
-                        UserDefinedProperties = ""
-                    });
-                    g.MetadataId = m.Id;
-                    g.VersionNumber = 1;
-                    g.PreviousVersionDocumentId = -1;
-                    ct.Documents.Add(g);
-                    ct.SaveChanges();
+                    document.MetaData = "[]";
+                    document.VersionNumber = 1;
+                    document.PreviousVersionDocumentId = -1;
+                    context.Documents.Add(document);
+                    context.SaveChanges();
                     return true;
                 }
             }
@@ -121,9 +113,17 @@ namespace PocsKft.Models
 
         public Document GetDocumentByPath(string path)
         {
+<<<<<<< HEAD
             var folderPath = path.Substring(0, path.LastIndexOf('/') + 1);
             var fileName = path.Substring(path.LastIndexOf('/') + 1);
             int folderId = FolderManager.Instance.GetFolderByPath(folderPath).Id;
+=======
+            var folderPath = path.Substring(0, path.LastIndexOf('/')+1);
+            var fileName = path.Substring(path.LastIndexOf('/')+1);
+            var parentFolder = FolderManager.Instance.GetFolderByPath(folderPath);
+            if (parentFolder==null) return null;
+            int folderId = parentFolder.Id;
+>>>>>>> 38fc6776db18786e373640291306c2dbe9be7dac
             using (UsersContext ct = new UsersContext())
             {
                 var doc = ct.Documents.SingleOrDefault(x => x.ParentFolderId == folderId && x.Name == fileName);
@@ -138,6 +138,7 @@ namespace PocsKft.Models
                 var fileToUpdate = ct.Documents.SingleOrDefault(x => x.Id == documentId);
                 if (fileToUpdate == null) return;
 
+<<<<<<< HEAD
                 var metaData = ct.Metadatas.SingleOrDefault(x => x.Id == fileToUpdate.MetadataId);
                 if (metaData == null)
                 {
@@ -149,19 +150,21 @@ namespace PocsKft.Models
                     fileToUpdate.MetadataId = metaData.Id;
                     ct.Entry(fileToUpdate).State = EntityState.Modified;
                 }
+=======
+>>>>>>> 38fc6776db18786e373640291306c2dbe9be7dac
                 var remoteObj = Json.Decode(fileJson);
                 var properties = remoteObj.properties;
                 var propsString = Json.Encode(properties);
                 if (!String.IsNullOrEmpty(propsString))
                 {
-                    metaData.UserDefinedProperties = propsString;
-                    ct.Entry(metaData).State = EntityState.Modified;
+                    fileToUpdate.MetaData = propsString;
                 }
 
                 ct.SaveChanges();
             }
         }
 
+<<<<<<< HEAD
         public Dictionary<string, string> SearchMeta(object jsonKey, object jsonValue)
         {
             using (UsersContext ct = new UsersContext())
@@ -189,13 +192,16 @@ namespace PocsKft.Models
         }
 
         public Metadata GetMetadataFor(int documentId)
+=======
+        public string GetMetadataFor(int documentId)
+>>>>>>> 38fc6776db18786e373640291306c2dbe9be7dac
         {
             using (UsersContext ct = new UsersContext())
             {
                 var document = ct.Documents.SingleOrDefault(x => x.Id == documentId);
                 if (document == null) return null;
-                var metaData = ct.Metadatas.SingleOrDefault(x => x.Id == document.MetadataId);
-                return metaData;
+                
+                return document.MetaData;
             }
         }
 

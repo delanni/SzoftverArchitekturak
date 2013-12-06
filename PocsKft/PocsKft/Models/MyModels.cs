@@ -10,21 +10,31 @@ namespace PocsKft.Models
     public abstract class CommonAncestor
     {
         public int Id { get; set; }
-        public string Name { get; set; }
         public int CreatorId { get; set; }
-        public bool IsFolder { get; set; }
+        public string Name { get; set; }
         public int ParentFolderId { get; set; }
         public string PathOnServer { get; set; }
         public DateTime CreatedDate { get; set; }
         public int LastModifiedbyId { get; set; } //userId
         public DateTime LastModifiedDate { get; set; }
+        public string MetaData { get; set; }
+        public string Description { get; set; }
     }
 
 
     public class Folder : CommonAncestor
     {
         public bool IsRootFolder { get; set; }
-        public string Description { get; set; }
+    }
+
+    public class Document : CommonAncestor
+    {
+        public int VersionNumber { get; set; }
+        public int PreviousVersionDocumentId { get; set; } // ha ő az első verzió, akkor -1
+        public int LockedByUserId { get; set; }
+        public Status Status { get; set; } // Archived or Active
+        public bool Locked { get; set; }
+        public string VirtualFileName { get; set; }
     }
 
     public class Group
@@ -38,26 +48,6 @@ namespace PocsKft.Models
         public int Id { get; set; }
         public int GroupId { get; set; }
         public int UserId { get; set; }
-    }
-
-
-    public class Document : CommonAncestor
-    {
-        public int VersionNumber { get; set; }
-        public int PreviousVersionDocumentId { get; set; } // ha ő az első verzió, akkor -1
-        public int LockedByUserId { get; set; }
-        public Status Status { get; set; } // Archived or Active
-        public DocumentType DocumentType { get; set; }
-        public bool Locked { get; set; }
-        public string VirtualFileName { get; set; }
-        public int MetadataId { get; set; }
-    }
-
-
-    public class Metadata
-    {
-        public int Id { get; set; }
-        public string UserDefinedProperties { get; set; }
     }
 
     public class Comment
@@ -91,14 +81,6 @@ namespace PocsKft.Models
     {
         Active = 1,
         Archive = 2
-    }
-
-    public enum DocumentType
-    {
-        Excel = 1,
-        Word = 2,
-        PDF = 3,
-        Other = 4
     }
 
     public enum PermissionType

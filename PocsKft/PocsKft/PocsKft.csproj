@@ -193,6 +193,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\AccountModels.cs" />
+    <Compile Include="Models\HomeControllerAssistant.cs" />
     <Compile Include="Models\LockManager.cs" />
     <Compile Include="Models\MyModels.cs" />
     <Compile Include="Models\PermissionManager.cs" />

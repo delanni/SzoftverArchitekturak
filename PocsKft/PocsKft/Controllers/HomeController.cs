@@ -11,6 +11,19 @@ namespace PocsKft.Controllers
 {
     public class HomeController : Controller
     {
+
+        private HomeControllerAssistant _assistant;
+        HomeControllerAssistant Assistant
+        {
+            get
+            {
+                if (_assistant == null)
+                    _assistant = new HomeControllerAssistant(this);
+                return _assistant;
+            }
+            set { this._assistant = value; }
+        }
+
         public ActionResult Index(string path)
         {
             var type = Request.RequestType;
@@ -20,10 +33,8 @@ namespace PocsKft.Controllers
                 {
                     case "PUT":
                         return CreateFolder(path);
-                        break;
                     case "DELETE":
                         return DeleteResource(path);
-                        break;
                     case "GET":
                         var headerAccepts = Request.Headers["Accept"];
                         if (headerAccepts.ToLower().Contains("json"))
@@ -31,10 +42,8 @@ namespace PocsKft.Controllers
                             return List(path);
                         }
                         return View();
-                        break;
                     default:
                         return View();
-                        break;
                 }
             }
             catch (Exception ex)
@@ -43,12 +52,12 @@ namespace PocsKft.Controllers
                 {
                     if (ex.Message.Contains("right")) Response.StatusCode = 503;
                     else Response.StatusCode = 500;
-                    return Json(ex.Message);
+                    return Json(ex.Message, JsonRequestBehavior.AllowGet);
                 }
                 else
                 {
                     Response.StatusCode = 500;
-                    return Json("An error ocurred, try again");
+                    return Json("An error ocurred, try again", JsonRequestBehavior.AllowGet);
                 }
             }
         }
@@ -62,17 +71,10 @@ namespace PocsKft.Controllers
             }
             else
             {
-                var document = DocumentManager.Instance.GetDocumentByPath(path);
-                if (document == null) throw new Exception("There is no such document");
-                if (!PermissionManager.Instance.HasRights(getUserId(), document.Id)) throw new Exception("You have no rights to download the file");
-                var virtualFileName = document.VirtualFileName;
-                var fileName = document.Name;
-                var fileStream = System.IO.File.OpenRead(Path.Combine(Server.MapPath("~/App_Data/uploads"), virtualFileName));
-                return File(fileStream, "application/octet-stream", fileName);
+                dynamic fileInfo = Assistant.FetchFile(path);
+                return File(fileInfo.fileStream, "application/octet-stream", fileInfo.fileName);
             }
         }
-
-        private int getUserId() { return UserManager.Instance.GetUserIdByName(HttpContext.User.Identity.Name); }
 
         [HttpPost]
         public ActionResult Index(HttpPostedFileBase file, string path)
@@ -83,7 +85,7 @@ namespace PocsKft.Controllers
                 try
                 {
                     var fileJson = Request.Form["data"];
-                    handleFileUpdate(fileJson, path);
+                    Assistant.HandleFileUpdate(fileJson, path);
                 }
                 catch (Exception e)
                 {
@@ -91,170 +93,34 @@ namespace PocsKft.Controllers
             }
             else
             {
-                handleFileUpload(file, path);
+                Assistant.HandleFileUpload(file, path);
             }
             return RedirectToAction("Index", new { path = path });
         }
 
-        private void handleFileUpload(HttpPostedFileBase file, string path)
-        {
-            var virtualFileName = Guid.NewGuid().ToString();
-            var userId = getUserId();
-            var parentFolderId = FolderManager.Instance.GetFolderByPath(path).Id;
-
-            if (!PermissionManager.Instance.HasRights(userId, parentFolderId)) throw new Exception("You have no right to create a file here");
-
-            if (file != null && file.ContentLength > 0)
-            {
-                var originalFileName = Path.GetFileName(file.FileName);
-                // store the file inside ~/App_Data/uploads folder
-                if (!Directory.Exists(Server.MapPath("~/App_Data/uploads")))
-                {
-                    Directory.CreateDirectory(Server.MapPath("~/App_Data/uploads"));
-                }
-                var newPath = Path.Combine(Server.MapPath("~/App_Data/uploads"), virtualFileName);
-                file.SaveAs(newPath);
-
-                Document document = new Document()
-                {
-                    CreatedDate = DateTime.Now,
-                    CreatorId = userId,
-                    IsFolder = false,
-                    LastModifiedbyId = userId,
-                    LastModifiedDate = DateTime.Now,
-                    Locked = false,
-                    LockedByUserId = -1,
-                    Name = originalFileName,
-                    ParentFolderId = parentFolderId,
-                    PathOnServer = path,
-                    Status = Status.Active,
-                    VersionNumber = 1,
-                    VirtualFileName = virtualFileName
-                };
-                DocumentManager.Instance.AddDocument(document);
-            }
-        }
-
-        private void handleFileUpdate(string fileJSON, string path)
-        {
-            var fileToUpdate = DocumentManager.Instance.GetDocumentByPath(path);
-            if (fileToUpdate != null)
-                if (PermissionManager.Instance.HasRights(getUserId(), fileToUpdate.Id))
-                {
-                    DocumentManager.Instance.UpdateMeta(fileToUpdate.Id, fileJSON);
-                }
-                else
-                {
-                    throw new Exception("You have no rights to modify the file");
-                }
-            else
-            {
-                var folderToUpdate = FolderManager.Instance.GetFolderByPath(path);
-                if (folderToUpdate != null)
-                {
-                    if (PermissionManager.Instance.HasRights(getUserId(), folderToUpdate.Id))
-                    {
-                        FolderManager.Instance.UpdateMeta(folderToUpdate.Id, fileJSON);
-                    }
-                    else
-                    {
-                        throw new Exception("You have no rights to modify the file");
-                    }
-                }
-            }
-        }
-
+        [HttpGet()]
         public JsonResult List(string path)
         {
-            int userId = UserManager.Instance.GetUserIdByName(HttpContext.User.Identity.Name);
+            List<object> entitiesToList = new List<object>();
 
             if (String.IsNullOrEmpty(path))
             {
-                List<Folder> projects = FolderManager.Instance.GetProjects();
-                List<object> projectsWithPermission = new List<object>();
-
-                foreach (Folder f in projects)
-                {
-                    if (PermissionManager.Instance.HasRights(userId, f.Id))
-                    {
-                        projectsWithPermission.Add(new ClientProject
-                        {
-                            CreationDate = f.CreatedDate,
-                            Name = f.Name,
-                            OwnerName = UserManager.Instance.GetUserNameById(userId),
-                            Right = "WRITE"
-                        }.toJSON());
-                    }
-                }
-
-                return Json(projectsWithPermission, JsonRequestBehavior.AllowGet);
-
+                var projects = Assistant.ListProjects();
+                entitiesToList.AddRange(projects);
             }
             else
             {
-
                 Folder folder = FolderManager.Instance.GetFolderByPath(path);
 
-                List<Folder> children = FolderManager.Instance.ListChildrenFolders(folder.Id);
-                List<Document> documents = FolderManager.Instance.ListDocumentsInFolder(folder.Id);
+                var folders = Assistant.ListFoldersIn(folder);
+                var files = Assistant.ListFilesIn(folder);
 
-                List<object> documentsAndFoldersWithPermission = new List<object>();
+                entitiesToList.AddRange(folders);
+                entitiesToList.AddRange(files);
 
-                if (children != null)
-                {
-                    foreach (Folder f in children)
-                    {
-                        if (PermissionManager.Instance.HasRights(userId, f.Id))
-                        {
-                            documentsAndFoldersWithPermission.Add(new ClientFile
-                            {
-                                CreatorId = f.CreatorId,
-                                Id = f.Id,
-                                IsFolder = true,
-                                // IsLocked = false,
-                                // LockedByUserName = ,
-                                Name = f.Name,
-                                ParentFolderId = f.ParentFolderId,
-                                //VersionNumber = ,
-                                //UserHasLock = ,
-                                PathOnServer = f.PathOnServer,
-                                MetaData = FolderManager.Instance.GetMetadataFor(f.Id)
-                            }.toJSON());
-                        }
-                    }
-                }
-                if (documents != null)
-                {
-                    foreach (Document f in documents)
-                    {
-                        if (PermissionManager.Instance.HasRights(userId, f.Id))
-                        {
-                            documentsAndFoldersWithPermission.Add(new ClientFile
-                            {
-                                CreatorId = f.CreatorId,
-                                //Description = f.,
-                                Id = f.Id,
-                                IsFolder = false,
-                                Locked = f.Locked,
-                                LockedByUser = f.LockedByUserId,
-                                Name = f.Name,
-                                ParentFolderId = f.ParentFolderId,
-                                VersionNumber = f.VersionNumber,
-                                UserHasLock = f.LockedByUserId == userId,
-                                PathOnServer = f.PathOnServer,
-                                MetaData = DocumentManager.Instance.GetMetadataFor(f.Id)
-                            }.toJSON());
-                        }
-                    }
-                }
-
-                return Json(documentsAndFoldersWithPermission, JsonRequestBehavior.AllowGet);
             }
-        }
+            return Json(entitiesToList, JsonRequestBehavior.AllowGet);
 
-        public ActionResult About()
-        {
-            return View();
         }
 
         [HttpPut]
@@ -293,7 +159,6 @@ namespace PocsKft.Controllers
                     CreatedDate = DateTime.Now,
                     LastModifiedDate = DateTime.Now,
                     IsRootFolder = false,
-                    IsFolder = true,
                     CreatorId = userId,
                     ParentFolderId = parent.Id,
                     PathOnServer = (parent.PathOnServer + parent.Name + "/")
@@ -319,7 +184,6 @@ namespace PocsKft.Controllers
                     CreatedDate = DateTime.Now,
                     LastModifiedDate = DateTime.Now,
                     IsRootFolder = true,
-                    IsFolder = false,
                     CreatorId = userId,
                     ParentFolderId = 0,
                     PathOnServer = "/"
@@ -340,44 +204,18 @@ namespace PocsKft.Controllers
 
             if (path.EndsWith("/"))
             {
-                return deleteFolder(path);
+                return Json(Assistant.DeleteFolder(path) ? "Deletion successful" : "Deletion failed.");
             }
             else
             {
-                return deleteDocument(path);
+                return Json(Assistant.DeleteDocument(path) ? "Deletion successful" : "Deletion failed.");
             }
         }
 
-        private ActionResult deleteDocument(string path)
-        {
-            int userId = UserManager.Instance.GetUserIdByName(HttpContext.User.Identity.Name);
-            var fileToDelete = DocumentManager.Instance.GetDocumentByPath(path);
-            if (fileToDelete != null
-                && PermissionManager.Instance.HasRights(userId, fileToDelete.Id)
-                && DocumentManager.Instance.DeleteDocumentById(fileToDelete.Id))
-            {
-                return Json(true);
-            }
-            else
-            {
-                throw new Exception("You have no right to delete that document");
-            }
-        }
 
-        private ActionResult deleteFolder(string path)
+        public ActionResult About()
         {
-            int userId = UserManager.Instance.GetUserIdByName(HttpContext.User.Identity.Name);
-            Folder folderToDelete = FolderManager.Instance.GetFolderByPath(path);
-            if (folderToDelete != null
-                && PermissionManager.Instance.HasRights(userId, folderToDelete.Id)
-                && FolderManager.Instance.DeleteFolderById(folderToDelete.Id))
-            {
-                return Json(true);
-            }
-            else
-            {
-                throw new Exception("You have no right to delete that folder");
-            }
+            return View();
         }
     }
 }
