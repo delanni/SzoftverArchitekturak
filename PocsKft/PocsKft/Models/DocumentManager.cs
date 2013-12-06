@@ -4,6 +4,7 @@ using System.Data;
 using System.Linq;
 using System.Web;
 using System.Web.Helpers;
+using System.Web.Script.Serialization;
 
 namespace PocsKft.Models
 {
@@ -120,8 +121,8 @@ namespace PocsKft.Models
 
         public Document GetDocumentByPath(string path)
         {
-            var folderPath = path.Substring(0, path.LastIndexOf('/')+1);
-            var fileName = path.Substring(path.LastIndexOf('/')+1);
+            var folderPath = path.Substring(0, path.LastIndexOf('/') + 1);
+            var fileName = path.Substring(path.LastIndexOf('/') + 1);
             int folderId = FolderManager.Instance.GetFolderByPath(folderPath).Id;
             using (UsersContext ct = new UsersContext())
             {
@@ -130,15 +131,15 @@ namespace PocsKft.Models
             }
         }
 
-        public void UpdateMeta(int fileId, string fileJson)
+        public void UpdateMeta(int documentId, string fileJson)
         {
             using (UsersContext ct = new UsersContext())
             {
-                var fileToUpdate = ct.Documents.SingleOrDefault(x => x.Id == fileId);
+                var fileToUpdate = ct.Documents.SingleOrDefault(x => x.Id == documentId);
                 if (fileToUpdate == null) return;
 
                 var metaData = ct.Metadatas.SingleOrDefault(x => x.Id == fileToUpdate.MetadataId);
-                if (metaData == null) // Because the default value for an integer is 0
+                if (metaData == null)
                 {
                     metaData = ct.Metadatas.Add(new Metadata()
                     {
@@ -158,6 +159,32 @@ namespace PocsKft.Models
                 }
 
                 ct.SaveChanges();
+            }
+        }
+
+        public Dictionary<string, string> SearchMeta(object jsonKey, object jsonValue)
+        {
+            using (UsersContext ct = new UsersContext())
+            {
+                Dictionary<Document, object> hash;
+
+                foreach (Metadata meta in ct.Metadatas)
+                {
+                    dynamic data = Json.Decode(meta.UserDefinedProperties);
+
+                    var result = from i in (IEnumerable<dynamic>)data
+                                 select new
+                                 {
+                                     i.jsonKey,
+                                     i.jsonValue
+                                 };
+
+
+
+                    Assert.AreEqual(1, result.Count());
+                    Assert.AreEqual("client Name", result.First().Name);
+                    Assert.AreEqual("35ea10da-b8d5-4ef8-bf23-c829ae90fe60", result.First().Id);
+                }
             }
         }
 
