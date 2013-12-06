@@ -184,6 +184,7 @@
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Models\ClientFile.cs" />
     <Compile Include="Models\ClientProject.cs" />
+    <Compile Include="Models\CommentManager.cs" />
     <Compile Include="Models\DocumentManager.cs" />
     <Compile Include="Models\FolderManager.cs" />
     <Compile Include="Models\GroupManager.cs" />
