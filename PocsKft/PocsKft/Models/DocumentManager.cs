@@ -150,35 +150,16 @@ namespace PocsKft.Models
             {
                 List<Document> docments = new List<Document>();
 
-                foreach (Document doc in ct.Documents)
-                {
-                    //dynamic data = Json.Decode(doc.MetaData);
-                    JObject jObject = JObject.Parse(doc.MetaData);
-                    JArray jArray = JArray.Parse(doc.MetaData);
-
                     if (String.IsNullOrEmpty(jsonKey) && String.IsNullOrEmpty(jsonValue)) return null;
                     else if (!String.IsNullOrEmpty(jsonKey) && !String.IsNullOrEmpty(jsonKey))
                     {
-                        JToken jToken = jObject.GetValue(jsonKey);
+                        foreach (Document doc in ct.Documents)
+                        {
+                            //dynamic data = Json.Decode(doc.MetaData);
+                            JObject jObject = JObject.Parse(doc.MetaData);
+                            JArray jArray = JArray.Parse(doc.MetaData);
+                            JToken jToken = jObject.GetValue(jsonKey);
 
-                        if (jToken != null)
-                        {
-                            if (jToken.ToString().Equals(jsonValue))
-                            {
-                                docments.Add(doc);
-                            }
-                        }
-                    }
-                    else if (!String.IsNullOrEmpty(jsonKey)) //csak jsonKey
-                    {
-                        JToken jToken = jObject.GetValue(jsonKey);
-                        if (jToken != null)
-                            docments.Add(doc);
-                    }
-                    else //csak jsonValue
-                    {
-                        foreach( JToken jToken in jObject.Values() )
-                        {
                             if (jToken != null)
                             {
                                 if (jToken.ToString().Equals(jsonValue))
@@ -188,7 +169,37 @@ namespace PocsKft.Models
                             }
                         }
                     }
-                }
+                    else if (!String.IsNullOrEmpty(jsonKey)) //csak jsonKey
+                    {
+                        foreach (Document doc in ct.Documents)
+                        {
+                            //dynamic data = Json.Decode(doc.MetaData);
+                            JObject jObject = JObject.Parse(doc.MetaData);
+                            JArray jArray = JArray.Parse(doc.MetaData);
+                            JToken jToken = jObject.GetValue(jsonKey);
+                            if (jToken != null)
+                                docments.Add(doc);
+                        }
+                    }
+                    else //csak jsonValue
+                    {
+                        foreach (Document doc in ct.Documents)
+                        {
+                            //dynamic data = Json.Decode(doc.MetaData);
+                            JObject jObject = JObject.Parse(doc.MetaData);
+                            JArray jArray = JArray.Parse(doc.MetaData);
+                            foreach (JToken jToken in jObject.Values())
+                            {
+                                if (jToken != null)
+                                {
+                                    if (jToken.ToString().Equals(jsonValue))
+                                    {
+                                        docments.Add(doc);
+                                    }
+                                }
+                            }
+                        }
+                    }
                 return docments;
             }
         }
