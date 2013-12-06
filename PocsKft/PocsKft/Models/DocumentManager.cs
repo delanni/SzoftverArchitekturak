@@ -4,7 +4,6 @@ using System.Data;
 using System.Linq;
 using System.Web;
 using System.Web.Helpers;
-using System.Web.Script.Serialization;
 
 namespace PocsKft.Models
 {
@@ -73,30 +72,38 @@ namespace PocsKft.Models
 
                 ct.Entry(d).State = EntityState.Modified;
                 doc.Status = Status.Active;
-                doc.MetaData = d.MetaData;
-
+                //Document temp = 
+                Metadata m = ct.Metadatas.Add(new Metadata
+                {
+                    UserDefinedProperties = ""
+                });
+                doc.MetadataId = m.Id;
                 ct.Documents.Add(doc);
                 ct.SaveChanges();
             }
         }
 
-        public bool AddDocument(Document document)
+        public bool AddDocument(Document g)
         {
-            // TODO: miért van néhány property beállítva rajta, és néhány nem?
-            using (UsersContext context = new UsersContext())
+            using (UsersContext ct = new UsersContext())
             {
-                if (context.Documents.Any(x => x.ParentFolderId == document.ParentFolderId
-                    && x.Name == document.Name))
+                //ha van ugyanilyen nevű -> false
+                if (ct.Documents.Any(x => x.ParentFolderId == g.ParentFolderId
+                    && x.Name.Equals(g.Name)))
                 {
                     return false;
                 }
                 else
                 {
-                    document.MetaData = "[]";
-                    document.VersionNumber = 1;
-                    document.PreviousVersionDocumentId = -1;
-                    context.Documents.Add(document);
-                    context.SaveChanges();
+                    Metadata m = ct.Metadatas.Add(new Metadata
+                    {
+                        UserDefinedProperties = ""
+                    });
+                    g.MetadataId = m.Id;
+                    g.VersionNumber = 1;
+                    g.PreviousVersionDocumentId = -1;
+                    ct.Documents.Add(g);
+                    ct.SaveChanges();
                     return true;
                 }
             }
@@ -113,23 +120,9 @@ namespace PocsKft.Models
 
         public Document GetDocumentByPath(string path)
         {
-<<<<<<< HEAD
-            var folderPath = path.Substring(0, path.LastIndexOf('/') + 1);
-            var fileName = path.Substring(path.LastIndexOf('/') + 1);
-            int folderId = FolderManager.Instance.GetFolderByPath(folderPath).Id;
-=======
             var folderPath = path.Substring(0, path.LastIndexOf('/')+1);
             var fileName = path.Substring(path.LastIndexOf('/')+1);
-            var parentFolder = FolderManager.Instance.GetFolderByPath(folderPath);
-            if (parentFolder==null) return null;
-            int folderId = parentFolder.Id;
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> 38fc6776db18786e373640291306c2dbe9be7dac
-=======
->>>>>>> 38fc6776db18786e373640291306c2dbe9be7dac
-=======
->>>>>>> 38fc6776db18786e373640291306c2dbe9be7dac
+            int folderId = FolderManager.Instance.GetFolderByPath(folderPath).Id;
             using (UsersContext ct = new UsersContext())
             {
                 var doc = ct.Documents.SingleOrDefault(x => x.ParentFolderId == folderId && x.Name == fileName);
@@ -137,18 +130,15 @@ namespace PocsKft.Models
             }
         }
 
-        public void UpdateMeta(int documentId, string fileJson)
+        public void UpdateMeta(int fileId, string fileJson)
         {
             using (UsersContext ct = new UsersContext())
             {
-                var fileToUpdate = ct.Documents.SingleOrDefault(x => x.Id == documentId);
+                var fileToUpdate = ct.Documents.SingleOrDefault(x => x.Id == fileId);
                 if (fileToUpdate == null) return;
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
                 var metaData = ct.Metadatas.SingleOrDefault(x => x.Id == fileToUpdate.MetadataId);
-                if (metaData == null)
+                if (metaData == null) // Because the default value for an integer is 0
                 {
                     metaData = ct.Metadatas.Add(new Metadata()
                     {
@@ -158,70 +148,27 @@ namespace PocsKft.Models
                     fileToUpdate.MetadataId = metaData.Id;
                     ct.Entry(fileToUpdate).State = EntityState.Modified;
                 }
-=======
->>>>>>> 38fc6776db18786e373640291306c2dbe9be7dac
-=======
->>>>>>> 38fc6776db18786e373640291306c2dbe9be7dac
-=======
->>>>>>> 38fc6776db18786e373640291306c2dbe9be7dac
                 var remoteObj = Json.Decode(fileJson);
                 var properties = remoteObj.properties;
                 var propsString = Json.Encode(properties);
                 if (!String.IsNullOrEmpty(propsString))
                 {
-                    fileToUpdate.MetaData = propsString;
+                    metaData.UserDefinedProperties = propsString;
+                    ct.Entry(metaData).State = EntityState.Modified;
                 }
 
                 ct.SaveChanges();
             }
         }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-        public Dictionary<string, string> SearchMeta(object jsonKey, object jsonValue)
-        {
-            using (UsersContext ct = new UsersContext())
-            {
-                Dictionary<Document, object> hash;
-
-                foreach (Metadata meta in ct.Metadatas)
-                {
-                    dynamic data = Json.Decode(meta.UserDefinedProperties);
-
-                    var result = from i in (IEnumerable<dynamic>)data
-                                 select new
-                                 {
-                                     i.jsonKey,
-                                     i.jsonValue
-                                 };
-
-
-
-                    Assert.AreEqual(1, result.Count());
-                    Assert.AreEqual("client Name", result.First().Name);
-                    Assert.AreEqual("35ea10da-b8d5-4ef8-bf23-c829ae90fe60", result.First().Id);
-                }
-            }
-        }
-
         public Metadata GetMetadataFor(int documentId)
-=======
-        public string GetMetadataFor(int documentId)
->>>>>>> 38fc6776db18786e373640291306c2dbe9be7dac
-=======
-        public string GetMetadataFor(int documentId)
->>>>>>> 38fc6776db18786e373640291306c2dbe9be7dac
-=======
-        public string GetMetadataFor(int documentId)
->>>>>>> 38fc6776db18786e373640291306c2dbe9be7dac
         {
             using (UsersContext ct = new UsersContext())
             {
                 var document = ct.Documents.SingleOrDefault(x => x.Id == documentId);
                 if (document == null) return null;
-                
-                return document.MetaData;
+                var metaData = ct.Metadatas.SingleOrDefault(x => x.Id == document.MetadataId);
+                return metaData;
             }
         }
 
