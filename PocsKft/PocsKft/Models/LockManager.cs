@@ -111,6 +111,11 @@ namespace PocsKft.Models
                 {
                     ct.Locks.Remove(l);
 
+                    File d = FileManager.Instance.GetFileById(documnetId);
+                    d.Locked = false;
+                    d.LockedByUserId = -1;
+                    ct.Entry(d).State = EntityState.Modified;
+
                     ct.SaveChanges();
                 }
             }

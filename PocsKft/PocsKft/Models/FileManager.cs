@@ -51,7 +51,7 @@ namespace PocsKft.Models
                 }
                 try
                 {
-                    ct.Files.Remove(file);
+                    ct.Entry<File>(file).State = EntityState.Deleted;
                     ct.SaveChanges();
                     return true;
                 }
@@ -98,6 +98,7 @@ namespace PocsKft.Models
                 }
                 else
                 {
+                    if (!file.PathOnServer.StartsWith("/")) file.PathOnServer = "/" + file.PathOnServer;
                     file.MetaData = "[]";
                     file.VersionNumber = 1;
                     file.PreviousVersionFileId = -1;
@@ -114,18 +115,6 @@ namespace PocsKft.Models
             {
                 var files = ct.Files.Where(i => i.Name.Contains(name));
                 return files.ToList();
-            }
-        }
-
-        public File GetFilesByPath(string path)
-        {
-            var folderPath = path.Substring(0, path.LastIndexOf('/') + 1);
-            var fileName = path.Substring(path.LastIndexOf('/') + 1);
-            int folderId = GetFilesByPath(folderPath).Id;
-            using (UsersContext ct = new UsersContext())
-            {
-                var file = ct.Files.SingleOrDefault(x => x.ParentFolderId == folderId && x.Name == fileName);
-                return file;
             }
         }
 

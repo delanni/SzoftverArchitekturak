@@ -74,7 +74,7 @@ namespace PocsKft.Models
 
         internal void HandleFileUpdate(string fileJSON, string path)
         {
-            var fileToUpdate = FileManager.Instance.GetFilesByPath(path);
+            var fileToUpdate = FileManager.Instance.GetFileByPath(path);
             if (fileToUpdate != null)
                 if (PermissionManager.Instance.CanRead(UserId, fileToUpdate.Id))
                 {
@@ -105,7 +105,7 @@ namespace PocsKft.Models
         {
             var uploadPath = master.Server.MapPath("~/App_Data/uploads");
 
-            var document = FileManager.Instance.GetFilesByPath(path);
+            var document = FileManager.Instance.GetFileByPath(path);
             if (document == null)
                 throw new Exception("There is no such document");
             if (!PermissionManager.Instance.CanRead(UserId, document.Id))
@@ -170,7 +170,7 @@ namespace PocsKft.Models
 
         internal bool DeleteDocument(string path)
         {
-            var fileToDelete = FileManager.Instance.GetFilesByPath(path);
+            var fileToDelete = FileManager.Instance.GetFileByPath(path);
             if (fileToDelete != null
                 && PermissionManager.Instance.CanRead(UserId, fileToDelete.Id)
                 && FileManager.Instance.DeleteFileById(fileToDelete.Id))
@@ -200,7 +200,7 @@ namespace PocsKft.Models
 
         internal bool HandleFileLock(string path)
         {
-            var document = FileManager.Instance.GetFilesByPath(path);
+            var document = FileManager.Instance.GetFileByPath(path);
             if (document == null) throw new Exception("Lockable file not found");
             if (PermissionManager.Instance.CanRead(UserId, document.Id) && !document.Locked){
                 LockManager.Instance.AcquireLockOnDocument(UserId, document.Id);
@@ -212,7 +212,7 @@ namespace PocsKft.Models
 
         internal bool HandleFileUnlock(string path)
         {
-            var document = FileManager.Instance.GetFilesByPath(path);
+            var document = FileManager.Instance.GetFileByPath(path);
             if (document == null) throw new Exception("Unlockable file not found");
             if (PermissionManager.Instance.CanRead(UserId, document.Id) && document.Locked)
             {
