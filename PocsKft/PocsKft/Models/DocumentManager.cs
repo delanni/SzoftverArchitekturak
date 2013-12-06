@@ -188,25 +188,8 @@ namespace PocsKft.Models
                             }
                         }
                     }
-
-
-                    //var result = from i in (IEnumerable<dynamic>)data
-                    //             select new
-                    //              {
-                    //                 i.jsonKey,
-                    //                 i.jsonValue
-                    //             };
-                    //foreach (dynamic obj in (IEnumerable<dynamic>)data)
-                    //{
-                    //    if ( ((object)obj[0]).ToString().Equals(jsonKey))
-                    //    { 
-
-                    //    }
-                    //}
-
                 }
-
-                return null;
+                return docments;
             }
         }
 
