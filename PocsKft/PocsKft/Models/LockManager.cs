@@ -84,6 +84,7 @@ namespace PocsKft.Models
             {
                 if (ct.Locks.Where(i => i.UserId == userId && i.FolderOrDocumentId == documentId)
                     .FirstOrDefault() == null)
+                    
                 {
                     ct.Locks.Add(new Lock
                     {
