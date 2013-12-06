@@ -46,7 +46,7 @@ namespace PocsKft.Models
 
         public bool DeleteGroupById(int id)
         {
-            Group g = GetGRoupById(id);
+            Group g = GetGroupById(id);
             using (UsersContext ct = new UsersContext())
             {
                 if (g != null)
@@ -90,7 +90,7 @@ namespace PocsKft.Models
 
         public bool DeleteUserFromGroupById(int id, UserProfile user)
         {
-            Group g = GetGRoupById(id);
+            Group g = GetGroupById(id);
 
             using (UsersContext ct = new UsersContext())
             {
@@ -130,7 +130,7 @@ namespace PocsKft.Models
 
         public bool AddUserToGroupById(int id, UserProfile user)
         {
-            Group g = GetGRoupById(id);
+            Group g = GetGroupById(id);
 
             using (UsersContext ct = new UsersContext())
             {
