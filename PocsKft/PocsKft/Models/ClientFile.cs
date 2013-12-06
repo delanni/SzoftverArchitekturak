@@ -18,13 +18,12 @@ namespace PocsKft.Models
         public DateTime CreatedDate { get; set; }
         public int LastModifiedbyId { get; set; } //userId
         public DateTime LastModifiedDate { get; set; }
-        public Metadata MetaData { get; set; }
+        public string MetaData { get; set; }
 
         //Doc
         public int VersionNumber { get; set; }
         public int LockedByUser { get; set; }
         public Status Status { get; set; } // Archived or Active
-        public DocumentType DocumentType { get; set; }
         public bool Locked { get; set; }
 
         public string Right { get; set; }
@@ -56,7 +55,7 @@ namespace PocsKft.Models
                 lastModificationDate = LastModifiedDate,
                 lockStatus = Locked?UserHasLock?"UNDERCONTROL":"LOCKED":"UNLOCKED",
                 rights = Right,
-                properties = MetaData==null?"[]":MetaData.UserDefinedProperties
+                properties = MetaData??"[]"
             };
         }
 

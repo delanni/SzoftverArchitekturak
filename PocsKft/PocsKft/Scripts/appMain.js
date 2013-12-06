@@ -217,7 +217,7 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
                         url: putUrl,
                         beforeSend: function () { },
                         success: function () { $("#folderDialog").dialog("close"); $("#folderNameBox").val(""); notifyFS(); },
-                        error: function (e) { alert("Error:\n" + JSON.stringify(e)) },
+                        error: function (e) { alert("Error during folder creation:\n" + JSON.stringify(e)) },
                         cache: false,
                         contentType: false,
                         processData: false
@@ -247,7 +247,7 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
                             $("#projectNameBox").val("");
                             notifyFS();
                         },
-                        error: function (e) { alert("Error:\n" + JSON.stringify(e)) },
+                        error: function (e) { alert("Error during project creation:\n" + JSON.stringify(e)) },
                         cache: false,
                         contentType: false,
                         processData: false
@@ -302,7 +302,7 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
                 notifyFS();
             },
             error: function (e) {
-                deferred.reject(false); alert("Error:\n" + JSON.stringify(e));
+                deferred.reject(false); alert("Error during deleting resource:\n" + JSON.stringify(e));
             },
         });
 
@@ -323,7 +323,7 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
                             $("#revertDialog").dialog("close");
                             notifyFS();
                         },
-                        error: function (e) { alert("Error:\n" + JSON.stringify(e)) },
+                        error: function (e) { alert("Error during reverting:\n" + JSON.stringify(e)) },
                     });
                 },
                 Cancel: function () {
@@ -340,7 +340,7 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
         $.ajax({
             url: filePath,  //Server side action to process
             type: 'POST',
-            dataType:'json',
+            dataType: 'json',
             //Ajax events
             beforeSend: function () { },
             success: function () {
@@ -349,7 +349,7 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
                 notifyFS();
             },
             error: function (e) {
-                alert("Error:\n" + JSON.stringify(e))
+                alert("Error updating file properties:\n" + JSON.stringify(e))
                 deferred.reject();
             },
             // Form data
@@ -388,6 +388,8 @@ HBMAIN.controller("BrowserController", ["$scope", "$rootScope", "Communicator", 
                 });
                 $scope.clearSelections();
                 HBMAIN.setLoading(false);
+            }, function (errorData) {
+                alert("Error during listing the folder:\n" + JSON.stringify(errorData));
             });
         };
 
@@ -437,8 +439,8 @@ HBMAIN.controller("PropertiesController", ["$scope", "$rootScope", "Communicator
 
         $scope.addNewProperty = function () {
             var file = $scope.global.selectedFile;
-            if (file.properties && file.properties[file.properties.length-1]) {
-                if (file.properties[file.properties.length - 1].propName == file.properties[file.properties.length - 1].propValue && file.properties[file.properties.length - 1].propValue==='') {
+            if (file.properties && file.properties[file.properties.length - 1]) {
+                if (file.properties[file.properties.length - 1].propName == file.properties[file.properties.length - 1].propValue && file.properties[file.properties.length - 1].propValue === '') {
                     return;
                 }
             }

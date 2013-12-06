@@ -72,38 +72,30 @@ namespace PocsKft.Models
 
                 ct.Entry(d).State = EntityState.Modified;
                 doc.Status = Status.Active;
-                //Document temp = 
-                Metadata m = ct.Metadatas.Add(new Metadata
-                {
-                    UserDefinedProperties = ""
-                });
-                doc.MetadataId = m.Id;
+                doc.MetaData = d.MetaData;
+
                 ct.Documents.Add(doc);
                 ct.SaveChanges();
             }
         }
 
-        public bool AddDocument(Document g)
+        public bool AddDocument(Document document)
         {
-            using (UsersContext ct = new UsersContext())
+            // TODO: miért van néhány property beállítva rajta, és néhány nem?
+            using (UsersContext context = new UsersContext())
             {
-                //ha van ugyanilyen nevű -> false
-                if (ct.Documents.Any(x => x.ParentFolderId == g.ParentFolderId
-                    && x.Name.Equals(g.Name)))
+                if (context.Documents.Any(x => x.ParentFolderId == document.ParentFolderId
+                    && x.Name == document.Name))
                 {
                     return false;
                 }
                 else
                 {
-                    Metadata m = ct.Metadatas.Add(new Metadata
-                    {
-                        UserDefinedProperties = ""
-                    });
-                    g.MetadataId = m.Id;
-                    g.VersionNumber = 1;
-                    g.PreviousVersionDocumentId = -1;
-                    ct.Documents.Add(g);
-                    ct.SaveChanges();
+                    document.MetaData = "[]";
+                    document.VersionNumber = 1;
+                    document.PreviousVersionDocumentId = -1;
+                    context.Documents.Add(document);
+                    context.SaveChanges();
                     return true;
                 }
             }
@@ -122,7 +114,9 @@ namespace PocsKft.Models
         {
             var folderPath = path.Substring(0, path.LastIndexOf('/')+1);
             var fileName = path.Substring(path.LastIndexOf('/')+1);
-            int folderId = FolderManager.Instance.GetFolderByPath(folderPath).Id;
+            var parentFolder = FolderManager.Instance.GetFolderByPath(folderPath);
+            if (parentFolder==null) return null;
+            int folderId = parentFolder.Id;
             using (UsersContext ct = new UsersContext())
             {
                 var doc = ct.Documents.SingleOrDefault(x => x.ParentFolderId == folderId && x.Name == fileName);
@@ -137,38 +131,26 @@ namespace PocsKft.Models
                 var fileToUpdate = ct.Documents.SingleOrDefault(x => x.Id == fileId);
                 if (fileToUpdate == null) return;
 
-                var metaData = ct.Metadatas.SingleOrDefault(x => x.Id == fileToUpdate.MetadataId);
-                if (metaData == null) // Because the default value for an integer is 0
-                {
-                    metaData = ct.Metadatas.Add(new Metadata()
-                    {
-                        UserDefinedProperties = "{}"
-                    });
-                    ct.SaveChanges();
-                    fileToUpdate.MetadataId = metaData.Id;
-                    ct.Entry(fileToUpdate).State = EntityState.Modified;
-                }
                 var remoteObj = Json.Decode(fileJson);
                 var properties = remoteObj.properties;
                 var propsString = Json.Encode(properties);
                 if (!String.IsNullOrEmpty(propsString))
                 {
-                    metaData.UserDefinedProperties = propsString;
-                    ct.Entry(metaData).State = EntityState.Modified;
+                    fileToUpdate.MetaData = propsString;
                 }
 
                 ct.SaveChanges();
             }
         }
 
-        public Metadata GetMetadataFor(int documentId)
+        public string GetMetadataFor(int documentId)
         {
             using (UsersContext ct = new UsersContext())
             {
                 var document = ct.Documents.SingleOrDefault(x => x.Id == documentId);
                 if (document == null) return null;
-                var metaData = ct.Metadatas.SingleOrDefault(x => x.Id == document.MetadataId);
-                return metaData;
+                
+                return document.MetaData;
             }
         }
 
