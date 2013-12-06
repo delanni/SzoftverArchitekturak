@@ -123,6 +123,9 @@ namespace PocsKft.Models
             var parentFolder = FolderManager.Instance.GetFolderByPath(folderPath);
             if (parentFolder==null) return null;
             int folderId = parentFolder.Id;
+<<<<<<< HEAD
+>>>>>>> 38fc6776db18786e373640291306c2dbe9be7dac
+=======
 >>>>>>> 38fc6776db18786e373640291306c2dbe9be7dac
             using (UsersContext ct = new UsersContext())
             {
@@ -139,6 +142,7 @@ namespace PocsKft.Models
                 if (fileToUpdate == null) return;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
                 var metaData = ct.Metadatas.SingleOrDefault(x => x.Id == fileToUpdate.MetadataId);
                 if (metaData == null)
                 {
@@ -150,6 +154,8 @@ namespace PocsKft.Models
                     fileToUpdate.MetadataId = metaData.Id;
                     ct.Entry(fileToUpdate).State = EntityState.Modified;
                 }
+=======
+>>>>>>> 38fc6776db18786e373640291306c2dbe9be7dac
 =======
 >>>>>>> 38fc6776db18786e373640291306c2dbe9be7dac
                 var remoteObj = Json.Decode(fileJson);
@@ -164,6 +170,7 @@ namespace PocsKft.Models
             }
         }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
         public Dictionary<string, string> SearchMeta(object jsonKey, object jsonValue)
         {
@@ -192,6 +199,9 @@ namespace PocsKft.Models
         }
 
         public Metadata GetMetadataFor(int documentId)
+=======
+        public string GetMetadataFor(int documentId)
+>>>>>>> 38fc6776db18786e373640291306c2dbe9be7dac
 =======
         public string GetMetadataFor(int documentId)
 >>>>>>> 38fc6776db18786e373640291306c2dbe9be7dac
