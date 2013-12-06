@@ -7,34 +7,30 @@ using System.Web;
 
 namespace PocsKft.Models
 {
-    public abstract class CommonAncestor
+    public class File
     {
         public int Id { get; set; }
         public int CreatorId { get; set; }
-        public string Name { get; set; }
         public int ParentFolderId { get; set; }
-        public string PathOnServer { get; set; }
-        public DateTime CreatedDate { get; set; }
         public int LastModifiedbyId { get; set; } //userId
-        public DateTime LastModifiedDate { get; set; }
-        public string MetaData { get; set; }
-        public string Description { get; set; }
-    }
-
-
-    public class Folder : CommonAncestor
-    {
-        public bool IsRootFolder { get; set; }
-    }
-
-    public class Document : CommonAncestor
-    {
-        public int VersionNumber { get; set; }
-        public int PreviousVersionDocumentId { get; set; } // ha ő az első verzió, akkor -1
+        public int PreviousVersionFileId { get; set; } // ha ő az első verzió, akkor -1
         public int LockedByUserId { get; set; }
+
+        public string Name { get; set; }
+        public string VirtualFileName { get; set; }
+        public string PathOnServer { get; set; }
+
+        public bool IsFolder { get; set; }
+        public bool IsRootFolder { get; set; }
+        public int VersionNumber { get; set; }
         public Status Status { get; set; } // Archived or Active
         public bool Locked { get; set; }
-        public string VirtualFileName { get; set; }
+
+        public string MetaData { get; set; }
+        public string Description { get; set; }
+
+        public DateTime CreatedDate { get; set; }
+        public DateTime LastModifiedDate { get; set; }
     }
 
     public class Group
@@ -72,7 +68,7 @@ namespace PocsKft.Models
     {
         public int Id { get; set; }
         public int UserOrGroupId { get; set; }
-        public int FolderOrDocumentId { get; set; } // Folder or Document Id
+        public int FileId { get; set; }
         public bool IsFolder { get; set; }
         public PermissionType Type { get; set; }
     }

@@ -91,7 +91,7 @@ namespace PocsKft.Models
                         FolderOrDocumentId = documentId
                     });
 
-                    Document d = DocumentManager.Instance.GetDocumentById(documentId);
+                    File d = FileManager.Instance.GetFileById(documentId);
                     d.Locked = true;
                     d.LockedByUserId = userId;
                     ct.Entry(d).State = EntityState.Modified;
