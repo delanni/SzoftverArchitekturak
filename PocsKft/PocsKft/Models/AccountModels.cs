@@ -28,7 +28,7 @@ namespace PocsKft.Models
         public DbSet<Permission> Permissions { get; set; }
         public DbSet<GroupMembership> GroupMemberships { get; set; }
         public DbSet<Lock> Locks { get; set; }
-        
+        public DbSet<Comment> Comments { get; set; }
     }
 
     [Table("UserProfiles")]

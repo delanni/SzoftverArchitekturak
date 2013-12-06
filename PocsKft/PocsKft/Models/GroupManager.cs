@@ -26,7 +26,7 @@ namespace PocsKft.Models
             }
         }
 
-        public Group GetGRoupById(int id)
+        public Group GetGroupById(int id)
         {
             using (UsersContext ct = new UsersContext())
             {

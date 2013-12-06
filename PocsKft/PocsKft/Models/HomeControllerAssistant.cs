@@ -151,12 +151,11 @@ namespace PocsKft.Models
                             CreatorId = f.CreatorId,
                             Id = f.Id,
                             IsFolder = true,
-                            // IsLocked = false,
-                            // LockedByUserName = ,
                             Name = f.Name,
                             ParentFolderId = f.ParentFolderId,
-                            //VersionNumber = ,
-                            //UserHasLock = ,
+                            CreatedDate = f.CreatedDate,
+                            LastModifiedDate = f.LastModifiedDate,
+                            UserHasLock = false,
                             PathOnServer = f.PathOnServer,
                             MetaData = f.MetaData
                         }.toJSON());
