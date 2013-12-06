@@ -5,7 +5,6 @@ using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.Mvc;
 using PocsKft.Models;
-using System.IO;
 
 namespace PocsKft.Controllers
 {
@@ -121,12 +120,10 @@ namespace PocsKft.Controllers
             }
             else
             {
-                Folder folder = FolderManager.Instance.GetFolderByPath(path);
+                File file = FileManager.Instance.GetFileByPath(path);
 
-                var folders = Assistant.ListFoldersIn(folder);
-                var files = Assistant.ListFilesIn(folder);
+                var files = Assistant.ListFilesIn(file);
 
-                entitiesToList.AddRange(folders);
                 entitiesToList.AddRange(files);
 
             }
@@ -137,45 +134,48 @@ namespace PocsKft.Controllers
         [HttpPut]
         public ActionResult CreateFolder(string path)
         {
-            IEnumerable<string> parentNames = path.Split('/');
-            string folderName = parentNames.Last();
-            parentNames = parentNames.Take(parentNames.Count() - 1);
+            if (path.EndsWith("/"))
+            {
+                path = path.TrimEnd('/');
+            }
+            var parentPath = path.Substring(0, path.LastIndexOf('/') + 1);
+            var folderName = path.Substring(path.LastIndexOf('/') + 1);
 
             //Regex regex = new Regex(@"^[0-9A-Za-Z_-]{3,20}$");
 
-            if (true)//regex.IsMatch(folderName))
+
+            File parent = FileManager.Instance.GetFileByPath(parentPath);
+            if (parent != null)
             {
-                Folder parent = FolderManager.Instance.GetFolderByPath(parentNames);
-                if (parent != null)
-                {
-                    createFolder(folderName, parent);
-                }
-                else
-                {
-                    createProject(folderName);
-                }
+                createFolder(folderName, parent);
             }
+            else
+            {
+                createProject(folderName);
+            }
+
 
             return Json(true);
         }
 
-        private void createFolder(string folderName, Folder parent)
+        private void createFolder(string folderName, File parent)
         {
             int userId = UserManager.Instance.GetUserIdByName(HttpContext.User.Identity.Name);
-            if (PermissionManager.Instance.HasRights(userId, parent.Id))
+            if (PermissionManager.Instance.CanRead(userId, parent.Id))
             {
-                Folder newFolder = new Folder
+                File newFolder = new File
                 {
                     Name = folderName,
                     CreatedDate = DateTime.Now,
                     LastModifiedDate = DateTime.Now,
                     IsRootFolder = false,
+                    IsFolder = true,
                     CreatorId = userId,
                     ParentFolderId = parent.Id,
                     PathOnServer = (parent.PathOnServer + parent.Name + "/")
                 };
 
-                int newFolderId = FolderManager.Instance.CreateFolder(newFolder);
+                int newFolderId = FileManager.Instance.CreateFile(newFolder);
                 PermissionManager.Instance.GrantRightOnFolder(userId, newFolderId, PermissionType.WRITE);
             }
             else
@@ -187,20 +187,21 @@ namespace PocsKft.Controllers
         private void createProject(string folderName)
         {
             int userId = UserManager.Instance.GetUserIdByName(HttpContext.User.Identity.Name);
-            if (PermissionManager.Instance.HasRights(userId, 0))
+            if (PermissionManager.Instance.CanRead(userId, 0))
             {
-                Folder newFolder = new Folder
+                File newFolder = new File
                 {
                     Name = folderName,
                     CreatedDate = DateTime.Now,
                     LastModifiedDate = DateTime.Now,
                     IsRootFolder = true,
+                    IsFolder = true,
                     CreatorId = userId,
                     ParentFolderId = 0,
                     PathOnServer = "/"
                 };
 
-                int newFolderId = FolderManager.Instance.CreateFolder(newFolder);
+                int newFolderId = FileManager.Instance.CreateFile(newFolder);
                 PermissionManager.Instance.GrantRightOnFolder(userId, newFolderId, PermissionType.WRITE);
             }
             else

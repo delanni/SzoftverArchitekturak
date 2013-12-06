@@ -23,8 +23,7 @@ namespace PocsKft.Models
 
         public DbSet<UserProfile> UserProfiles { get; set; }
         public DbSet<Group> Groups { get; set; }
-        public DbSet<Folder> Folders { get; set; }
-        public DbSet<Document> Documents { get; set; }
+        public DbSet<File> Files { get; set; }
         public DbSet<Permission> Permissions { get; set; }
         public DbSet<GroupMembership> GroupMemberships { get; set; }
         public DbSet<Lock> Locks { get; set; }

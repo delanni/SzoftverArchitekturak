@@ -30,14 +30,14 @@ namespace PocsKft.Models
         /// <param name="userId"></param>
         /// <param name="documentId"></param>
         /// <returns></returns>
-        public bool HasRights(int userId, int documentId)
+        public bool CanRead(int userId, int documentId)
         {
             if (documentId == 0) return true; // a root-ban mindenki tud projektet csinalni
             using (UsersContext ct = new UsersContext())
             {
                 //magára a user-re
-                if (ct.Permissions.Where(i => i.Id == documentId
-                    && i.UserOrGroupId == userId).FirstOrDefault() != null)
+                if (ct.Permissions.Any(i => i.FileId == documentId 
+                    && i.UserOrGroupId == userId))
                 {
                     return true;
                 }
@@ -49,8 +49,41 @@ namespace PocsKft.Models
                     {
                         foreach (Group g in list)
                         {
-                            if (ct.Permissions.Where(i => i.Id == documentId
-                                && i.UserOrGroupId == g.Id).FirstOrDefault() != null)
+                            if (ct.Permissions.Any(i => i.FileId == documentId
+                                && i.UserOrGroupId == g.Id))
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+        }
+
+        public bool CanWrite(int userId, int documentId)
+        {
+            if (documentId == 0) return true; // a root-ban mindenki tud projektet csinalni
+            using (UsersContext ct = new UsersContext())
+            {
+                //magára a user-re
+                if (ct.Permissions.Any(i => i.Type == PermissionType.WRITE
+                    && i.FileId == documentId
+                    && i.UserOrGroupId == userId))
+                {
+                    return true;
+                }
+                //valamely, a user-t tartalmazó csoport-ra
+                else
+                {
+                    List<Group> list = GroupManager.Instance.GetGroupsOfUser(userId);
+                    if (list != null)
+                    {
+                        foreach (Group g in list)
+                        {
+                            if (ct.Permissions.Any(i => i.Type == PermissionType.WRITE
+                                && i.FileId == documentId
+                                && i.UserOrGroupId == g.Id))
                             {
                                 return true;
                             }
@@ -65,18 +98,18 @@ namespace PocsKft.Models
         /// Ha még nem volt rajta Right, akkor felveszi.
         /// </summary>
         /// <param name="userOrGroupId">Adott User vagy Group Id-ja</param>
-        /// <param name="documentId">Adott Document vagy Folder Id-ja</param>
+        /// <param name="documentId">Adott File vagy Folder Id-ja</param>
         /// <param name="permissionType">A permission tipusa</param>
         public void GrantRightOnDocument(int userOrGroupId, int documentId, PermissionType permissionType)
         {
             using (UsersContext ct = new UsersContext())
             {
                 if (ct.Permissions.SingleOrDefault(i => i.UserOrGroupId == userOrGroupId
-                    && i.FolderOrDocumentId == documentId) == null)
+                    && i.FileId == documentId) == null)
                 {
                     ct.Permissions.Add(new Permission
                     {
-                        FolderOrDocumentId = documentId,
+                        FileId = documentId,
                         UserOrGroupId = userOrGroupId,
                         IsFolder = false,
                         Type = permissionType
@@ -86,7 +119,7 @@ namespace PocsKft.Models
             }
         }
 
-        public void GrantRightOnFolder(int userOrGroupId, int folderId, PermissionType Type, bool isRecursive=true)
+        public void GrantRightOnFolder(int userOrGroupId, int folderId, PermissionType Type, bool isRecursive = true)
         {
             using (UsersContext ct = new UsersContext())
             {
@@ -97,7 +130,7 @@ namespace PocsKft.Models
         }
 
         /// <summary>
-        /// Minden tartalmazó Document-re és Almappára beír egy rekordot
+        /// Minden tartalmazó File-re és Almappára beír egy rekordot
         /// a Permissions táblába.
         /// </summary>
         /// <param name="ct"></param>
@@ -105,15 +138,15 @@ namespace PocsKft.Models
         /// <param name="userOrGroupId"></param>
         public void GrantRightOnAllChildren(UsersContext ct, int folderId, int userOrGroupId, PermissionType Type, bool isRecursive)
         {
-            Folder f = FolderManager.Instance.GetFolderById(folderId);
+            File f = FileManager.Instance.GetFileById(folderId);
 
             //erre a Folder-re van-e már bejegyzés. Ha nincs -> új rekord.
             if (ct.Permissions.Where(i => i.UserOrGroupId == userOrGroupId
-                && i.FolderOrDocumentId == folderId).FirstOrDefault() == null)
+                && i.FileId == folderId).FirstOrDefault() == null)
             {
                 ct.Permissions.Add(new Permission
                 {
-                    FolderOrDocumentId = f.Id,
+                    FileId = f.Id,
                     UserOrGroupId = userOrGroupId,
                     IsFolder = true
                 });
@@ -124,17 +157,17 @@ namespace PocsKft.Models
             {
 
                 //Minden dokumentumra van-e már bejegyzés. Ha nincs -> új rekord.
-                List<Document> docs = ct.Documents.Where(i => i.ParentFolderId == folderId).ToList();
+                List<File> docs = ct.Files.Where(i => i.ParentFolderId == folderId).ToList();
                 if (docs != null)
                 {
-                    foreach (Document temp in docs)
+                    foreach (File temp in docs)
                     {
                         if (ct.Permissions.Where(i => i.UserOrGroupId == userOrGroupId
-                            && i.FolderOrDocumentId == temp.Id) == null)
+                            && i.FileId == temp.Id) == null)
                         {
                             ct.Permissions.Add(new Permission
                             {
-                                FolderOrDocumentId = temp.Id,
+                                FileId = temp.Id,
                                 UserOrGroupId = userOrGroupId,
                                 IsFolder = false,
                                 Type = Type
@@ -143,10 +176,10 @@ namespace PocsKft.Models
                     }
                 }
                 //Minden gyerek-mappára van-e már bejegyzés. Ha nincs -> új rekord.
-                List<Folder> folders = ct.Folders.Where(i => i.ParentFolderId == folderId).ToList();
+                List<File> folders = ct.Files.Where(i => i.ParentFolderId == folderId).ToList();
                 if (folders != null)
                 {
-                    foreach (Folder temp in folders)
+                    foreach (File temp in folders)
                     {
                         GrantRightOnAllChildren(ct, temp.Id, userOrGroupId, Type, isRecursive);
                     }
@@ -161,7 +194,8 @@ namespace PocsKft.Models
                 Permission p = ct.Permissions.Where(i => i.UserOrGroupId == userOrGroupId
                     && i.Id == documentId).FirstOrDefault();
 
-                if(p != null){
+                if (p != null)
+                {
                     ct.Permissions.Remove(p);
                     ct.SaveChanges();
                 }
@@ -180,7 +214,7 @@ namespace PocsKft.Models
 
         public void RevokeRightOnAllChildren(UsersContext ct, int folderId, int userOrGroupId)
         {
-            Folder f = FolderManager.Instance.GetFolderById(folderId);
+            File f = FileManager.Instance.GetFileById(folderId);
 
             //erre a Folder-re a Permission törlése
             Permission p = ct.Permissions.Where(i => i.UserOrGroupId == userOrGroupId
@@ -192,10 +226,10 @@ namespace PocsKft.Models
             }
 
             //Minden dokumentumra -> Permission törlése
-            List<Document> docs = ct.Documents.Where(i => i.ParentFolderId == folderId).ToList();
+            List<File> docs = ct.Files.Where(i => i.ParentFolderId == folderId).ToList();
             if (docs != null)
             {
-                foreach (Document temp in docs)
+                foreach (File temp in docs)
                 {
                     Permission perm = ct.Permissions.Where(i => i.UserOrGroupId == userOrGroupId
                         && i.Id == temp.Id).FirstOrDefault();
@@ -204,14 +238,6 @@ namespace PocsKft.Models
                     {
                         ct.Permissions.Remove(perm);
                     }
-                }
-            }
-
-            List<Folder> folders = ct.Folders.Where(i => i.ParentFolderId == folderId).ToList();
-            if (folders != null)
-            {
-                foreach (Folder temp in folders)
-                {
                     RevokeRightOnAllChildren(ct, temp.Id, userOrGroupId);
                 }
             }

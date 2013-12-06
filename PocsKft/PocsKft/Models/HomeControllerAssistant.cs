@@ -38,10 +38,10 @@ namespace PocsKft.Models
         internal void HandleFileUpload(HttpPostedFileBase file, string path)
         {
             var virtualFileName = Guid.NewGuid().ToString();
-            var parentFolderId = FolderManager.Instance.GetFolderByPath(path).Id;
+            var parentFolderId = FileManager.Instance.GetFileByPath(path).Id;
             var uploadPath = master.Server.MapPath("~/App_Data/uploads");
 
-            if (!PermissionManager.Instance.HasRights(UserId, parentFolderId)) throw new Exception("You have no right to create a file here");
+            if (!PermissionManager.Instance.CanRead(UserId, parentFolderId)) throw new Exception("You have no right to create a file here");
 
             if (file != null && file.ContentLength > 0)
             {
@@ -52,7 +52,7 @@ namespace PocsKft.Models
                 }
                 file.SaveAs(Path.Combine(uploadPath, virtualFileName));
 
-                Document document = new Document()
+                File document = new File()
                 {
                     CreatedDate = DateTime.Now,
                     CreatorId = UserId,
@@ -67,18 +67,18 @@ namespace PocsKft.Models
                     VersionNumber = 1,
                     VirtualFileName = virtualFileName
                 };
-                DocumentManager.Instance.AddDocument(document);
+                FileManager.Instance.CreateFile(document);
                 PermissionManager.Instance.GrantRightOnDocument(UserId, document.Id, PermissionType.WRITE);
             }
         }
 
         internal void HandleFileUpdate(string fileJSON, string path)
         {
-            var fileToUpdate = DocumentManager.Instance.GetDocumentByPath(path);
+            var fileToUpdate = FileManager.Instance.GetFileByPath(path);
             if (fileToUpdate != null)
-                if (PermissionManager.Instance.HasRights(UserId, fileToUpdate.Id))
+                if (PermissionManager.Instance.CanRead(UserId, fileToUpdate.Id))
                 {
-                    DocumentManager.Instance.UpdateMeta(fileToUpdate.Id, fileJSON);
+                    FileManager.Instance.UpdateMeta(fileToUpdate.Id, fileJSON);
                 }
                 else
                 {
@@ -86,12 +86,12 @@ namespace PocsKft.Models
                 }
             else
             {
-                var folderToUpdate = FolderManager.Instance.GetFolderByPath(path);
+                var folderToUpdate = FileManager.Instance.GetFileByPath(path);
                 if (folderToUpdate != null)
                 {
-                    if (PermissionManager.Instance.HasRights(UserId, folderToUpdate.Id))
+                    if (PermissionManager.Instance.CanRead(UserId, folderToUpdate.Id))
                     {
-                        FolderManager.Instance.UpdateMeta(folderToUpdate.Id, fileJSON);
+                        FileManager.Instance.UpdateMeta(folderToUpdate.Id, fileJSON);
                     }
                     else
                     {
@@ -105,10 +105,10 @@ namespace PocsKft.Models
         {
             var uploadPath = master.Server.MapPath("~/App_Data/uploads");
 
-            var document = DocumentManager.Instance.GetDocumentByPath(path);
+            var document = FileManager.Instance.GetFileByPath(path);
             if (document == null)
                 throw new Exception("There is no such document");
-            if (!PermissionManager.Instance.HasRights(UserId, document.Id))
+            if (!PermissionManager.Instance.CanRead(UserId, document.Id))
                 throw new Exception("You have no rights to download the file");
 
             var virtualFileName = document.VirtualFileName;
@@ -121,11 +121,11 @@ namespace PocsKft.Models
 
         internal IEnumerable<object> ListProjects()
         {
-            List<Folder> projects = FolderManager.Instance.GetProjects();
+            List<File> projects = FileManager.Instance.GetProjects();
 
-            foreach (Folder f in projects)
+            foreach (File f in projects)
             {
-                if (PermissionManager.Instance.HasRights(UserId, f.Id))
+                if (PermissionManager.Instance.CanRead(UserId, f.Id))
                 {
                     yield return (new ClientProject
                     {
@@ -138,48 +138,22 @@ namespace PocsKft.Models
             }
         }
 
-        internal IEnumerable<object> ListFoldersIn(Folder folder)
+        internal IEnumerable<object> ListFilesIn(File folder)
         {
-            List<Folder> children = FolderManager.Instance.ListChildrenFolders(folder.Id);
-            if (children != null)
-            {
-                foreach (Folder f in children)
-                {
-                    if (PermissionManager.Instance.HasRights(UserId, f.Id))
-                    {
-                        yield return (new ClientFile
-                        {
-                            CreatorId = f.CreatorId,
-                            Id = f.Id,
-                            IsFolder = true,
-                            Name = f.Name,
-                            ParentFolderId = f.ParentFolderId,
-                            CreatedDate = f.CreatedDate,
-                            LastModifiedDate = f.LastModifiedDate,
-                            UserHasLock = false,
-                            PathOnServer = f.PathOnServer,
-                            MetaData = f.MetaData
-                        }.toJSON());
-                    }
-                }
-            }
-        }
-
-        internal IEnumerable<object> ListFilesIn(Folder folder)
-        {
-            List<Document> documents = FolderManager.Instance.ListDocumentsInFolder(folder.Id);
+            List<File> documents = FileManager.Instance.ListChildren(folder.Id);
             if (documents != null)
             {
-                foreach (Document f in documents)
+                foreach (File f in documents)
                 {
-                    if (PermissionManager.Instance.HasRights(UserId, f.Id))
+                    if (PermissionManager.Instance.CanRead(UserId, f.Id))
                     {
                         yield return (new ClientFile
                         {
                             CreatorId = f.CreatorId,
                             //Description = f.,
                             Id = f.Id,
-                            IsFolder = false,
+                            IsFolder = f.IsFolder,
+                            CreatedDate = f.CreatedDate,
                             Locked = f.Locked,
                             LockedByUser = f.LockedByUserId,
                             Name = f.Name,
@@ -196,10 +170,10 @@ namespace PocsKft.Models
 
         internal bool DeleteDocument(string path)
         {
-            var fileToDelete = DocumentManager.Instance.GetDocumentByPath(path);
+            var fileToDelete = FileManager.Instance.GetFileByPath(path);
             if (fileToDelete != null
-                && PermissionManager.Instance.HasRights(UserId, fileToDelete.Id)
-                && DocumentManager.Instance.DeleteDocumentById(fileToDelete.Id))
+                && PermissionManager.Instance.CanRead(UserId, fileToDelete.Id)
+                && FileManager.Instance.DeleteFileById(fileToDelete.Id))
             {
                 return true;
             }
@@ -211,10 +185,10 @@ namespace PocsKft.Models
 
         internal bool DeleteFolder(string path)
         {
-            Folder folderToDelete = FolderManager.Instance.GetFolderByPath(path);
+            File folderToDelete = FileManager.Instance.GetFileByPath(path);
             if (folderToDelete != null
-                && PermissionManager.Instance.HasRights(UserId, folderToDelete.Id)
-                && FolderManager.Instance.DeleteFolderById(folderToDelete.Id))
+                && PermissionManager.Instance.CanRead(UserId, folderToDelete.Id)
+                && FileManager.Instance.DeleteFileById(folderToDelete.Id))
             {
                 return true;
             }
@@ -226,9 +200,9 @@ namespace PocsKft.Models
 
         internal bool HandleFileLock(string path)
         {
-            var document = DocumentManager.Instance.GetDocumentByPath(path);
+            var document = FileManager.Instance.GetFileByPath(path);
             if (document == null) throw new Exception("Lockable file not found");
-            if (PermissionManager.Instance.HasRights(UserId, document.Id) && !document.Locked){
+            if (PermissionManager.Instance.CanRead(UserId, document.Id) && !document.Locked){
                 LockManager.Instance.AcquireLockOnDocument(UserId, document.Id);
                 return true;
             } else {
@@ -238,9 +212,9 @@ namespace PocsKft.Models
 
         internal bool HandleFileUnlock(string path)
         {
-            var document = DocumentManager.Instance.GetDocumentByPath(path);
+            var document = FileManager.Instance.GetFileByPath(path);
             if (document == null) throw new Exception("Unlockable file not found");
-            if (PermissionManager.Instance.HasRights(UserId, document.Id) && document.Locked)
+            if (PermissionManager.Instance.CanRead(UserId, document.Id) && document.Locked)
             {
                 LockManager.Instance.ReleaseLockOnDocument(UserId, document.Id);
                 return true;

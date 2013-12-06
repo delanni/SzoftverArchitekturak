@@ -185,8 +185,7 @@
     <Compile Include="Models\ClientFile.cs" />
     <Compile Include="Models\ClientProject.cs" />
     <Compile Include="Models\CommentManager.cs" />
-    <Compile Include="Models\DocumentManager.cs" />
-    <Compile Include="Models\FolderManager.cs" />
+    <Compile Include="Models\FileManager.cs" />
     <Compile Include="Models\GroupManager.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Filters\InitializeSimpleMembershipAttribute.cs" />

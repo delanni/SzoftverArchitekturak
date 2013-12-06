@@ -34,18 +34,18 @@ namespace PocsKft.Models
             }
         }
 
-        public void AddCommentToDocument(string content, int documentId, int userId)
+        public void AddCommentToDocument(string content, int fileId, int userId)
         {
             using (UsersContext ct = new UsersContext())
             {
-                Document g = ct.Documents.Find(documentId);
+                File g = ct.Files.Find(fileId);
                 if (g == null) return;
 
                 ct.Comments.Add(new Comment
                 {
                     Content = content,
                     createdDate = DateTime.Now,
-                    DocumentId = documentId,
+                    DocumentId = fileId,
                     WrittenbyId = userId
                 });
 
@@ -64,14 +64,14 @@ namespace PocsKft.Models
             }
         }
 
-        public IEnumerable<Comment> GetCommentsForDocument(int documentId)
+        public IEnumerable<Comment> GetCommentsForFile(int fileId)
         {
             using (UsersContext ct = new UsersContext())
             {
-                Document g = ct.Documents.Find(documentId);
+                File g = ct.Files.Find(fileId);
                 if (g == null) return null;
 
-                return ct.Comments.Where(i => i.DocumentId == documentId).OrderByDescending( i => i.createdDate).ToList();
+                return ct.Comments.Where(i => i.DocumentId == fileId).OrderByDescending( i => i.createdDate).ToList();
             }
         }
     }

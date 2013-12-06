@@ -92,7 +92,7 @@ namespace PocsKft.Models
                         FolderOrDocumentId = documentId
                     });
 
-                    Document d = DocumentManager.Instance.GetDocumentById(documentId);
+                    File d = FileManager.Instance.GetFileById(documentId);
                     d.Locked = true;
                     d.LockedByUserId = userId;
                     ct.Entry(d).State = EntityState.Modified;
@@ -111,6 +111,11 @@ namespace PocsKft.Models
                 if (l != null)
                 {
                     ct.Locks.Remove(l);
+
+                    File d = FileManager.Instance.GetFileById(documnetId);
+                    d.Locked = false;
+                    d.LockedByUserId = -1;
+                    ct.Entry(d).State = EntityState.Modified;
 
                     ct.SaveChanges();
                 }
