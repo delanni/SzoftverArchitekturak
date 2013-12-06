@@ -78,22 +78,22 @@ namespace PocsKft.Models
 
 
         //Elhelyez egy lock-ot a 
-        public void AcquireLockOnDocument(int userId, int documnetId)
+        public void AcquireLockOnDocument(int userId, int documentId)
         {
             using (UsersContext ct = new UsersContext())
             {
-                if (ct.Locks.Where(i => i.UserId == userId && i.FolderOrDocumentId == documnetId)
+                if (ct.Locks.Where(i => i.UserId == userId && i.FolderOrDocumentId == documentId)
                     .FirstOrDefault() == null)
                 {
                     ct.Locks.Add(new Lock
                     {
                         UserId = userId,
-                        FolderOrDocumentId = documnetId
+                        FolderOrDocumentId = documentId
                     });
 
-                    Document d = DocumentManager.Instance.GetDocumentById(userId);
+                    Document d = DocumentManager.Instance.GetDocumentById(documentId);
                     d.Locked = true;
-                    d.LockedByUserId = documnetId;
+                    d.LockedByUserId = userId;
                     ct.Entry(d).State = EntityState.Modified;
 
                     ct.SaveChanges();

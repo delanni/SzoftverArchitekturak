@@ -82,13 +82,24 @@ namespace PocsKft.Controllers
             // case "POST":
             if (file == null)
             {
-                try
+                if (Request.Form["unlock"] != null)
                 {
-                    var fileJson = Request.Form["data"];
-                    Assistant.HandleFileUpdate(fileJson, path);
+                    Assistant.HandleFileUnlock(path);
                 }
-                catch (Exception e)
+                else if (Request.Form["lock"] != null)
                 {
+                    Assistant.HandleFileLock(path);
+                }
+                else
+                {
+                    try
+                    {
+                        var fileJson = Request.Form["data"];
+                        Assistant.HandleFileUpdate(fileJson, path);
+                    }
+                    catch (Exception e)
+                    {
+                    }
                 }
             }
             else
@@ -98,7 +109,7 @@ namespace PocsKft.Controllers
             return RedirectToAction("Index", new { path = path });
         }
 
-        [HttpGet()]
+        [HttpGet]
         public JsonResult List(string path)
         {
             List<object> entitiesToList = new List<object>();

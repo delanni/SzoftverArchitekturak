@@ -34,9 +34,7 @@ HBMAIN.factory("GlobalService", function (Communicator) {
                 var levels = current.split("/");
                 levels.pop(); levels.pop();
                 var url = levels.join("/") + "/";
-                returnObject.currentPath = url;
                 window.location.pathname = url;
-                //Communicator.notifyFS();
             }
         },
         DELETE: {
@@ -347,6 +345,7 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
             beforeSend: function () { },
             success: function () {
                 deferred.resolve();
+                $("#fileUploadDialog").dialog("close");
                 notifyFS();
             },
             error: function (e) {
@@ -362,51 +361,6 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
         window.open("/Download/" + file.filePath + file.fileName);
     };
 
-    var tryLockFile = function (file) {
-        var deferred = $q.defer();
-        var filePath = file.filePath + file.fileName;
-        $.ajax({
-            url: filePath,  //Server side action to process
-            type: 'POST',
-            dataType: 'json',
-            //Ajax events
-            beforeSend: function () { },
-            success: function () {
-                deferred.resolve();
-                notifyFS();
-            },
-            error: function (e) {
-                alert("Error locking file:\n" + JSON.stringify(e))
-                deferred.reject();
-            },
-            // Form data
-            data: { "lock": filePath }
-        });
-    }
-
-    var unlockFile = function (file) {
-        var deferred = $q.defer();
-        var filePath = file.filePath + file.fileName;
-        $.ajax({
-            url: filePath,  //Server side action to process
-            type: 'POST',
-            dataType: 'json',
-            //Ajax events
-            beforeSend: function () { },
-            success: function () {
-                deferred.resolve();
-                notifyFS();
-            },
-            error: function (e) {
-                alert("Error unlocking file:\n" + JSON.stringify(e))
-                deferred.reject();
-            },
-            // Form data
-            data: { "unlock": filePath }
-        });
-    }
-
-
     return {
         listFolder: listAsync,
         delete: deleteResource,
@@ -414,11 +368,10 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
         uploadFile: uploadFile,
         updateMeta: updateFileProperties,
         download: downloadFile,
-        tryLock: tryLockFile,
-        unlock: unlockFile,
+        tryLock: angular.noop,
+        unlock: angular.noop,
         createProject: createProject,
-        createFolder: createFolder,
-        notifyFS: notifyFS
+        createFolder: createFolder
     };
 });
 
@@ -603,6 +556,12 @@ HBMAIN.directive("project", function () {
 });
 
 HBMAIN.directive("propertyfield", function () {
+    //var propertyTemplate = "<div class='property'>\
+    //                        <div class='propname' ng-bind='property.propName' />\
+    //                        <input class='edit propname' ng-model='property.propName'/>\
+    //                        <div class='propvalue' ng-bind='property.propValue' />\
+    //                        <input class='edit propvalue' ng-model='property.propValue' />\
+    //                        </div>";
     var propertyTemplate = "<div class='property'>\
                             <div class='propname' style='font-weight:bold'>{{property.propName}} : {{property.propValue}}</div>\
                             <label class='edit'>Property name:</label>\

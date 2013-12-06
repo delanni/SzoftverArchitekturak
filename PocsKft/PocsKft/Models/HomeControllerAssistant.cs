@@ -59,7 +59,7 @@ namespace PocsKft.Models
                     LastModifiedbyId = UserId,
                     LastModifiedDate = DateTime.Now,
                     Locked = false,
-                    LockedByUserId = -1,
+                    LockedByUserId = 0,
                     Name = originalFileName,
                     ParentFolderId = parentFolderId,
                     PathOnServer = path,
@@ -68,6 +68,7 @@ namespace PocsKft.Models
                     VirtualFileName = virtualFileName
                 };
                 DocumentManager.Instance.AddDocument(document);
+                PermissionManager.Instance.GrantRightOnDocument(UserId, document.Id, PermissionType.WRITE);
             }
         }
 
@@ -186,7 +187,7 @@ namespace PocsKft.Models
                             VersionNumber = f.VersionNumber,
                             UserHasLock = f.LockedByUserId == UserId,
                             PathOnServer = f.PathOnServer,
-                            MetaData = DocumentManager.Instance.GetMetadataFor(f.Id)
+                            MetaData = f.MetaData
                         }.toJSON());
                     }
                 }
@@ -220,6 +221,33 @@ namespace PocsKft.Models
             else
             {
                 throw new Exception("You have no right to delete that folder");
+            }
+        }
+
+        internal bool HandleFileLock(string path)
+        {
+            var document = DocumentManager.Instance.GetDocumentByPath(path);
+            if (document == null) throw new Exception("Lockable file not found");
+            if (PermissionManager.Instance.HasRights(UserId, document.Id) && !document.Locked){
+                LockManager.Instance.AcquireLockOnDocument(UserId, document.Id);
+                return true;
+            } else {
+                throw new Exception("You have no rights to lock the file.");
+            }
+        }
+
+        internal bool HandleFileUnlock(string path)
+        {
+            var document = DocumentManager.Instance.GetDocumentByPath(path);
+            if (document == null) throw new Exception("Unlockable file not found");
+            if (PermissionManager.Instance.HasRights(UserId, document.Id) && document.Locked)
+            {
+                LockManager.Instance.ReleaseLockOnDocument(UserId, document.Id);
+                return true;
+            }
+            else
+            {
+                throw new Exception("You have no rights to lock the file.");
             }
         }
     }

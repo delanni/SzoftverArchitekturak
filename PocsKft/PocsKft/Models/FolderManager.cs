@@ -118,40 +118,6 @@ namespace PocsKft.Models
             }
         }
 
-        //public bool AddDocumentToFolder(int folderId, Document document)
-        //{
-        //    Folder g = GetFolderById(folderId);
-        //    using (UsersContext ct = new UsersContext())
-        //    {
-        //        if (g != null)
-        //        {
-        //            if (g.Documents == null)
-        //                g.Documents = new List<Document>();
-        //            g.Documents.Add(document);
-        //            ct.SaveChanges();
-        //            return true;
-        //        }
-        //    }
-        //    return false;
-        //}
-
-        //public bool RemoveDocumentFromFolder(int folderId, Document document)
-        //{
-        //    Folder g = GetFolderById(folderId);
-        //    using (UsersContext ct = new UsersContext())
-        //    {
-        //        if (g != null)
-        //        {
-        //            if (g.Documents == null)
-        //                g.Documents = new List<Document>();
-        //            g.Documents.Remove(document);
-        //            ct.SaveChanges();
-        //            return true;
-        //        }
-        //    }
-        //    return false;
-        //}
-
         public bool AddDescriptionToFolder(int folderId, string description)
         {
             Folder g = GetFolderById(folderId);

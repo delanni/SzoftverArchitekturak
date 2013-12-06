@@ -66,18 +66,20 @@ namespace PocsKft.Models
         /// </summary>
         /// <param name="userOrGroupId">Adott User vagy Group Id-ja</param>
         /// <param name="documentId">Adott Document vagy Folder Id-ja</param>
-        public void GrantRightOnDocument(int userOrGroupId, int documentId)
+        /// <param name="permissionType">A permission tipusa</param>
+        public void GrantRightOnDocument(int userOrGroupId, int documentId, PermissionType permissionType)
         {
             using (UsersContext ct = new UsersContext())
             {
-                if (ct.Permissions.Where(i => i.UserOrGroupId == userOrGroupId
-                    && i.Id == documentId) == null)
+                if (ct.Permissions.SingleOrDefault(i => i.UserOrGroupId == userOrGroupId
+                    && i.FolderOrDocumentId == documentId) == null)
                 {
                     ct.Permissions.Add(new Permission
                     {
-                        Id = documentId,
+                        FolderOrDocumentId = documentId,
                         UserOrGroupId = userOrGroupId,
-                        IsFolder = false
+                        IsFolder = false,
+                        Type = permissionType
                     });
                     ct.SaveChanges();
                 }
