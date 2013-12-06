@@ -1,9 +1,11 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Web;
 using System.Web.Helpers;
+using System.Web.Script.Serialization;
 
 namespace PocsKft.Models
 {
@@ -72,41 +74,32 @@ namespace PocsKft.Models
 
                 ct.Entry(d).State = EntityState.Modified;
                 doc.Status = Status.Active;
-                //Document temp = 
-                Metadata m = ct.Metadatas.Add(new Metadata
-                {
-                    UserDefinedProperties = ""
-                });
-                doc.MetadataId = m.Id;
+                doc.MetaData = d.MetaData;
                 ct.Documents.Add(doc);
                 ct.SaveChanges();
             }
         }
 
-        public bool AddDocument(Document g)
+        public bool AddDocument(Document document)
         {
-            using (UsersContext ct = new UsersContext())
-            {
-                //ha van ugyanilyen nevű -> false
-                if (ct.Documents.Any(x => x.ParentFolderId == g.ParentFolderId
-                    && x.Name.Equals(g.Name)))
+            // TODO: miért van néhány property beállítva rajta, és néhány nem?
+            using (UsersContext context = new UsersContext())
+
+                if (context.Documents.Any(x => x.ParentFolderId == document.ParentFolderId
+                   && x.Name == document.Name))
                 {
                     return false;
                 }
                 else
                 {
-                    Metadata m = ct.Metadatas.Add(new Metadata
-                    {
-                        UserDefinedProperties = ""
-                    });
-                    g.MetadataId = m.Id;
-                    g.VersionNumber = 1;
-                    g.PreviousVersionDocumentId = -1;
-                    ct.Documents.Add(g);
-                    ct.SaveChanges();
+                    document.MetaData = "[]";
+                    document.VersionNumber = 1;
+                    document.PreviousVersionDocumentId = -1;
+                    context.Documents.Add(document);
+                    context.SaveChanges();
+
                     return true;
                 }
-            }
         }
 
         public List<Document> SearchDocumentsByName(string name)
@@ -120,8 +113,8 @@ namespace PocsKft.Models
 
         public Document GetDocumentByPath(string path)
         {
-            var folderPath = path.Substring(0, path.LastIndexOf('/')+1);
-            var fileName = path.Substring(path.LastIndexOf('/')+1);
+            var folderPath = path.Substring(0, path.LastIndexOf('/') + 1);
+            var fileName = path.Substring(path.LastIndexOf('/') + 1);
             int folderId = FolderManager.Instance.GetFolderByPath(folderPath).Id;
             using (UsersContext ct = new UsersContext())
             {
@@ -130,45 +123,101 @@ namespace PocsKft.Models
             }
         }
 
-        public void UpdateMeta(int fileId, string fileJson)
+        public void UpdateMeta(int documentId, string fileJson)
         {
             using (UsersContext ct = new UsersContext())
             {
-                var fileToUpdate = ct.Documents.SingleOrDefault(x => x.Id == fileId);
+                var fileToUpdate = ct.Documents.SingleOrDefault(x => x.Id == documentId);
                 if (fileToUpdate == null) return;
 
-                var metaData = ct.Metadatas.SingleOrDefault(x => x.Id == fileToUpdate.MetadataId);
-                if (metaData == null) // Because the default value for an integer is 0
-                {
-                    metaData = ct.Metadatas.Add(new Metadata()
-                    {
-                        UserDefinedProperties = "{}"
-                    });
-                    ct.SaveChanges();
-                    fileToUpdate.MetadataId = metaData.Id;
-                    ct.Entry(fileToUpdate).State = EntityState.Modified;
-                }
+                if (fileToUpdate.MetaData == null) fileToUpdate.MetaData = "{}";
+
                 var remoteObj = Json.Decode(fileJson);
                 var properties = remoteObj.properties;
                 var propsString = Json.Encode(properties);
                 if (!String.IsNullOrEmpty(propsString))
                 {
-                    metaData.UserDefinedProperties = propsString;
-                    ct.Entry(metaData).State = EntityState.Modified;
+                    fileToUpdate.MetaData = propsString;
                 }
 
                 ct.SaveChanges();
             }
         }
 
-        public Metadata GetMetadataFor(int documentId)
+        public List<Document> SearchMeta(string jsonKey, string jsonValue)
+        {
+            using (UsersContext ct = new UsersContext())
+            {
+                List<Document> docments = new List<Document>();
+
+                foreach (Document doc in ct.Documents)
+                {
+                    //dynamic data = Json.Decode(doc.MetaData);
+                    JObject jObject = JObject.Parse(doc.MetaData);
+                    JArray jArray = JArray.Parse(doc.MetaData);
+
+                    if (String.IsNullOrEmpty(jsonKey) && String.IsNullOrEmpty(jsonValue)) return null;
+                    else if (!String.IsNullOrEmpty(jsonKey) && !String.IsNullOrEmpty(jsonKey))
+                    {
+                        JToken jToken = jObject.GetValue(jsonKey);
+
+                        if (jToken != null)
+                        {
+                            if (jToken.ToString().Equals(jsonValue))
+                            {
+                                docments.Add(doc);
+                            }
+                        }
+                    }
+                    else if (!String.IsNullOrEmpty(jsonKey)) //csak jsonKey
+                    {
+                        JToken jToken = jObject.GetValue(jsonKey);
+                        if (jToken != null)
+                            docments.Add(doc);
+                    }
+                    else //csak jsonValue
+                    {
+                        foreach( JToken jToken in jObject.Values() )
+                        {
+                            if (jToken != null)
+                            {
+                                if (jToken.ToString().Equals(jsonValue))
+                                {
+                                    docments.Add(doc);
+                                }
+                            }
+                        }
+                    }
+
+
+                    //var result = from i in (IEnumerable<dynamic>)data
+                    //             select new
+                    //              {
+                    //                 i.jsonKey,
+                    //                 i.jsonValue
+                    //             };
+                    //foreach (dynamic obj in (IEnumerable<dynamic>)data)
+                    //{
+                    //    if ( ((object)obj[0]).ToString().Equals(jsonKey))
+                    //    { 
+
+                    //    }
+                    //}
+
+                }
+
+                return null;
+            }
+        }
+
+
+        public string GetMetadataFor(int documentId)
         {
             using (UsersContext ct = new UsersContext())
             {
                 var document = ct.Documents.SingleOrDefault(x => x.Id == documentId);
                 if (document == null) return null;
-                var metaData = ct.Metadatas.SingleOrDefault(x => x.Id == document.MetadataId);
-                return metaData;
+                return document.MetaData;
             }
         }
 
