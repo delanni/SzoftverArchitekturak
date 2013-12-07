@@ -68,21 +68,22 @@ namespace PocsKft.Models
             return DeleteFile(file);
         }
 
-        public void AddNewVersionForFile(File file, int oldFileId)
+        public int AddNewVersionForFile(File file, int oldFileId)
         {
             using (UsersContext ct = new UsersContext())
             {
                 File oldFile = GetFileById(oldFileId);
                 oldFile.Status = Status.Archive;
+                ct.Entry(oldFile).State = EntityState.Modified;
 
                 file.VersionNumber = oldFile.VersionNumber + 1;
                 file.PreviousVersionFileId = oldFile.Id;
-
-                ct.Entry(oldFile).State = EntityState.Modified;
                 file.Status = Status.Active;
                 file.MetaData = oldFile.MetaData;
-                ct.Files.Add(file);
+                var insertedFile = ct.Files.Add(file);
                 ct.SaveChanges();
+
+                return insertedFile.Id;
             }
         }
 
@@ -90,11 +91,22 @@ namespace PocsKft.Models
         {
             // TODO: miért van néhány property beállítva rajta, és néhány nem?
             using (UsersContext context = new UsersContext())
-
-                if (context.Files.Any(x => x.IsFolder==file.IsFolder && x.ParentFolderId == file.ParentFolderId
-                   && x.Name == file.Name))
+            {
+                var evilTwin = context.Files.SingleOrDefault(x => x.IsFolder == file.IsFolder && x.ParentFolderId == file.ParentFolderId && x.Name == file.Name);
+                if (evilTwin != null)
                 {
-                    throw new Exception("The file already exists, try a different name.");
+                    if (!file.IsFolder)
+                    {
+                        if (LockManager.Instance.DoesUserHaveLockOnDocument(file.CreatorId, file.Id))
+                        {
+                            return AddNewVersionForFile(file, evilTwin.Id);
+                        }
+                        else
+                        {
+                            throw new Exception("You must first acquire lock before updating.");
+                        }
+                    }
+                    else { throw new Exception("The file already exists, try a different name."); }
                 }
                 else
                 {
@@ -107,6 +119,7 @@ namespace PocsKft.Models
 
                     return returnedFile.Id;
                 }
+            }
         }
 
         public List<File> SearchFilesByName(string name)

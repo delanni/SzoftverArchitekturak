@@ -266,6 +266,8 @@
     <Content Include="Content\glyphicons-filetypes-regular.woff" />
     <Content Include="Content\glyphicons-halflings-regular.eot" />
     <Content Include="Content\glyphicons-social-regular.eot" />
+    <None Include="Properties\PublishProfiles\pocskft - FTP.pubxml" />
+    <None Include="Properties\PublishProfiles\pocskft - Web Deploy.pubxml" />
     <None Include="Scripts\jquery-1.8.2.intellisense.js" />
     <Content Include="Scripts\angular.js" />
     <Content Include="Scripts\appMain.js" />

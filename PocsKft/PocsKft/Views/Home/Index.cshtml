@@ -34,6 +34,7 @@
     <div ng-if="global.selectedFile">
         <label>Name of the {{global.selectedFile.fileName?global.selectedFile.isRealFile?"file":"folder":"project"}}:</label>
         <h2>{{global.selectedFile.fileName || global.selectedFile.projectName}}</h2>
+        <label>Created on:</label><span> {{global.selectedFile.creationDate.toDateString()}}, {{global.selectedFile.creationDate.toLocaleTimeString()}}</span>
         <propertyfield ng-repeat="property in global.selectedFile.properties" property="property"></propertyfield>
         <button class="edit" ng-click="addNewProperty()">New Property</button>
         <button id="saveChangesButton" class="edit" ng-click="save()">Save changes</button>

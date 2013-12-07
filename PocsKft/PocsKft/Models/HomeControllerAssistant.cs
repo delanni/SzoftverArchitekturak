@@ -37,6 +37,12 @@ namespace PocsKft.Models
 
         internal void HandleFileUpload(HttpPostedFileBase file, string path)
         {
+            string targetFileName = file.FileName;
+            if (!path.EndsWith("/"))
+            {
+                targetFileName = path.Split('/').LastOrDefault();
+            }
+
             var virtualFileName = Guid.NewGuid().ToString();
             var parentFolderId = FileManager.Instance.GetFileByPath(path).Id;
             var uploadPath = master.Server.MapPath("~/App_Data/uploads");
@@ -45,7 +51,7 @@ namespace PocsKft.Models
 
             if (file != null && file.ContentLength > 0)
             {
-                var originalFileName = Path.GetFileName(file.FileName);
+                var originalFileName = Path.GetFileName(targetFileName);
                 if (!Directory.Exists(uploadPath))
                 {
                     Directory.CreateDirectory(uploadPath);

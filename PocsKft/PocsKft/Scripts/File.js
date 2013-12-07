@@ -19,7 +19,11 @@ var File = (function () {
 
         this.filePath = opts.filePath || "/";
 
-        this.creationDate = opts.creationDate || new Date();
+        if (opts.creationDate && opts.creationDate.match(/-?\d+/)) {
+            this.creationDate = new Date(+opts.creationDate.match(/-?\d+/)[0]);
+        } else {
+            this.creationDate = opts.creationDate || new Date();
+        }
 
         this.lastModificationDate = opts.lastModificationDate || this.creationDate;
 

@@ -77,7 +77,7 @@ HBMAIN.factory("GlobalService", function (Communicator) {
             type: "git_commit",
             execute: function () {
                 var file = returnObject.selectedFile;
-                Communicator.updateFile(file);
+                Communicator.uploadFile(file.filePath + file.fileName);
             }
         },
         DOWNLOAD: {
