@@ -1,6 +1,24 @@
-﻿@{
-    ViewBag.Title = "Home Page";
-}
+﻿<!-- The used templates -->
+<script type="text/ng-template" id="folderTemplate">
+    <div class='folder' title='{{folderpath + foldername}}'>[{{foldername}}]</div>
+</script>
+<script type="text/ng-template" id="fileTemplate">
+    <div class='file' title='{{filepath + filename}}' ng-class="{locked: (locked=='LOCKED'), undercontrol: (locked=='UNDERCONTROL')}" >{{filename}}</div>
+</script>
+<script type="text/ng-template" id="projectTemplate">
+    <div alt='Owner: {{ownername}}' class='project'>*{{projectname}}*</div>
+</script>
+<script type="text/ng-template" id="propertyTemplate">
+    <div class='property'>
+        <div class='propname' style='font-weight:bold'>{{property.propName}} : {{property.propValue}}</div>
+        <label class='edit'>Property name:</label>
+        <input class='edit propname' ng-model='property.propName'/>
+        <label class='edit'>Property value:</label>
+        <input class='edit propvalue' ng-model='property.propValue' />
+    </div>
+</script>
+
+
 <aside class="leftActionBarAcceptor" ng-controller="ActionBarController">
     <div ng-repeat="action in actions"
         title="{{action.name}}"
@@ -26,7 +44,8 @@
                 ng-class="{selected: file.selected}"
                 filename="{{file.fileName}}"
                 filepath="{{file.filePath}}"
-                lastmodified="{{file.lastModified}}"></file>
+                lastmodified="{{file.lastModified}}"
+                locked="{{file.lockStatus}}"></file>
         </div>
     </div>
 </section>
@@ -53,6 +72,12 @@
 <div id="projectDialog" style="display: none" title="New project...">
     <div>Name of the project:</div>
     <input id="projectNameBox" type="text" />
+</div>
+
+<div id="revertDialog" style="display: none" ng-controller="RevertController" title="Revert file...">
+    <div>Select a version:</div>
+    <select style="width:100%" ng-model="selectedVersion" ng-options="'version '+v.versionNumber group by v.date for v in versions"></select>
+    <input id="versionNumber" type="hidden" value="{{selectedVersion.versionNumber}}" />
 </div>
 
 <div id="fileUploadDialog" style="display: none" title="Pick a file...">

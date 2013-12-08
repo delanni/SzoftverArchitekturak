@@ -34,7 +34,7 @@ namespace PocsKft.Models
             }
         }
 
-        public void AddCommentToDocument(string content, int fileId, int userId)
+        public void AddCommentToDocument(string content, int fileId, Guid userId)
         {
             using (UsersContext ct = new UsersContext())
             {

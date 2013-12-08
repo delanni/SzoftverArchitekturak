@@ -80,6 +80,16 @@ namespace PocsKft.Controllers
                 try
                 {
                     WebSecurity.CreateUserAndAccount(model.UserName, model.Password);
+                    var id = WebSecurity.GetUserId(model.UserName);
+                    using (UsersContext ctx = new UsersContext())
+                    {
+                        ctx.UserProfiles.Add(new UserProfile()
+                        {
+                            WebsecId = id,
+                            UserName = model.UserName
+                        });
+                        ctx.SaveChanges();
+                    }
                     WebSecurity.Login(model.UserName, model.Password);
                     return RedirectToAction("Index", "Home");
                 }

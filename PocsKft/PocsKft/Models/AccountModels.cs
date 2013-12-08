@@ -19,13 +19,15 @@ namespace PocsKft.Models
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             base.Configuration.LazyLoadingEnabled = false;
+
+            modelBuilder.Entity<Group>().Property(x => x.Id).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+            modelBuilder.Entity<UserProfile>().Property(x => x.UserId).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
         }
 
         public DbSet<UserProfile> UserProfiles { get; set; }
         public DbSet<Group> Groups { get; set; }
         public DbSet<File> Files { get; set; }
         public DbSet<Permission> Permissions { get; set; }
-        public DbSet<GroupMembership> GroupMemberships { get; set; }
         public DbSet<Lock> Locks { get; set; }
         public DbSet<Comment> Comments { get; set; }
     }
@@ -35,8 +37,9 @@ namespace PocsKft.Models
     {
         [Key]
         [DatabaseGeneratedAttribute(DatabaseGeneratedOption.Identity)]
-        public int UserId { get; set; }
+        public Guid UserId { get; set; }
         public string UserName { get; set; }
+        public int WebsecId { get; set; }
     }
 
     public class RegisterExternalLoginModel

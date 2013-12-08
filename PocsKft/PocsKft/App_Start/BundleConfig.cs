@@ -39,11 +39,17 @@ namespace PocsKft
                         "~/Content/themes/base/jquery.ui.progressbar.css",
                         "~/Content/themes/base/jquery.ui.theme.css"));
 
-            bundles.Add(new ScriptBundle("~/bundles/heribolz")
+            bundles.Add(new ScriptBundle("~/bundles/appmain")
                 .Include("~/Scripts/appMain.js")
+                .Include("~/Scripts/GlobalService.js")
+                .Include("~/Scripts/BrowserController.js")
+                .Include("~/Scripts/Communicator.js")
+                .Include("~/Scripts/PropertiesController.js")
+                .Include("~/Scripts/ActionBarController.js")
                 .Include("~/Scripts/User.js")
                 .Include("~/Scripts/File.js")
                 .Include("~/Scripts/Project.js")
+                .Include("~/Scripts/Version.js")
                 .Include("~/Scripts/Property.js")
                 .Include("~/Scripts/bootstrap.js")
                 );

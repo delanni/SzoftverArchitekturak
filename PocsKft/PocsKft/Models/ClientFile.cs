@@ -8,26 +8,18 @@ namespace PocsKft.Models
 {
     public class ClientFile
     {
-        public int Id { get; set; }
         public string Name { get; set; }
-        public int CreatorId { get; set; }
         public bool IsFolder { get; set; }
-        public int MetadataId { get; set; }
-        public int ParentFolderId { get; set; }
         public string PathOnServer { get; set; }
         public DateTime CreatedDate { get; set; }
-        public int LastModifiedbyId { get; set; } //userId
         public DateTime LastModifiedDate { get; set; }
         public string MetaData { get; set; }
-
-        //Doc
         public int VersionNumber { get; set; }
-        public int LockedByUser { get; set; }
-        public Status Status { get; set; } // Archived or Active
         public bool Locked { get; set; }
-
         public string Right { get; set; }
         public bool UserHasLock { get; set; }
+
+        public List<object> Versions { get; set; }
 
         public object toJSON()
         {
@@ -44,6 +36,7 @@ namespace PocsKft.Models
              * rights:enum("WRITE","READ");
              * properties:[array{string:object}];
              * comments:[array{name:string,date:string,message:string}];
+             * versions:[array{date:datestring, versionNumber:number}];
              **/
 
             return new
@@ -55,7 +48,8 @@ namespace PocsKft.Models
                 lastModificationDate = LastModifiedDate,
                 lockStatus = Locked?UserHasLock?"UNDERCONTROL":"LOCKED":"UNLOCKED",
                 rights = Right,
-                properties = MetaData??"[]"
+                properties = MetaData??"[]",
+                versions = Versions
             };
         }
 

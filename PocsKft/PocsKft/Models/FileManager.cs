@@ -70,21 +70,25 @@ namespace PocsKft.Models
 
         public int AddNewVersionForFile(File file, int oldFileId)
         {
+            File insertedFile;
             using (UsersContext ct = new UsersContext())
             {
                 File oldFile = GetFileById(oldFileId);
                 oldFile.Status = Status.Archive;
                 ct.Entry(oldFile).State = EntityState.Modified;
 
+                file.CreatedDate = oldFile.CreatedDate;
                 file.VersionNumber = oldFile.VersionNumber + 1;
                 file.PreviousVersionFileId = oldFile.Id;
                 file.Status = Status.Active;
                 file.MetaData = oldFile.MetaData;
-                var insertedFile = ct.Files.Add(file);
+                insertedFile = ct.Files.Add(file);
                 ct.SaveChanges();
 
-                return insertedFile.Id;
             }
+            LockManager.Instance.ReleaseLockOnDocument(file.CreatorId, oldFileId);
+            LockManager.Instance.AcquireLockOnDocument(file.CreatorId, insertedFile.Id);
+            return insertedFile.Id;
         }
 
         public int CreateFile(File file)
@@ -92,12 +96,17 @@ namespace PocsKft.Models
             // TODO: miért van néhány property beállítva rajta, és néhány nem?
             using (UsersContext context = new UsersContext())
             {
-                var evilTwin = context.Files.SingleOrDefault(x => x.IsFolder == file.IsFolder && x.ParentFolderId == file.ParentFolderId && x.Name == file.Name);
+                var evilTwin = context.Files.SingleOrDefault(x =>
+                    x.IsFolder == file.IsFolder // the same type
+                    && x.ParentFolderId == file.ParentFolderId  // in the same folder
+                    && x.Name == file.Name // going by the same name
+                    && (x.IsFolder || x.Status == Status.Active) // if file, then the active one only
+                    );
                 if (evilTwin != null)
                 {
                     if (!file.IsFolder)
                     {
-                        if (LockManager.Instance.DoesUserHaveLockOnDocument(file.CreatorId, file.Id))
+                        if (LockManager.Instance.IsLockedByUser(file.CreatorId, evilTwin.Id))
                         {
                             return AddNewVersionForFile(file, evilTwin.Id);
                         }
@@ -243,7 +252,9 @@ namespace PocsKft.Models
             if (!path.StartsWith("/")) path = "/" + path;
             using (UsersContext ct = new UsersContext())
             {
-                var file = ct.Files.SingleOrDefault(x => x.PathOnServer + x.Name + (x.IsFolder ? "/" : "") == path);
+                var file = ct.Files.SingleOrDefault(x =>
+                    (x.IsFolder && path == (x.PathOnServer + x.Name + "/")) ||
+                    (!x.IsFolder && x.Status == Status.Active && path == (x.PathOnServer + x.Name)));
                 return file;
             }
         }

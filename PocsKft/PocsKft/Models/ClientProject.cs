@@ -11,7 +11,7 @@ namespace PocsKft.Models
         public string OwnerName { get; set; }
         public DateTime CreationDate { get; set; }
         public string Right { get; set; }
-
+        public string MetaData { get; set; }
 
         public object toJSON()
         {
@@ -28,6 +28,7 @@ namespace PocsKft.Models
                 ownerName = OwnerName,
                 rights = Right,
                 filePath = "/",
+                properties = MetaData ?? "[]",
                 isProject = true
             };
         }

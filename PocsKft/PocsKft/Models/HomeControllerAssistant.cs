@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using System.Web.Security;
+using WebMatrix.WebData;
 
 namespace PocsKft.Models
 {
@@ -12,9 +14,9 @@ namespace PocsKft.Models
     {
         private HomeController master;
 
-        private int? _userId;
+        private Guid? _userId;
 
-        private int UserId
+        private Guid UserId
         {
             get
             {
@@ -33,6 +35,7 @@ namespace PocsKft.Models
         public HomeControllerAssistant(HomeController parent)
         {
             this.master = parent;
+            this._userId = UserId;
         }
 
         internal void HandleFileUpload(HttpPostedFileBase file, string path)
@@ -41,6 +44,7 @@ namespace PocsKft.Models
             if (!path.EndsWith("/"))
             {
                 targetFileName = path.Split('/').LastOrDefault();
+                path = path.Substring(0,path.LastIndexOf('/') + 1);
             }
 
             var virtualFileName = Guid.NewGuid().ToString();
@@ -65,16 +69,17 @@ namespace PocsKft.Models
                     LastModifiedbyId = UserId,
                     LastModifiedDate = DateTime.Now,
                     Locked = false,
-                    LockedByUserId = 0,
+                    LockedByUserId = Guid.Empty,
                     Name = originalFileName,
                     ParentFolderId = parentFolderId,
                     PathOnServer = path,
                     Status = Status.Active,
+                    PreviousVersionFileId = -1,
                     VersionNumber = 1,
                     VirtualFileName = virtualFileName
                 };
                 FileManager.Instance.CreateFile(document);
-                PermissionManager.Instance.GrantRightOnDocument(UserId, document.Id, PermissionType.WRITE);
+                PermissionManager.Instance.GrantRightOnFile(UserId, document.Id, PermissionType.WRITE);
             }
         }
 
@@ -120,8 +125,10 @@ namespace PocsKft.Models
             var virtualFileName = document.VirtualFileName;
             var fileName = document.Name;
             var fileStream = System.IO.File.OpenRead(Path.Combine(uploadPath, virtualFileName));
-            return new {
-                fileStream= fileStream, fileName= fileName
+            return new
+            {
+                fileStream = fileStream,
+                fileName = fileName
             };
         }
 
@@ -131,44 +138,50 @@ namespace PocsKft.Models
 
             foreach (File f in projects)
             {
-                if (PermissionManager.Instance.CanRead(UserId, f.Id))
+                string right = PermissionManager.Instance.EvaluateRight(UserId, f.Id);
+                if (right != null)
                 {
                     yield return (new ClientProject
                     {
                         CreationDate = f.CreatedDate,
                         Name = f.Name,
-                        OwnerName = UserManager.Instance.GetUserNameById(UserId),
-                        Right = "WRITE"
+                        OwnerName = UserManager.Instance.GetUserNameById(f.CreatorId),
+                        Right = right,
+                        MetaData = f.MetaData
                     }.toJSON());
                 }
             }
         }
 
-        internal IEnumerable<object> ListFilesIn(File folder)
+        internal IEnumerable<object> ListFilesIn(File file)
         {
-            List<File> documents = FileManager.Instance.ListChildren(folder.Id);
+            List<File> documents = FileManager.Instance.ListChildren(file.Id);
             if (documents != null)
             {
-                foreach (File f in documents)
+                string folderReadRight = PermissionManager.Instance.EvaluateRight(UserId, file.Id);
+                if (folderReadRight != null)
                 {
-                    if (PermissionManager.Instance.CanRead(UserId, f.Id))
+                    foreach (File f in documents)
                     {
-                        yield return (new ClientFile
+                        string right = PermissionManager.Instance.EvaluateRight(UserId, f.Id);
+                        var versions = this.GetVersionsForFile(f.Id);
+                        if (right != null)
                         {
-                            CreatorId = f.CreatorId,
-                            //Description = f.,
-                            Id = f.Id,
-                            IsFolder = f.IsFolder,
-                            CreatedDate = f.CreatedDate,
-                            Locked = f.Locked,
-                            LockedByUser = f.LockedByUserId,
-                            Name = f.Name,
-                            ParentFolderId = f.ParentFolderId,
-                            VersionNumber = f.VersionNumber,
-                            UserHasLock = f.LockedByUserId == UserId,
-                            PathOnServer = f.PathOnServer,
-                            MetaData = f.MetaData
-                        }.toJSON());
+                            yield return (new ClientFile
+                            {
+                                CreatedDate = f.CreatedDate,
+                                IsFolder = f.IsFolder,
+                                LastModifiedDate = f.LastModifiedDate,
+                                Locked = f.Locked,
+                                MetaData = f.MetaData,
+                                Name = f.Name,
+                                PathOnServer = f.PathOnServer,
+                                Right = right,
+                                UserHasLock = f.LockedByUserId == UserId,
+                                VersionNumber = f.VersionNumber,
+                                Versions = versions
+                            }.toJSON());
+                        }
                     }
                 }
             }
@@ -208,10 +221,13 @@ namespace PocsKft.Models
         {
             var document = FileManager.Instance.GetFileByPath(path);
             if (document == null) throw new Exception("Lockable file not found");
-            if (PermissionManager.Instance.CanRead(UserId, document.Id) && !document.Locked){
+            if (PermissionManager.Instance.CanRead(UserId, document.Id) && !document.Locked)
+            {
                 LockManager.Instance.AcquireLockOnDocument(UserId, document.Id);
                 return true;
-            } else {
+            }
+            else
+            {
                 throw new Exception("You have no rights to lock the file.");
             }
         }
@@ -230,5 +246,89 @@ namespace PocsKft.Models
                 throw new Exception("You have no rights to lock the file.");
             }
         }
+
+        internal List<object> GetVersionsForFile(int id)
+        {
+            List<object> returnValues = new List<object>();
+            File f;
+            int actualId = id;
+            do
+            {
+                f = FileManager.Instance.GetFileById(actualId);
+                if (f == null) break;
+                if (f.Status == Status.Archive)
+                {
+                    returnValues.Add(new
+                    {
+                        versionNumber = f.VersionNumber,
+                        date = f.LastModifiedDate,
+                    });
+                }
+                actualId = f.PreviousVersionFileId;
+            } while (actualId>0);
+            return returnValues;
+        }
+
+
+        internal void CreateFolder(string folderName, File parent)
+        {
+            if (PermissionManager.Instance.CanRead(UserId, parent.Id))
+            {
+                File newFolder = new File
+                {
+                    Name = folderName,
+                    CreatedDate = DateTime.Now,
+                    LastModifiedDate = DateTime.Now,
+                    IsRootFolder = false,
+                    IsFolder = true,
+                    CreatorId = UserId,
+                    ParentFolderId = parent.Id,
+                    PathOnServer = (parent.PathOnServer + parent.Name + "/")
+                };
+
+                int newFolderId = FileManager.Instance.CreateFile(newFolder);
+
+                if (master.HttpContext.User.Identity.IsAuthenticated)
+                {
+                    PermissionManager.Instance.GrantRightOnFolder(UserId, newFolderId, PermissionType.WRITE);
+                }
+                else
+                {
+                    PermissionManager.Instance.GrantRightOnFolder(GroupManager.EVERYBODY_ID, newFolderId, PermissionType.WRITE);
+                }
+            }
+            else
+            {
+                throw new Exception("No rights for creating folder here");
+            }
+        }
+
+        internal void CreateProject(string folderName)
+        {
+            if (PermissionManager.Instance.CanRead(UserId, 0))
+            {
+                File newFolder = new File
+                {
+                    Name = folderName,
+                    CreatedDate = DateTime.Now,
+                    LastModifiedDate = DateTime.Now,
+                    IsRootFolder = true,
+                    IsFolder = true,
+                    CreatorId = UserId,
+                    ParentFolderId = 0,
+                    PathOnServer = "/",
+                    MetaData = "[]"
+                };
+
+                int newFolderId = FileManager.Instance.CreateFile(newFolder);
+                PermissionManager.Instance.GrantRightOnFolder(UserId, newFolderId, PermissionType.WRITE);
+            }
+            else
+            {
+                throw new Exception("No rights for creating folder here");
+            }
+        }
+
+
     }
 }

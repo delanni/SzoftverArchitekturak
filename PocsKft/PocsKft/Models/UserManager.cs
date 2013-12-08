@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using System.Web.Security;
+using WebMatrix.WebData;
 
 namespace PocsKft.Models
 {
@@ -23,40 +25,33 @@ namespace PocsKft.Models
             }
         }
 
-        public int GetUserIdByName(string name)
+        public Guid GetUserIdByName(string name)
         {
-            using (UsersContext ct = new UsersContext())
+            if (String.IsNullOrEmpty(name) || name == "unknown") return Guid.NewGuid();
+            using (var context = new UsersContext())
             {
-                UserProfile user = 
-                    ct.UserProfiles.Where(i => i.UserName.Equals(name) == true).FirstOrDefault();
-                if (user != null)
-                    return user.UserId;
-                else
-                    return -1;
+                var usr = context.UserProfiles.SingleOrDefault(x => x.UserName == name);
+                return usr==null?Guid.NewGuid():usr.UserId;
             }
         }
 
-        public UserProfile GetUserById(int id)
+        public string GetUserNameById(Guid id)
         {
-            using (UsersContext ct = new UsersContext())
+            using (var context = new UsersContext())
             {
-                UserProfile user =
-                    ct.UserProfiles.Where(i => i.UserId == id).FirstOrDefault();
-                return user;
+                var usr = context.UserProfiles.SingleOrDefault(x => x.UserId == id);
+                return usr==null?"unknown":usr.UserName;
             }
-        }
-
-        public string GetUserNameById(int id)
-        {
-            using (UsersContext ct = new UsersContext())
-            {
-                UserProfile user =
-                    ct.UserProfiles.Where(i => i.UserId == id).FirstOrDefault();
-                if (user != null)
-                    return user.UserName;
-                else
-                    return null;
-            }
+            //try
+            //{
+            //    var user = Membership.GetUser((Guid)id);
+            //    if (user == null) return "unknown";
+            //    return user.UserName;
+            //}
+            //catch (Exception e)
+            //{
+            //    return "unknown";
+            //}
         }
     }
 }

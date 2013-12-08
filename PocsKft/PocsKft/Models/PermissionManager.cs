@@ -17,7 +17,10 @@ namespace PocsKft.Models
                 lock (syncRoot)
                 {
                     if (instance == null)
+                    {
                         instance = new PermissionManager();
+                    }
+
                 }
                 return instance;
             }
@@ -30,13 +33,13 @@ namespace PocsKft.Models
         /// <param name="userId"></param>
         /// <param name="documentId"></param>
         /// <returns></returns>
-        public bool CanRead(int userId, int documentId)
+        public bool CanRead(Guid userId, int documentId)
         {
             if (documentId == 0) return true; // a root-ban mindenki tud projektet csinalni
             using (UsersContext ct = new UsersContext())
             {
                 //magára a user-re
-                if (ct.Permissions.Any(i => i.FileId == documentId 
+                if (ct.Permissions.Any(i => i.FileId == documentId
                     && i.UserOrGroupId == userId))
                 {
                     return true;
@@ -61,7 +64,7 @@ namespace PocsKft.Models
             }
         }
 
-        public bool CanWrite(int userId, int documentId)
+        public bool CanWrite(Guid userId, int documentId)
         {
             if (documentId == 0) return true; // a root-ban mindenki tud projektet csinalni
             using (UsersContext ct = new UsersContext())
@@ -76,7 +79,7 @@ namespace PocsKft.Models
                 //valamely, a user-t tartalmazó csoport-ra
                 else
                 {
-                    List<Group> list = GroupManager.Instance.GetGroupsOfUser(userId);
+                    IEnumerable<Group> list = GroupManager.Instance.GetGroupsOfUser(userId);
                     if (list != null)
                     {
                         foreach (Group g in list)
@@ -98,18 +101,17 @@ namespace PocsKft.Models
         /// Ha még nem volt rajta Right, akkor felveszi.
         /// </summary>
         /// <param name="userOrGroupId">Adott User vagy Group Id-ja</param>
-        /// <param name="documentId">Adott File vagy Folder Id-ja</param>
+        /// <param name="fileId">Adott File vagy Folder Id-ja</param>
         /// <param name="permissionType">A permission tipusa</param>
-        public void GrantRightOnDocument(int userOrGroupId, int documentId, PermissionType permissionType)
+        public void GrantRightOnFile(Guid userOrGroupId, int fileId, PermissionType permissionType)
         {
             using (UsersContext ct = new UsersContext())
             {
-                if (ct.Permissions.SingleOrDefault(i => i.UserOrGroupId == userOrGroupId
-                    && i.FileId == documentId) == null)
+                if (!ct.Permissions.Any(i => i.UserOrGroupId == userOrGroupId && i.FileId == fileId))
                 {
                     ct.Permissions.Add(new Permission
                     {
-                        FileId = documentId,
+                        FileId = fileId,
                         UserOrGroupId = userOrGroupId,
                         IsFolder = false,
                         Type = permissionType
@@ -119,12 +121,12 @@ namespace PocsKft.Models
             }
         }
 
-        public void GrantRightOnFolder(int userOrGroupId, int folderId, PermissionType Type, bool isRecursive = true)
+        public void GrantRightOnFolder(Guid userOrGroupId, int folderId, PermissionType Type, bool isRecursive = true)
         {
+            GrantRightOnFile(userOrGroupId, folderId, Type);
             using (UsersContext ct = new UsersContext())
             {
                 GrantRightOnAllChildren(ct, folderId, userOrGroupId, Type, isRecursive);
-
                 ct.SaveChanges();
             }
         }
@@ -136,7 +138,7 @@ namespace PocsKft.Models
         /// <param name="ct"></param>
         /// <param name="folderId"></param>
         /// <param name="userOrGroupId"></param>
-        public void GrantRightOnAllChildren(UsersContext ct, int folderId, int userOrGroupId, PermissionType Type, bool isRecursive)
+        public void GrantRightOnAllChildren(UsersContext ct, int folderId, Guid userOrGroupId, PermissionType Type, bool isRecursive)
         {
             File f = FileManager.Instance.GetFileById(folderId);
 
@@ -187,7 +189,7 @@ namespace PocsKft.Models
             }
         }
 
-        public void RevokeRightOnDocument(int userOrGroupId, int documentId)
+        public void RevokeRightOnDocument(Guid userOrGroupId, int documentId)
         {
             using (UsersContext ct = new UsersContext())
             {
@@ -202,7 +204,7 @@ namespace PocsKft.Models
             }
         }
 
-        public void RevokeRightOnFolder(int userOrGroupId, int folderId)
+        public void RevokeRightOnFolder(Guid userOrGroupId, int folderId)
         {
             using (UsersContext ct = new UsersContext())
             {
@@ -212,7 +214,7 @@ namespace PocsKft.Models
             }
         }
 
-        public void RevokeRightOnAllChildren(UsersContext ct, int folderId, int userOrGroupId)
+        public void RevokeRightOnAllChildren(UsersContext ct, int folderId, Guid userOrGroupId)
         {
             File f = FileManager.Instance.GetFileById(folderId);
 
@@ -241,6 +243,13 @@ namespace PocsKft.Models
                     RevokeRightOnAllChildren(ct, temp.Id, userOrGroupId);
                 }
             }
+        }
+
+        internal string EvaluateRight(Guid UserId, int fileId)
+        {
+            if (CanWrite(UserId, fileId)) return "WRITE";
+            else if (CanRead(UserId, fileId)) return "READ";
+            else return null;
         }
     }
 }

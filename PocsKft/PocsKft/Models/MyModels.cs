@@ -9,12 +9,13 @@ namespace PocsKft.Models
 {
     public class File
     {
+        [DatabaseGenerated(System.ComponentModel.DataAnnotations.Schema.DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        public int CreatorId { get; set; }
+        public Guid CreatorId { get; set; }
         public int ParentFolderId { get; set; }
-        public int LastModifiedbyId { get; set; } //userId
+        public Guid LastModifiedbyId { get; set; } //userId
         public int PreviousVersionFileId { get; set; } // ha ő az első verzió, akkor -1
-        public int LockedByUserId { get; set; }
+        public Guid LockedByUserId { get; set; }
 
         public string Name { get; set; }
         public string VirtualFileName { get; set; }
@@ -35,39 +36,36 @@ namespace PocsKft.Models
 
     public class Group
     {
-        public int Id { get; set; }
+        [DatabaseGenerated(System.ComponentModel.DataAnnotations.Schema.DatabaseGeneratedOption.Identity)]
+        public Guid Id { get; set; }
         public string GroupName { get; set; }
-    }
-
-    public class GroupMembership
-    {
-        public int Id { get; set; }
-        public int GroupId { get; set; }
-        public int UserId { get; set; }
     }
 
     public class Comment
     {
+        [DatabaseGenerated(System.ComponentModel.DataAnnotations.Schema.DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         public int DocumentId { get; set; }
         public string Content { get; set; }
         public DateTime createdDate { get; set; }
-        public int WrittenbyId { get; set; } //userId
+        public Guid WrittenbyId { get; set; } //userId
     }
 
 
     public class Lock
     {
+        [DatabaseGenerated(System.ComponentModel.DataAnnotations.Schema.DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        public int UserId { get; set; }
+        public Guid UserId { get; set; }
         public int FolderOrDocumentId { get; set; }
     }
 
 
     public class Permission
     {
+        [DatabaseGenerated(System.ComponentModel.DataAnnotations.Schema.DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        public int UserOrGroupId { get; set; }
+        public Guid UserOrGroupId { get; set; }
         public int FileId { get; set; }
         public bool IsFolder { get; set; }
         public PermissionType Type { get; set; }

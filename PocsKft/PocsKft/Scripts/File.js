@@ -25,7 +25,11 @@ var File = (function () {
             this.creationDate = opts.creationDate || new Date();
         }
 
-        this.lastModificationDate = opts.lastModificationDate || this.creationDate;
+        if (opts.lastModificationDate && opts.lastModificationDate.match(/-?\d+/)) {
+            this.lastModificationDate = new Date(+opts.lastModificationDate.match(/-?\d+/)[0]);
+        } else {
+            this.lastModificationDate = this.creationDate || new Date();
+        }
 
         this.projectName = opts.projectName || "root";
 
@@ -47,6 +51,12 @@ var File = (function () {
             }
         } else {
             this.properties = [];
+        }
+
+        if (opts.versions) {
+            this.versions = opts.versions.map(function (e) { return new Version(e); });
+        } else {
+            this.versions = [];
         }
     }
 

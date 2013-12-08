@@ -11,13 +11,13 @@
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/jqueryui")
     @Scripts.Render("~/bundles/angular")
-    @Scripts.Render("~/bundles/heribolz")
+    @Scripts.Render("~/bundles/appmain")
 </head>
 <body ng-app="heribolz">
     <header>
         <nav class="topNavBar">
             <div class="wellPadded">
-                <div id="homeLink">&lt;@Html.ActionLink("SoftBolz", "Index", "Home")&gt;</div>
+                <h1 style="margin:0" id="homeLink">{{@Html.ActionLink("SoftBolz", "Index", "Home")}}</h1>
                 <div id="loginBox">@Html.Partial("_LoginPartial")</div>
             </div>
         </nav>

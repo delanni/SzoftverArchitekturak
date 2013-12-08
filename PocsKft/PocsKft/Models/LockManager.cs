@@ -28,93 +28,76 @@ namespace PocsKft.Models
         // Az adott dokumentumon a User helyezett-e el Lock-ot ?
         // igen -> true
         // nem -> false
-        public bool DoesUserHaveLockOnDocument(int userId, int documnetId)
+        public bool IsLockedByUser(Guid userId, int fileId)
         {
             using (UsersContext ct = new UsersContext())
             {
-                Lock l = ct.Locks.Where(i => i.UserId == userId && i.FolderOrDocumentId == documnetId)
-            .FirstOrDefault();
-                if (l != null)
-                {
-                    return true;
-                }
-                return false;
+                return ct.Locks.Any(i => i.UserId == userId && i.FolderOrDocumentId == fileId);
             }
         }
 
         // Az adott dokumentumon valaki aki nem a User helyezett-e el Lock-ot ?
         // igen -> true
         // nem -> false
-        public bool DoesAybodyButUserHaveLockOnDocument(int userId, int documnetId)
+        public bool DoesAybodyButUserHaveLockOnDocument(Guid userId, int documnetId)
         {
             using (UsersContext ct = new UsersContext())
             {
-                Lock l = ct.Locks.Where(i => i.UserId != userId && i.FolderOrDocumentId == documnetId)
-            .FirstOrDefault();
-                if (l != null)
-                {
-                    return true;
-                }
-                return false;
+                return ct.Locks.Any(i => i.UserId != userId && i.FolderOrDocumentId == documnetId);
             }
         }
 
         // Az adott dokumentumon van-e Lock?
         // igen -> true
         // nem -> false
-        public bool DoesAybodyHaveLockOnDocument(int documnetId)
+        public bool IsFileLocked(int fileId)
         {
             using (UsersContext ct = new UsersContext())
             {
-                Lock l = ct.Locks.Where(i => i.FolderOrDocumentId == documnetId)
-            .FirstOrDefault();
-                if (l != null)
-                {
-                    return true;
-                }
-                return false;
+                return ct.Locks.Any(i => i.FolderOrDocumentId == fileId);
             }
         }
 
 
         //Elhelyez egy lock-ot a 
-        public void AcquireLockOnDocument(int userId, int documentId)
+        public void AcquireLockOnDocument(Guid userId, int fileId)
         {
             using (UsersContext ct = new UsersContext())
             {
-                if (ct.Locks.Where(i => i.UserId == userId && i.FolderOrDocumentId == documentId)
-                    .FirstOrDefault() == null)
-                    
+                if (!ct.Locks.Any(i => i.UserId == userId && i.FolderOrDocumentId == fileId))
                 {
                     ct.Locks.Add(new Lock
                     {
                         UserId = userId,
-                        FolderOrDocumentId = documentId
+                        FolderOrDocumentId = fileId
                     });
 
-                    File d = FileManager.Instance.GetFileById(documentId);
+                    File d = FileManager.Instance.GetFileById(fileId);
                     d.Locked = true;
                     d.LockedByUserId = userId;
                     ct.Entry(d).State = EntityState.Modified;
 
                     ct.SaveChanges();
                 }
+                else
+                {
+                    throw new Exception("The document is already locked");
+                }
             }
         }
 
-        public void ReleaseLockOnDocument(int userId, int documnetId)
+        public void ReleaseLockOnDocument(Guid userId, int fileId)
         {
             using (UsersContext ct = new UsersContext())
             {
-                Lock l = ct.Locks.Where(i => i.UserId == userId && i.FolderOrDocumentId == documnetId)
-                            .FirstOrDefault();
+                Lock l = ct.Locks.SingleOrDefault(i => i.UserId == userId && i.FolderOrDocumentId == fileId);
                 if (l != null)
                 {
                     ct.Locks.Remove(l);
 
-                    File d = FileManager.Instance.GetFileById(documnetId);
+                    File d = FileManager.Instance.GetFileById(fileId);
                     d.Locked = false;
-                    d.LockedByUserId = -1;
+                    d.LockedByUserId = Guid.NewGuid();
                     ct.Entry(d).State = EntityState.Modified;
 
                     ct.SaveChanges();

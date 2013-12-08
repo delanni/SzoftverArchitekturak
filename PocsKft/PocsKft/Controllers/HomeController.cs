@@ -5,9 +5,12 @@ using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.Mvc;
 using PocsKft.Models;
+using PocsKft.Filters;
+using System.Web.Security;
 
 namespace PocsKft.Controllers
 {
+    [InitializeSimpleMembership]
     public class HomeController : Controller
     {
 
@@ -125,7 +128,6 @@ namespace PocsKft.Controllers
                 var files = Assistant.ListFilesIn(file);
 
                 entitiesToList.AddRange(files);
-
             }
             return Json(entitiesToList, JsonRequestBehavior.AllowGet);
 
@@ -147,67 +149,15 @@ namespace PocsKft.Controllers
             File parent = FileManager.Instance.GetFileByPath(parentPath);
             if (parent != null)
             {
-                createFolder(folderName, parent);
+                Assistant.CreateFolder(folderName, parent);
             }
             else
             {
-                createProject(folderName);
+                Assistant.CreateProject(folderName);
             }
 
 
             return Json(true);
-        }
-
-        private void createFolder(string folderName, File parent)
-        {
-            int userId = UserManager.Instance.GetUserIdByName(HttpContext.User.Identity.Name);
-            if (PermissionManager.Instance.CanRead(userId, parent.Id))
-            {
-                File newFolder = new File
-                {
-                    Name = folderName,
-                    CreatedDate = DateTime.Now,
-                    LastModifiedDate = DateTime.Now,
-                    IsRootFolder = false,
-                    IsFolder = true,
-                    CreatorId = userId,
-                    ParentFolderId = parent.Id,
-                    PathOnServer = (parent.PathOnServer + parent.Name + "/")
-                };
-
-                int newFolderId = FileManager.Instance.CreateFile(newFolder);
-                PermissionManager.Instance.GrantRightOnFolder(userId, newFolderId, PermissionType.WRITE);
-            }
-            else
-            {
-                throw new Exception("No rights for creating folder here");
-            }
-        }
-
-        private void createProject(string folderName)
-        {
-            int userId = UserManager.Instance.GetUserIdByName(HttpContext.User.Identity.Name);
-            if (PermissionManager.Instance.CanRead(userId, 0))
-            {
-                File newFolder = new File
-                {
-                    Name = folderName,
-                    CreatedDate = DateTime.Now,
-                    LastModifiedDate = DateTime.Now,
-                    IsRootFolder = true,
-                    IsFolder = true,
-                    CreatorId = userId,
-                    ParentFolderId = 0,
-                    PathOnServer = "/"
-                };
-
-                int newFolderId = FileManager.Instance.CreateFile(newFolder);
-                PermissionManager.Instance.GrantRightOnFolder(userId, newFolderId, PermissionType.WRITE);
-            }
-            else
-            {
-                throw new Exception("No rights for creating folder here");
-            }
         }
 
         [HttpDelete]

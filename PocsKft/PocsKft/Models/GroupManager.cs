@@ -2,16 +2,30 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using System.Web.Security;
 
 namespace PocsKft.Models
 {
     //Singleton
     public class GroupManager
     {
+        public const string EVERYBODY = "Everybody";
+        public static Guid EVERYBODY_ID = Guid.Empty;
         private static volatile GroupManager instance;
         private static object syncRoot = new Object();
-        private GroupManager() { }
-        //public List<Group> Groups { get; set; }
+        private GroupManager() {
+            using (UsersContext context = new UsersContext())
+            {
+                if (!context.Groups.Any(x => x.GroupName == EVERYBODY))
+                {
+                    CreateGroup(new Group()
+                    {
+                        GroupName = EVERYBODY
+                    });
+                }
+                EVERYBODY_ID = GetGroup(EVERYBODY).Id;
+            }
+        }
 
         public static GroupManager Instance
         {
@@ -21,16 +35,25 @@ namespace PocsKft.Models
                 {
                     if (instance == null)
                         instance = new GroupManager();
+
                 }
                 return instance;
             }
         }
 
-        public Group GetGroupById(int id)
+        public Group GetGroup(Guid id)
         {
             using (UsersContext ct = new UsersContext())
             {
-                Group g = ct.Groups.Where(i => i.Id == id).FirstOrDefault();
+                Group g = ct.Groups.FirstOrDefault(i => i.Id == id);
+                return g;
+            }
+        }
+        public Group GetGroup(string groupName)
+        {
+            using (UsersContext ct = new UsersContext())
+            {
+                Group g = ct.Groups.FirstOrDefault(i => i.GroupName == groupName);
                 return g;
             }
         }
@@ -43,127 +66,80 @@ namespace PocsKft.Models
                 ct.SaveChanges();
             }
         }
-
-        public bool DeleteGroupById(int id)
+        public void DeleteGroup(Guid id)
         {
-            Group g = GetGroupById(id);
-            using (UsersContext ct = new UsersContext())
+            Group g = GetGroup(id);
+            DeleteGroup(g);
+
+        }
+
+        public Guid CreateGroup(Group g)
+        {
+            if (Roles.RoleExists(g.GroupName))
             {
-                if (g != null)
+                throw new Exception("Role " + g.GroupName + "  already exists");
+            }
+            else
+            {
+                Roles.CreateRole(g.GroupName);
+                using (UsersContext ct = new UsersContext())
                 {
-                    ct.Groups.Remove(g);
+                    Group temp = ct.Groups.Add(g);
                     ct.SaveChanges();
-                    return true;
+                    return temp.Id;
                 }
-            }
-            return false;
-        }
-
-        public bool CreateGroup(Group g)
-        {
-            using (UsersContext ct = new UsersContext())
-            {
-                Group temp = ct.Groups.Add(g);
-                ct.SaveChanges();
-                if (temp != null)
-                    return true;
-                else
-                    return false;
             }
         }
 
-        public bool DeleteUserFromGroup(Group g, UserProfile user)
+        public void DeleteUserFromGroup(Group g, UserProfile user)
         {
-            using (UsersContext ct = new UsersContext())
-            {
-                GroupMembership gm = ct.GroupMemberships.Where(i => i.UserId == user.UserId
-                    && i.GroupId == g.Id).FirstOrDefault();
-                if (gm != null)
-                {
-                    ct.GroupMemberships.Remove(gm);
-                    ct.SaveChanges();
-                    return true;
-                }
-            }
-            return false;
+            Roles.RemoveUserFromRole(user.UserName, g.GroupName);
+
+        }
+        public void DeleteUserFromGroup(Guid id, UserProfile user)
+        {
+            Group g = GetGroup(id);
+            Roles.RemoveUserFromRole(user.UserName, g.GroupName);
         }
 
-        public bool DeleteUserFromGroupById(int id, UserProfile user)
+        public void AddUserToGroup(Group g, UserProfile user)
         {
-            Group g = GetGroupById(id);
+            Roles.AddUserToRole(user.UserName, g.GroupName);
+        }
+        public void AddUserToGroup(Guid id, UserProfile user)
+        {
+            Group g = GetGroup(id);
 
-            using (UsersContext ct = new UsersContext())
-            {
-                GroupMembership gm = ct.GroupMemberships.Where(i => i.UserId == user.UserId
-                    && i.GroupId == g.Id).FirstOrDefault();
-                if (gm != null)
-                {
-                    ct.GroupMemberships.Remove(gm);
-                    ct.SaveChanges();
-                    return true;
-                }
-            }
-            return false;
+            AddUserToGroup(g, user);
         }
 
-        public bool AddUserToGroup(Group g, UserProfile user)
+        public List<Group> GetGroupsOfUser(Guid userId)
         {
-            using (UsersContext ct = new UsersContext())
+            var userName = UserManager.Instance.GetUserNameById(userId);
+            List<Group> groups = new List<Group>();
+            groups.Add(GetGroup(GroupManager.EVERYBODY));
+            try
             {
-                GroupMembership gm = ct.GroupMemberships.Where(i => i.UserId == user.UserId
-    && i.GroupId == g.Id).FirstOrDefault();
-
-                if (gm != null)
-                {
-
-                    ct.GroupMemberships.Add(new GroupMembership
-                    {
-                        GroupId = g.Id,
-                        UserId = user.UserId
-                    });
-                    ct.SaveChanges();
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        public bool AddUserToGroupById(int id, UserProfile user)
-        {
-            Group g = GetGroupById(id);
-
-            using (UsersContext ct = new UsersContext())
-            {
-                GroupMembership gm = ct.GroupMemberships.Where(i => i.UserId == user.UserId
-    && i.GroupId == g.Id).FirstOrDefault();
-
-                if (gm != null)
-                {
-
-                    ct.GroupMemberships.Add(new GroupMembership
-                    {
-                        GroupId = g.Id,
-                        UserId = user.UserId
-                    });
-                    ct.SaveChanges();
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        public List<Group> GetGroupsOfUser(int userId)
-        {
-            using (UsersContext ct = new UsersContext())
-            {
-                List<Group> groups = new List<Group>();
-                List<int> ints =  ct.GroupMemberships.Where(j => j.UserId == userId).Select(i => i.GroupId).ToList();
-                foreach(int i in ints)
-                {
-                    groups.Add( ct.Groups.Where(j => j.Id == i).FirstOrDefault() );
-                }
+                var roles = Roles.Provider.GetRolesForUser(userName);
+                groups.AddRange(roles.Select(x => GetGroup(x)));
                 return groups;
             }
+            catch (InvalidOperationException exception)
+            {
+                return groups;
+            }
+        }
+
+        public bool IsUserInGroup(Guid userId, Guid groupId)
+        {
+            string userName = UserManager.Instance.GetUserNameById(userId);
+            string groupName = GetGroup(groupId).GroupName;
+
+            return IsUserInGroup(userName, groupName);
+        }
+        public bool IsUserInGroup(string userName, string groupName)
+        {
+            return Roles.GetRolesForUser(userName).Contains(groupName);
         }
     }
 }
