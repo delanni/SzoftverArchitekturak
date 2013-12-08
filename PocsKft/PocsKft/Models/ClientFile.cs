@@ -52,29 +52,5 @@ namespace PocsKft.Models
                 versions = Versions
             };
         }
-
-        public static ClientFile createExample()
-        {
-            var example = new ClientFile();
-            example.IsFolder = false;
-            example.Locked = true;
-            example.UserHasLock = true;
-            example.Name = "this.txt";
-            example.PathOnServer = "/asd/das";
-            example.Right = "WRITE";
-            return example;
-        }
-
-        public static ClientFile createExampleFolder()
-        {
-            var example = new ClientFile();
-            example.IsFolder = true;
-            example.Locked = true;
-            example.UserHasLock = true;
-            example.Name = "alma";
-            example.PathOnServer = "/asd/das";
-            example.Right = "WRITE";
-            return example;
-        }
     }
 }

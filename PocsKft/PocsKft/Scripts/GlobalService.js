@@ -74,7 +74,7 @@ HBMAIN.factory("GlobalService", function (Communicator) {
         },
         LOCK: {
             name: "Try to acquire lock on the file",
-            type: "lock",
+            type: "unlock",
             execute: function () {
                 var file = returnObject.selectedFile;
                 Communicator.tryLock(file);
@@ -82,7 +82,7 @@ HBMAIN.factory("GlobalService", function (Communicator) {
         },
         UNLOCK: {
             name: "Release the lock",
-            type: "unlock",
+            type: "lock",
             execute: function () {
                 var file = returnObject.selectedFile;
                 Communicator.unlock(file);
@@ -144,13 +144,13 @@ HBMAIN.factory("GlobalService", function (Communicator) {
         return [];
     };
     ACTIONS.getWriteActionsForFile = function (file) {
-        var baseActions = [ACTIONS.EDIT, ACTIONS.SAVE, ACTIONS.DELETE];
+        var baseActions = [ACTIONS.EDIT, ACTIONS.SAVE];
         if (file.lockStatus === 'UNLOCKED') {
             return [ACTIONS.LOCK].concat(baseActions);
         } else if (file.lockStatus === 'LOCKED') {
             return [ACTIONS.LOCKED];
         } else {
-            return [ACTIONS.UPDATE, ACTIONS.REVERT, ACTIONS.UNLOCK].concat(baseActions);
+            return [ACTIONS.UNLOCK, ACTIONS.UPDATE, ACTIONS.REVERT, ACTIONS.DELETE].concat(baseActions);
         }
     };
     ACTIONS.getReadActionsForFile = function (file) {

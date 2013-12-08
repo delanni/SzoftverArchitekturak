@@ -36,7 +36,15 @@ namespace PocsKft.Controllers
                     case "PUT":
                         return CreateFolder(path);
                     case "DELETE":
-                        return DeleteResource(path);
+                        var revertCandidate=Request.QueryString["revertTo"];
+                        if (revertCandidate == null)
+                        {
+                            return DeleteResource(path);
+                        }
+                        else
+                        {
+                            return RevertResource(path, revertCandidate);
+                        }
                     case "GET":
                         var headerAccepts = Request.Headers["Accept"];
                         if (headerAccepts.ToLower().Contains("json"))
@@ -52,16 +60,24 @@ namespace PocsKft.Controllers
             {
                 if (ex.GetType().Equals(typeof(Exception)))
                 {
-                    if (ex.Message.Contains("right")) Response.StatusCode = 503;
+                    if (ex.Message.ToLower().Contains("right")) Response.StatusCode = 503;
                     else Response.StatusCode = 500;
-                    return Json(ex.Message, JsonRequestBehavior.AllowGet);
+                    return Json(ex.Message.Substring(0, Math.Min(40, ex.Message.Length)), JsonRequestBehavior.AllowGet);
                 }
                 else
                 {
                     Response.StatusCode = 500;
-                    return Json("An error ocurred, try again", JsonRequestBehavior.AllowGet);
+                    return Json(ex.Message.Substring(0, Math.Min(40, ex.Message.Length)), JsonRequestBehavior.AllowGet);
                 }
             }
+        }
+
+        [HttpDelete]
+        private ActionResult RevertResource(string path, string revertCandidate)
+        {
+            var targetVersion = int.Parse(revertCandidate);
+            var success = Assistant.RevertFileTo(path, targetVersion);
+            return Json(success?"Reverting was successful.":"Reverting failed");
         }
 
         [HttpGet]
@@ -97,7 +113,7 @@ namespace PocsKft.Controllers
                     try
                     {
                         var fileJson = Request.Form["data"];
-                        Assistant.HandleFileUpdate(fileJson, path);
+                        path = Assistant.HandleFileUpdate(fileJson, path);
                     }
                     catch (Exception e)
                     {
@@ -106,7 +122,7 @@ namespace PocsKft.Controllers
             }
             else
             {
-                Assistant.HandleFileUpload(file, path);
+                path = Assistant.HandleFileUpload(file, path);
             }
             return RedirectToAction("Index", new { path = path });
         }

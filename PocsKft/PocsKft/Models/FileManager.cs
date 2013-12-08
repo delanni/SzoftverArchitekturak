@@ -255,6 +255,12 @@ namespace PocsKft.Models
                 var file = ct.Files.SingleOrDefault(x =>
                     (x.IsFolder && path == (x.PathOnServer + x.Name + "/")) ||
                     (!x.IsFolder && x.Status == Status.Active && path == (x.PathOnServer + x.Name)));
+                if (file == null)
+                {
+                    file = ct.Files.SingleOrDefault(x =>
+                    (x.IsFolder && path == (x.PathOnServer + x.Name + "/")) ||
+                    (!x.IsFolder && x.Status == Status.Active && path == ("/" + x.PathOnServer + x.Name)));
+                }
                 return file;
             }
         }

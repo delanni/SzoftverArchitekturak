@@ -38,7 +38,7 @@ namespace PocsKft.Models
             this._userId = UserId;
         }
 
-        internal void HandleFileUpload(HttpPostedFileBase file, string path)
+        internal string HandleFileUpload(HttpPostedFileBase file, string path)
         {
             string targetFileName = file.FileName;
             if (!path.EndsWith("/"))
@@ -81,9 +81,11 @@ namespace PocsKft.Models
                 FileManager.Instance.CreateFile(document);
                 PermissionManager.Instance.GrantRightOnFile(UserId, document.Id, PermissionType.WRITE);
             }
+
+            return path.Substring(0, path.LastIndexOf('/') + 1); ;
         }
 
-        internal void HandleFileUpdate(string fileJSON, string path)
+        internal string HandleFileUpdate(string fileJSON, string path)
         {
             var fileToUpdate = FileManager.Instance.GetFileByPath(path);
             if (fileToUpdate != null)
@@ -110,6 +112,7 @@ namespace PocsKft.Models
                     }
                 }
             }
+            return path;
         }
 
         internal dynamic FetchFile(string path)
@@ -329,6 +332,35 @@ namespace PocsKft.Models
             }
         }
 
+        internal bool RevertFileTo(string path, int targetVersion)
+        {
+            List<File> filesToDelete = new List<File>();
+            File file = FileManager.Instance.GetFileByPath(path);
+            while (file!=null && file.VersionNumber != targetVersion)
+            {
+                filesToDelete.Add(file);
+                file = FileManager.Instance.GetFileById(file.PreviousVersionFileId);
+            }
+            if (file != null)
+            {
+                using (var ctx = new UsersContext())
+                {
+                    file.Status = Status.Active;
+                    ctx.Entry<File>(file).State = System.Data.EntityState.Modified;
 
+                    ctx.SaveChanges();
+                }
+                LockManager.Instance.AcquireLockOnDocument(UserId, file.Id);
+                foreach (var f in filesToDelete)
+                {
+                    FileManager.Instance.DeleteFileById(f.Id);
+                }
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
     }
 }

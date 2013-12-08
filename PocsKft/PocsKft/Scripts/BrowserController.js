@@ -6,7 +6,7 @@ HBMAIN.controller("BrowserController", ["$scope", "$rootScope", "Communicator", 
             GlobalService.currentPath = $scope.currentPath;
             $rootScope.$broadcast("pathChanged", $scope.currentPath);
             window.document.title = decodeURI($scope.currentPath);
-            Communicator.listFolder($scope, $scope.currentPath).then(function (data) {
+            Communicator.listFolder($scope.currentPath).then(function (data) {
                 $scope.files = data.map(function (e) {
                     if (e.isProject) return new Project(e); else return new File(e);
                 });

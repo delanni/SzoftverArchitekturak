@@ -31,8 +31,6 @@ var File = (function () {
             this.lastModificationDate = this.creationDate || new Date();
         }
 
-        this.projectName = opts.projectName || "root";
-
         this.lastModifierName = opts.lastModifierName || "unknown";
 
         this.lockStatus = opts.lockStatus || LOCKSTATUS.UNLOCKED;
@@ -94,11 +92,6 @@ var File = (function () {
     **/
     _File.__defineGetter__("lastModifierName", function () { return this.lastModifierName; });
     _File.__defineSetter__("lastModifierName", function (value) { this.lastModifierName = value; });
-
-    /**
-    * Getter for the projectName property
-    **/
-    _File.__defineGetter__("projectName", function () { return this.projectName; });
 
     /**
     * Getter for the creationDate property
