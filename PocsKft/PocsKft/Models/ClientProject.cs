@@ -7,6 +7,14 @@ namespace PocsKft.Models
 {
     public class ClientProject
     {
+        public ClientProject(File f, Guid UserId)
+        {
+            this.Name = f.Name;
+            this.OwnerName = UserManager.Instance.GetUserNameById(UserId);
+            this.MetaData = f.MetaData;
+            this.CreationDate = f.CreatedDate;
+            this.Right = PermissionManager.Instance.EvaluateRight(UserId, f.Id);
+        }
         public string Name { get; set; }
         public string OwnerName { get; set; }
         public DateTime CreationDate { get; set; }

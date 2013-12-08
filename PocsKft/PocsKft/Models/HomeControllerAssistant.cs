@@ -144,14 +144,14 @@ namespace PocsKft.Models
                 string right = PermissionManager.Instance.EvaluateRight(UserId, f.Id);
                 if (right != null)
                 {
-                    yield return (new ClientProject
-                    {
-                        CreationDate = f.CreatedDate,
-                        Name = f.Name,
-                        OwnerName = UserManager.Instance.GetUserNameById(f.CreatorId),
-                        Right = right,
-                        MetaData = f.MetaData
-                    }.toJSON());
+                    yield return (new ClientProject(f, UserId).toJSON());
+                    //{
+                    //    CreationDate = f.CreatedDate,
+                    //    Name = f.Name,
+                    //    OwnerName = UserManager.Instance.GetUserNameById(f.CreatorId),
+                    //    Right = right,
+                    //    MetaData = f.MetaData
+                    //}.toJSON());
                 }
             }
         }
@@ -167,23 +167,10 @@ namespace PocsKft.Models
                     foreach (File f in documents)
                     {
                         string right = PermissionManager.Instance.EvaluateRight(UserId, f.Id);
-                        var versions = FileManager.Instance.GetVersionsForFile(f.Id);
+                        //var versions = FileManager.Instance.GetVersionsForFile(f.Id);
                         if (right != null)
                         {
-                            yield return (new ClientFile
-                            {
-                                CreatedDate = f.CreatedDate,
-                                IsFolder = f.IsFolder,
-                                LastModifiedDate = f.LastModifiedDate,
-                                Locked = f.Locked,
-                                MetaData = f.MetaData,
-                                Name = f.Name,
-                                PathOnServer = f.PathOnServer,
-                                Right = right,
-                                UserHasLock = f.LockedByUserId == UserId,
-                                VersionNumber = f.VersionNumber,
-                                Versions = versions
-                            }.toJSON());
+                            yield return (new ClientFile(f,UserId).toJSON());
                         }
                     }
                 }
@@ -269,13 +256,18 @@ namespace PocsKft.Models
 
                 int newFolderId = FileManager.Instance.CreateFile(newFolder);
 
-                if (master.HttpContext.User.Identity.IsAuthenticated)
+                if (!master.HttpContext.User.Identity.IsAuthenticated)
                 {
-                    PermissionManager.Instance.GrantRightOnFolder(UserId, newFolderId, PermissionType.WRITE);
+                    PermissionManager.Instance.GrantRightOnFolder(GroupManager.EVERYBODY_ID, newFolderId, PermissionType.WRITE);
                 }
                 else
                 {
-                    PermissionManager.Instance.GrantRightOnFolder(GroupManager.EVERYBODY_ID, newFolderId, PermissionType.WRITE);
+                    if (master.Request.QueryString["allwrite"] != null)
+                        PermissionManager.Instance.GrantRightOnFolder(GroupManager.EVERYBODY_ID, newFolderId, PermissionType.WRITE);
+                    else if (master.Request.QueryString["allread"] != null)
+                        PermissionManager.Instance.GrantRightOnFolder(GroupManager.EVERYBODY_ID, newFolderId, PermissionType.READ);
+                    else
+                        PermissionManager.Instance.GrantRightOnFolder(UserId, newFolderId, PermissionType.WRITE);
                 }
             }
             else
@@ -302,7 +294,19 @@ namespace PocsKft.Models
                 };
 
                 int newFolderId = FileManager.Instance.CreateFile(newFolder);
-                PermissionManager.Instance.GrantRightOnFolder(UserId, newFolderId, PermissionType.WRITE);
+                if (!master.HttpContext.User.Identity.IsAuthenticated)
+                {
+                    PermissionManager.Instance.GrantRightOnFolder(GroupManager.EVERYBODY_ID, newFolderId, PermissionType.WRITE);
+                }
+                else
+                {
+                    if (master.Request.QueryString["rights"]=="allwrite")
+                        PermissionManager.Instance.GrantRightOnFolder(GroupManager.EVERYBODY_ID, newFolderId, PermissionType.WRITE);
+                    else if (master.Request.QueryString["rights"]=="allread")
+                        PermissionManager.Instance.GrantRightOnFolder(GroupManager.EVERYBODY_ID, newFolderId, PermissionType.READ);
+                    else
+                        PermissionManager.Instance.GrantRightOnFolder(UserId, newFolderId, PermissionType.WRITE);                       
+                }
             }
             else
             {

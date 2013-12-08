@@ -16,6 +16,7 @@ namespace PocsKft.Models
             this.CreatedDate = x.CreatedDate;
             this.IsFolder = x.IsFolder;
             this.LastModifiedDate = x.LastModifiedDate;
+            this.LastModifierName = UserManager.Instance.GetUserNameById(x.LastModifiedbyId);
             this.Locked = x.Locked;
             this.MetaData = x.MetaData;
             this.Name = x.Name;
@@ -36,6 +37,7 @@ namespace PocsKft.Models
         public bool Locked { get; set; }
         public string Right { get; set; }
         public bool UserHasLock { get; set; }
+        public string LastModifierName { get; set; }
 
         public List<object> Versions { get; set; }
 
@@ -60,14 +62,15 @@ namespace PocsKft.Models
             return new
             {
                 isRealFile = !IsFolder,
-                fileName= Name,
-                filePath = PathOnServer==null?"":(PathOnServer.EndsWith("/") ? PathOnServer : PathOnServer + "/"),
+                fileName = Name,
+                filePath = PathOnServer == null ? "" : (PathOnServer.EndsWith("/") ? PathOnServer : PathOnServer + "/"),
                 creationDate = CreatedDate,
                 lastModificationDate = LastModifiedDate,
-                lockStatus = Locked?UserHasLock?"UNDERCONTROL":"LOCKED":"UNLOCKED",
+                lockStatus = Locked ? UserHasLock ? "UNDERCONTROL" : "LOCKED" : "UNLOCKED",
                 rights = Right,
-                properties = MetaData??"[]",
-                versions = Versions
+                properties = MetaData ?? "[]",
+                versions = Versions,
+                lastModifierName = LastModifierName
             };
         }
     }

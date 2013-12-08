@@ -62,7 +62,7 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
         HBMAIN.setLoading(true);
         return deferred.promise;
     }
-   
+
     var revertFile = function (file) {
         $("#revertDialog").dialog({
             resizable: false,
@@ -70,7 +70,7 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
             buttons: {
                 "Revert!": function () {
                     var versionNum = +$(this).find("#versionNumber").val();
-                    var fileUrl = relative(file.fileName)+ "?revertTo="+versionNum;
+                    var fileUrl = absolute(file.filePath) + file.fileName + "?revertTo=" + versionNum;
                     if (!confirm("Do you really want to revert the following :\n"
                     + fileUrl + ", to version " + versionNum)) { return; }
                     $.ajax({
@@ -92,7 +92,7 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
 
     var deleteResource = function (file) {
         var deferred = $q.defer();
-        var resourceUrl = relative(file.isProject ? file.projectName : file.fileName);
+        var resourceUrl = absolute(file.isProject ? "/" : file.filePath) + (file.isProject ? file.projectName : file.fileName);
         if (!file.isRealFile) resourceUrl += "/";
         if (!confirm("Do you really want to delete the following :\n" + resourceUrl + "?")) { return; }
         HBMAIN.setLoading(false);
@@ -142,7 +142,7 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
     var updateMeta = function (file) {
         var deferred = $q.defer();
         var data = file;
-        var filePath = relative(file.projectName || file.fileName);
+        var filePath = absolute(file.isProject ? "/" : file.filePath) + (file.projectName || file.fileName);
         if (!file.isRealFile) filePath += "/";
 
         $.ajax({
@@ -219,7 +219,9 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
             buttons: {
                 "Create": function () {
                     var folderName = $("#projectNameBox").val();
-                    var putUrl = relative(folderName);
+                    var rights = ($(this).find("#project-allwrite").attr("checked") && "?rights=allwrite") ||
+                        ($(this).find("#project-allread").attr("checked") && "?rights=allread") || "";
+                    var putUrl = absolute(folderName) + rights;
                     $.ajax({
                         type: "PUT",
                         url: putUrl,
@@ -249,7 +251,9 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
             buttons: {
                 "Create": function () {
                     var folderName = $("#folderNameBox").val();
-                    var putUrl = relative(folderName) + "/";
+                    var rights =($(this).find("#folder-allwrite").attr("checked") && "?rights=allwrite") ||
+                                ($(this).find("#folder-allread").attr("checked") && "?rights=allread") || "";
+                    var putUrl = absolute(currentPath) + folderName + "/" + rights;
                     $.ajax({
                         type: "PUT",
                         url: putUrl,
@@ -270,7 +274,7 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
 
     return {
         listFolder: listAsync,
-        performSearch:performSearch,
+        performSearch: performSearch,
 
         revert: revertFile,
         delete: deleteResource,

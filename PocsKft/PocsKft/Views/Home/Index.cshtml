@@ -54,7 +54,7 @@
         <label>Name of the {{global.selectedFile.fileName?global.selectedFile.isRealFile?"file":"folder":"project"}}:</label>
         <h2>{{global.selectedFile.fileName || global.selectedFile.projectName}}</h2>
         <label>Created on:</label><span> {{global.selectedFile.creationDate.toDateString()}}, {{global.selectedFile.creationDate.toLocaleTimeString()}}</span><br />
-        <label>Last modification:</label><span> {{global.selectedFile.lastModifiedDate.toDateString()}}, {{global.selectedFile.lastModifiedDate.toLocaleTimeString()}}, by {{global.selectedFile.lastModifierName}}</span> <br />
+        <label ng-if="global.selectedFile.isRealFile">Last modification:</label><span ng-if="global.selectedFile.isRealFile"> {{global.selectedFile.lastModificationDate.toDateString()}}, {{global.selectedFile.lastModificationDate.toLocaleTimeString()}}, by {{global.selectedFile.lastModifierName}}</span> <br />
         <propertyfield ng-repeat="property in global.selectedFile.properties" property="property"></propertyfield>
         <button class="edit" ng-click="addNewProperty()">New Property</button>
         <button id="saveChangesButton" class="edit" ng-click="save()">Save changes</button>
@@ -68,11 +68,23 @@
 <div id="folderDialog" style="display: none" title="New folder...">
     <div>Name of the folder:</div>
     <input id="folderNameBox" type="text" class="folderInputBox" />
+    <fieldset style="font-size:small">
+        <label for="project-allread">Everyone can read</label>
+        <input type="checkbox" id="folder-allread" /><br />
+        <label for="project-allwrite">Everyone can read/write</label>
+        <input type="checkbox" id="folder-allwrite" /><br />
+    </fieldset>
 </div>
 
 <div id="projectDialog" style="display: none" title="New project...">
     <div>Name of the project:</div>
     <input id="projectNameBox" type="text" />
+    <fieldset style="font-size:small">
+        <label for="project-allread">Everyone can read</label>
+        <input type="checkbox" id="project-allread" /><br />
+        <label for="project-allwrite">Everyone can read/write</label>
+        <input type="checkbox" id="project-allwrite" /><br />
+    </fieldset>
 </div>
 
 <div id="revertDialog" style="display: none" ng-controller="RevertController" title="Revert file...">
