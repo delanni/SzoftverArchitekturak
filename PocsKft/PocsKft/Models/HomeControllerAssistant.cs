@@ -44,7 +44,7 @@ namespace PocsKft.Models
             if (!path.EndsWith("/"))
             {
                 targetFileName = path.Split('/').LastOrDefault();
-                path = path.Substring(0,path.LastIndexOf('/') + 1);
+                path = path.Substring(0, path.LastIndexOf('/') + 1);
             }
 
             var virtualFileName = Guid.NewGuid().ToString();
@@ -167,7 +167,7 @@ namespace PocsKft.Models
                     foreach (File f in documents)
                     {
                         string right = PermissionManager.Instance.EvaluateRight(UserId, f.Id);
-                        var versions = this.GetVersionsForFile(f.Id);
+                        var versions = FileManager.Instance.GetVersionsForFile(f.Id);
                         if (right != null)
                         {
                             yield return (new ClientFile
@@ -250,28 +250,6 @@ namespace PocsKft.Models
             }
         }
 
-        internal List<object> GetVersionsForFile(int id)
-        {
-            List<object> returnValues = new List<object>();
-            File f;
-            int actualId = id;
-            do
-            {
-                f = FileManager.Instance.GetFileById(actualId);
-                if (f == null) break;
-                if (f.Status == Status.Archive)
-                {
-                    returnValues.Add(new
-                    {
-                        versionNumber = f.VersionNumber,
-                        date = f.LastModifiedDate,
-                    });
-                }
-                actualId = f.PreviousVersionFileId;
-            } while (actualId>0);
-            return returnValues;
-        }
-
 
         internal void CreateFolder(string folderName, File parent)
         {
@@ -336,7 +314,7 @@ namespace PocsKft.Models
         {
             List<File> filesToDelete = new List<File>();
             File file = FileManager.Instance.GetFileByPath(path);
-            while (file!=null && file.VersionNumber != targetVersion)
+            while (file != null && file.VersionNumber != targetVersion)
             {
                 filesToDelete.Add(file);
                 file = FileManager.Instance.GetFileById(file.PreviousVersionFileId);
@@ -361,6 +339,18 @@ namespace PocsKft.Models
             {
                 return false;
             }
+        }
+
+        internal IEnumerable<object> HandleSearch(string pathTerm, string keyTerm, string valueTerm)
+        {
+            List<File> results = new List<File>();
+            if (!String.IsNullOrWhiteSpace(pathTerm))
+                results.AddRange(FileManager.Instance.SearchFilesByName(pathTerm));
+            if (!String.IsNullOrWhiteSpace(keyTerm+valueTerm))
+                results.AddRange(FileManager.Instance.SearchMeta(keyTerm, valueTerm));
+            var resultSet = results.Where(y=>PermissionManager.Instance.EvaluateRight(UserId, y.Id)!=null)
+                .ToDictionary(x => x.Id);
+            return resultSet.Select(x => new ClientFile(x.Value, UserId).toJSON());
         }
     }
 }

@@ -41,6 +41,28 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
         return deferred.promise;
     };
 
+    var performSearch = function (searchInPath, searchInKey, searchInValue) {
+        var deferred = $q.defer();
+        var url = absolute("Search");
+        var query = $.param({ searchInPath: searchInPath, searchInKey: searchInKey, searchInValue: searchInValue });
+        if (query.length) url += "?" + query;
+        $http.get(url).success(function (data) {
+            if (data && data.hasOwnProperty("length")) {
+                deferred.resolve(data);
+            } else if (!data) {
+                deferred.resolve([]);
+            } else {
+                deferred.resolve([data]);
+            }
+        }).error(function (data, status) {
+            data = data || "Folder request failed";
+            deferred.reject(data);
+        });
+
+        HBMAIN.setLoading(true);
+        return deferred.promise;
+    }
+   
     var revertFile = function (file) {
         $("#revertDialog").dialog({
             resizable: false,
@@ -248,6 +270,7 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
 
     return {
         listFolder: listAsync,
+        performSearch:performSearch,
 
         revert: revertFile,
         delete: deleteResource,

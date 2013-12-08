@@ -17,6 +17,14 @@ HBMAIN.controller("BrowserController", ["$scope", "$rootScope", "Communicator", 
             });
         };
 
+        $scope.$on("searchDataArrived", function (event,data) {
+            $scope.files = data.map(function (e) {
+                if (e.isProject) return new Project(e); else return new File(e);
+                $scope.clearSelections();
+            });
+            HBMAIN.setLoading(false);
+        });
+
         $scope.$on("fileStructureChanged", function () {
             $scope.reload();
         });

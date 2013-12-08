@@ -8,6 +8,24 @@ namespace PocsKft.Models
 {
     public class ClientFile
     {
+
+        public ClientFile() { }
+
+        public ClientFile(File x, Guid userId)
+        {
+            this.CreatedDate = x.CreatedDate;
+            this.IsFolder = x.IsFolder;
+            this.LastModifiedDate = x.LastModifiedDate;
+            this.Locked = x.Locked;
+            this.MetaData = x.MetaData;
+            this.Name = x.Name;
+            this.PathOnServer = x.PathOnServer;
+            this.Right = PermissionManager.Instance.EvaluateRight(userId, x.Id);
+            this.UserHasLock = userId == x.LockedByUserId;
+            this.VersionNumber = x.VersionNumber;
+            this.Versions = FileManager.Instance.GetVersionsForFile(x.Id);
+        }
+
         public string Name { get; set; }
         public bool IsFolder { get; set; }
         public string PathOnServer { get; set; }

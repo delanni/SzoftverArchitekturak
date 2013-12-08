@@ -128,6 +128,18 @@ namespace PocsKft.Controllers
         }
 
         [HttpGet]
+        public JsonResult Search()
+        {
+            var pathTerm = Request.QueryString["searchInPath"];
+            var keyTerm = Request.QueryString["searchInKey"];
+            var valueTerm = Request.QueryString["searchInValue"];
+
+            var result = Assistant.HandleSearch(pathTerm, keyTerm, valueTerm);
+
+            return Json(result, JsonRequestBehavior.AllowGet);
+        }
+
+        [HttpGet]
         public JsonResult List(string path)
         {
             List<object> entitiesToList = new List<object>();

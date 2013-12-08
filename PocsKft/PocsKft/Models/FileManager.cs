@@ -135,7 +135,7 @@ namespace PocsKft.Models
         {
             using (UsersContext ct = new UsersContext())
             {
-                var files = ct.Files.Where(i => i.Name.Contains(name));
+                var files = ct.Files.Where(i =>(i.IsFolder || i.Status == Status.Active) && (i.PathOnServer + i.Name).Contains(name));
                 return files.ToList();
             }
         }
@@ -178,7 +178,11 @@ namespace PocsKft.Models
                         JToken propValue = jArray[i]["propValue"];
                         string propValueString = propValue.ToString();
 
-                        if (propName.Contains(jsonKey) || propValue.Contains(jsonValue))
+                        if (jsonKey.Length > 0 && jsonValue.Length > 0)
+                        { //both
+                            if (propNameString.Contains(jsonKey) && propValueString.Contains(jsonValue)) files.Add(doc);
+                        } else if ((jsonKey.Length > 0 && propNameString.Contains(jsonKey))
+                            || (jsonValue.Length > 0 && propValueString.Contains(jsonValue)))
                         {
                             files.Add(doc);
                         }
@@ -220,6 +224,29 @@ namespace PocsKft.Models
             versions.Add(file);
             return versions;
         }
+
+        internal List<object> GetVersionsForFile(int id)
+        {
+            List<object> returnValues = new List<object>();
+            File f;
+            int actualId = id;
+            do
+            {
+                f = GetFileById(actualId);
+                if (f == null) break;
+                if (f.Status == Status.Archive)
+                {
+                    returnValues.Add(new
+                    {
+                        versionNumber = f.VersionNumber,
+                        date = f.LastModifiedDate,
+                    });
+                }
+                actualId = f.PreviousVersionFileId;
+            } while (actualId > 0);
+            return returnValues;
+        }
+
 
         public bool AddDescriptionToFile(int fileId, string description)
         {

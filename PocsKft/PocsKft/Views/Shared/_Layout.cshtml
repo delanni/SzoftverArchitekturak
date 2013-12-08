@@ -17,8 +17,31 @@
     <header>
         <nav class="topNavBar">
             <div class="wellPadded">
-                <h1 style="margin:0" id="homeLink">{{@Html.ActionLink("SoftBolz", "Index", "Home")}}</h1>
                 <div id="loginBox">@Html.Partial("_LoginPartial")</div>
+                <h1 style="margin: 0" id="homeLink">{{@Html.ActionLink("Soft Bolz", "Index", "Home")}}</h1>
+                <div id="searchBox" ng-controller="SearchController">
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td>Search in path</td>
+                                <td>Search in meta key</td>
+                                <td>Search in meta value</td>
+                                <td rowspan="2">
+                                    <button class="glyphicons search" ng-click="performSearch()"></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input ng-model="searchInPath" /></td>
+                                <td>
+                                    <input ng-model="searchInKey" /></td>
+                                <td>
+                                    <input ng-model="searchInValue" /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
             </div>
         </nav>
     </header>
