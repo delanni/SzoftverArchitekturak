@@ -1,5 +1,5 @@
 ﻿
-HBMAIN.factory("GlobalService", function (Communicator) {
+NGMAIN.factory("GlobalService", function (Communicator) {
     var returnObject = {};
     var ACTIONS = {
         MAKEGROUP:{
@@ -37,9 +37,9 @@ HBMAIN.factory("GlobalService", function (Communicator) {
                 file = returnObject.selectedFile;
                 var promise = Communicator.delete(file);
                 promise.then(function (success) {
-                    HBMAIN.setLoading(false);
+                    NGMAIN.setLoading(false);
                 }, function (notfailure) {
-                    HBMAIN.setLoading(false);
+                    NGMAIN.setLoading(false);
                 });
             }
         },

@@ -19,6 +19,8 @@ var File = (function () {
 
         this.filePath = opts.filePath || "/";
 
+        this.description = opts.description || "";
+
         if (opts.creationDate && opts.creationDate.match(/-?\d+/)) {
             this.creationDate = new Date(+opts.creationDate.match(/-?\d+/)[0]);
         } else {
@@ -57,6 +59,13 @@ var File = (function () {
             this.versions = [];
         }
     }
+
+    /**
+    * Getter and setter for the description property.
+    * 
+    **/
+    _File.__defineGetter__("description", function () { return this.description; });
+    _File.__defineSetter__("description", function (value) { this.description = value });
 
     /**
     *   Tells if the file in question is a real file or a folder.

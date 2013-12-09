@@ -3,7 +3,7 @@
 * The main case is when the file selection changes, triggering 'fileSelectionChanged' on $rootScope.
 * Different actions for different selections
 **/
-HBMAIN.controller("ActionBarController",
+NGMAIN.controller("ActionBarController",
     ["$scope", "Communicator", "GlobalService",
     function ($scope, Communicator, GlobalService) {
         $scope.global = GlobalService;

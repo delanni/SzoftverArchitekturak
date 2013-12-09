@@ -7,6 +7,8 @@
 
         this.projectName = opts.projectName || "";
 
+        this.description = opts.description || "";
+
         if (opts.creationDate && opts.creationDate.match(/-?\d+/)) {
             this.creationDate = new Date(+opts.creationDate.match(/-?\d+/)[0]);
         } else {
@@ -26,6 +28,13 @@
         this.ownerName = opts.ownerName || "Admin";
         this.rights = opts.rights || "READ";
     }
+
+    /**
+    * Getter and setter for the description property.
+    * 
+    **/
+    _Project.__defineGetter__("description", function () { return this.description; });
+    _Project.__defineSetter__("description", function (value) { this.description = value });
 
     /**
     * Getter and setter for the projectName property.

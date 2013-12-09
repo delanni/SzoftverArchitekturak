@@ -1,4 +1,4 @@
-﻿HBMAIN.controller("SearchController", function ($scope, $rootScope, Communicator, GlobalService) {
+﻿NGMAIN.controller("SearchController", function ($scope, $rootScope, Communicator, GlobalService) {
     $scope.searchInKey = "";
     $scope.searchInValue = "";
     $scope.searchInPath = "";

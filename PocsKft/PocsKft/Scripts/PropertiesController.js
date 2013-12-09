@@ -1,5 +1,5 @@
 ﻿
-HBMAIN.controller("PropertiesController", ["$scope", "$rootScope", "Communicator", "GlobalService",
+NGMAIN.controller("PropertiesController", ["$scope", "$rootScope", "Communicator", "GlobalService",
     function ($scope, $rootScope, Communicator, GlobalService) {
         $scope.global = GlobalService;
 

@@ -14,6 +14,7 @@ namespace PocsKft.Models
         public ClientFile(File x, Guid userId)
         {
             this.CreatedDate = x.CreatedDate;
+            this.Description = x.Description;
             this.IsFolder = x.IsFolder;
             this.LastModifiedDate = x.LastModifiedDate;
             this.LastModifierName = UserManager.Instance.GetUserNameById(x.LastModifiedbyId);
@@ -38,7 +39,7 @@ namespace PocsKft.Models
         public string Right { get; set; }
         public bool UserHasLock { get; set; }
         public string LastModifierName { get; set; }
-
+        public string Description { get; set; }
         public List<object> Versions { get; set; }
 
         public object toJSON()
@@ -63,6 +64,7 @@ namespace PocsKft.Models
             {
                 isRealFile = !IsFolder,
                 fileName = Name,
+                description = Description,
                 filePath = PathOnServer == null ? "" : (PathOnServer.EndsWith("/") ? PathOnServer : PathOnServer + "/"),
                 creationDate = CreatedDate,
                 lastModificationDate = LastModifiedDate,

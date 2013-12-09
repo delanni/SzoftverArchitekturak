@@ -151,10 +151,12 @@ namespace PocsKft.Models
 
                 var remoteObj = Json.Decode(fileJson);
                 var properties = remoteObj.properties;
+                var description = remoteObj.description;
                 var propsString = Json.Encode(properties);
                 if (!String.IsNullOrEmpty(propsString))
                 {
                     fileToUpdate.MetaData = propsString;
+                    fileToUpdate.Description = description;
                 }
 
                 ct.SaveChanges();

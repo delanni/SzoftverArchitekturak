@@ -10,6 +10,7 @@ namespace PocsKft.Models
         public ClientProject(File f, Guid UserId)
         {
             this.Name = f.Name;
+            this.Description = f.Description;
             this.OwnerName = UserManager.Instance.GetUserNameById(UserId);
             this.MetaData = f.MetaData;
             this.CreationDate = f.CreatedDate;
@@ -32,6 +33,7 @@ namespace PocsKft.Models
             return new
             {
                 projectName = Name,
+                description = Description,
                 creationDate = CreationDate,
                 ownerName = OwnerName,
                 rights = Right,
@@ -40,5 +42,7 @@ namespace PocsKft.Models
                 isProject = true
             };
         }
+
+        public string Description { get; set; }
     }
 }

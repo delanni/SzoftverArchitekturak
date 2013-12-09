@@ -3,7 +3,7 @@
 * providing an api with functions for shared use
 *
 **/
-HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
+NGMAIN.factory("Communicator", function ($http, $q, $rootScope) {
     var c = {};
 
     var notifyFS = function () {
@@ -37,7 +37,7 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
             deferred.reject(data);
         });
 
-        HBMAIN.setLoading(true);
+        NGMAIN.setLoading(true);
         return deferred.promise;
     };
 
@@ -59,7 +59,7 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
             deferred.reject(data);
         });
 
-        HBMAIN.setLoading(true);
+        NGMAIN.setLoading(true);
         return deferred.promise;
     }
 
@@ -95,7 +95,7 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
         var resourceUrl = absolute(file.isProject ? "/" : file.filePath) + (file.isProject ? file.projectName : file.fileName);
         if (!file.isRealFile) resourceUrl += "/";
         if (!confirm("Do you really want to delete the following :\n" + resourceUrl + "?")) { return; }
-        HBMAIN.setLoading(false);
+        NGMAIN.setLoading(false);
         $.ajax({
             type: "DELETE",
             url: resourceUrl,

@@ -1,4 +1,4 @@
-﻿HBMAIN.controller("RevertController", function ($scope, Communicator, GlobalService) {
+﻿NGMAIN.controller("RevertController", function ($scope, Communicator, GlobalService) {
     $scope.$on("fileSelectionChanged", function () { $scope.populateVersions(GlobalService.selectedFile); });
     $scope.populateVersions = function (file) {
         if (file && file.versions) {

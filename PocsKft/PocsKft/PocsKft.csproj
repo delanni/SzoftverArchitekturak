@@ -270,7 +270,7 @@
     <None Include="Properties\PublishProfiles\pocskft - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\pocskft - Web Deploy.pubxml" />
     <Content Include="Scripts\ActionBarController.js" />
-    <Content Include="Scripts\angular.js" />
+    <Content Include="Scripts\ext\angular.js" />
     <Content Include="Scripts\appMain.js" />
     <Content Include="Scripts\bootStrap.js" />
     <Content Include="Scripts\BrowserController.js" />
@@ -278,9 +278,9 @@
     <Content Include="Scripts\File.js" />
     <Content Include="Scripts\GlobalService.js" />
     <Content Include="Scripts\Project.js" />
-    <Content Include="Scripts\jquery-1.8.2.js" />
-    <Content Include="Scripts\jquery-ui-1.8.24.js" />
-    <Content Include="Scripts\modernizr-2.6.2.js" />
+    <Content Include="Scripts\ext\jquery-1.8.2.js" />
+    <Content Include="Scripts\ext\jquery-ui-1.8.24.js" />
+    <Content Include="Scripts\ext\modernizr-2.6.2.js" />
     <Content Include="Scripts\PropertiesController.js" />
     <Content Include="Scripts\Property.js" />
     <Content Include="Scripts\RevertController.js" />
@@ -295,7 +295,7 @@
       <DependentUpon>Web.config</DependentUpon>
     </Content>
     <Content Include="Content\site.css" />
-    <Content Include="Scripts\_references.js" />
+    <Content Include="Scripts\ext\_references.js" />
     <Content Include="Images\accent.png" />
     <Content Include="Images\bullet.png" />
     <Content Include="Images\heroAccent.png" />

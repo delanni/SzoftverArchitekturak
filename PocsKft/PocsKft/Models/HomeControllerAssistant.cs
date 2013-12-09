@@ -352,8 +352,8 @@ namespace PocsKft.Models
             if (!String.IsNullOrWhiteSpace(keyTerm + valueTerm))
                 results.AddRange(FileManager.Instance.SearchMeta(keyTerm, valueTerm));
             var resultSet = results.Where(y => PermissionManager.Instance.EvaluateRight(UserId, y.Id) != null)
-                .ToDictionary(x => x.Id);
-            return resultSet.Select(x => new ClientFile(x.Value, UserId).toJSON());
+                .GroupBy(x => x.Id).Select(grp => grp.First());
+            return resultSet.Select(x => new ClientFile(x, UserId).toJSON());
         }
 
         internal string CreateGroup(string groupName)

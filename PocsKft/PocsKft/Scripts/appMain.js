@@ -1,13 +1,13 @@
 ﻿/// <reference path="_references.js"/>
 
-var HBMAIN = angular.module("heribolz", function () {
-    // Configure
+var NGMAIN = angular.module("softbolz", function () {
+    // Configure if needed
 });
 
 /**
 *  Sets the cursor to loading state or normal
 */
-HBMAIN.setLoading = function (onOff) {
+NGMAIN.setLoading = function (onOff) {
     if (onOff) {
         $(document.body).css("cursor", "progress");
     } else {
@@ -15,7 +15,7 @@ HBMAIN.setLoading = function (onOff) {
     }
 };
 
-HBMAIN.directive("file", function () {
+NGMAIN.directive("file", function () {
     return {
         scope: {
             filename: "@",
@@ -28,7 +28,7 @@ HBMAIN.directive("file", function () {
     };
 });
 
-HBMAIN.directive("folder", function () {
+NGMAIN.directive("folder", function () {
     return {
         scope: {
             foldername: "@",
@@ -40,7 +40,7 @@ HBMAIN.directive("folder", function () {
     };
 });
 
-HBMAIN.directive("project", function () {
+NGMAIN.directive("project", function () {
     return {
         scope: {
             projectname: "@",
@@ -51,7 +51,7 @@ HBMAIN.directive("project", function () {
     };
 });
 
-HBMAIN.directive("propertyfield", function () {
+NGMAIN.directive("propertyfield", function () {
     return {
         scope: {
             property: "="

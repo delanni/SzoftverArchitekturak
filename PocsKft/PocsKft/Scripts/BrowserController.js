@@ -1,5 +1,5 @@
 ﻿
-HBMAIN.controller("BrowserController", ["$scope", "$rootScope", "Communicator", "GlobalService",
+NGMAIN.controller("BrowserController", ["$scope", "$rootScope", "Communicator", "GlobalService",
     function ($scope, $rootScope, Communicator, GlobalService) {
         $scope.reload = function () {
             $scope.currentPath = window.location.pathname || "/";
@@ -11,7 +11,7 @@ HBMAIN.controller("BrowserController", ["$scope", "$rootScope", "Communicator", 
                     if (e.isProject) return new Project(e); else return new File(e);
                 });
                 $scope.clearSelections();
-                HBMAIN.setLoading(false);
+                NGMAIN.setLoading(false);
             }, function (errorData) {
                 alert("Error during listing the folder:\n" + JSON.stringify(errorData));
             });
@@ -22,7 +22,7 @@ HBMAIN.controller("BrowserController", ["$scope", "$rootScope", "Communicator", 
                 if (e.isProject) return new Project(e); else return new File(e);
                 $scope.clearSelections();
             });
-            HBMAIN.setLoading(false);
+            NGMAIN.setLoading(false);
         });
 
         $scope.$on("fileStructureChanged", function () {

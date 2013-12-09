@@ -55,6 +55,9 @@
         <h2>{{global.selectedFile.fileName || global.selectedFile.projectName}}</h2>
         <label>Created on:</label><span> {{global.selectedFile.creationDate.toDateString()}}, {{global.selectedFile.creationDate.toLocaleTimeString()}}</span><br />
         <label ng-if="global.selectedFile.isRealFile">Last modification:</label><span ng-if="global.selectedFile.isRealFile"> {{global.selectedFile.lastModificationDate.toDateString()}}, {{global.selectedFile.lastModificationDate.toLocaleTimeString()}}, by {{global.selectedFile.lastModifierName}}</span> <br />
+        <div>Description</div>
+        <div ng-bind="global.selectedFile.description"></div>
+        <textarea class="edit" style="width:100%" ng-model="global.selectedFile.description"></textarea>
         <propertyfield ng-repeat="property in global.selectedFile.properties" property="property"></propertyfield>
         <button class="edit" ng-click="addNewProperty()">New Property</button>
         <button id="saveChangesButton" class="edit" ng-click="save()">Save changes</button>
