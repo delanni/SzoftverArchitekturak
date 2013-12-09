@@ -193,6 +193,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\AccountModels.cs" />
+    <Compile Include="Models\GroupsViewModel.cs" />
     <Compile Include="Models\HomeControllerAssistant.cs" />
     <Compile Include="Models\LockManager.cs" />
     <Compile Include="Models\MyModels.cs" />
@@ -282,6 +283,8 @@
     <Content Include="Scripts\modernizr-2.6.2.js" />
     <Content Include="Scripts\PropertiesController.js" />
     <Content Include="Scripts\Property.js" />
+    <Content Include="Scripts\RevertController.js" />
+    <Content Include="Scripts\SearchController.js" />
     <Content Include="Scripts\User.js" />
     <Content Include="Scripts\Version.js" />
     <Content Include="Web.config" />
@@ -323,6 +326,7 @@
     <Content Include="Views\Shared\_LoginPartial.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
     <Content Include="Views\Web.config" />
+    <Content Include="Views\Home\Groups.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

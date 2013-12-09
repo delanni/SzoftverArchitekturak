@@ -2,6 +2,13 @@
 HBMAIN.factory("GlobalService", function (Communicator) {
     var returnObject = {};
     var ACTIONS = {
+        MAKEGROUP:{
+            name: "Create a new group",
+            type: "group",
+            execute: function () {
+                Communicator.createGroup();
+            }
+        },
         REVERT: {
             name: "Revert file to an older version",
             type: "history",
@@ -120,7 +127,7 @@ HBMAIN.factory("GlobalService", function (Communicator) {
     };
 
     ACTIONS.getWriteActionsInLobby = function () {
-        return [ACTIONS.CREATEPROJECT];
+        return [ACTIONS.CREATEPROJECT, ACTIONS.MAKEGROUP];
     };
     ACTIONS.getReadActionsInLobby = function () {
         return [];

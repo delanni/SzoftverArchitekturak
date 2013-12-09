@@ -13,7 +13,8 @@ namespace PocsKft.Models
         public static Guid EVERYBODY_ID = Guid.Empty;
         private static volatile GroupManager instance;
         private static object syncRoot = new Object();
-        private GroupManager() {
+        private GroupManager()
+        {
             using (UsersContext context = new UsersContext())
             {
                 if (!context.Groups.Any(x => x.GroupName == EVERYBODY))
@@ -91,22 +92,22 @@ namespace PocsKft.Models
             }
         }
 
-        public void DeleteUserFromGroup(Group g, UserProfile user)
+        public void DeleteUserFromGroup(Group g, string user)
         {
-            Roles.RemoveUserFromRole(user.UserName, g.GroupName);
+            Roles.RemoveUserFromRole(user, g.GroupName);
 
         }
-        public void DeleteUserFromGroup(Guid id, UserProfile user)
+        public void DeleteUserFromGroup(Guid id, string user)
         {
             Group g = GetGroup(id);
-            Roles.RemoveUserFromRole(user.UserName, g.GroupName);
+            Roles.RemoveUserFromRole(user, g.GroupName);
         }
 
-        public void AddUserToGroup(Group g, UserProfile user)
+        public void AddUserToGroup(Group g, string user)
         {
-            Roles.AddUserToRole(user.UserName, g.GroupName);
+            Roles.AddUserToRole(user, g.GroupName);
         }
-        public void AddUserToGroup(Guid id, UserProfile user)
+        public void AddUserToGroup(Guid id, string user)
         {
             Group g = GetGroup(id);
 
@@ -141,5 +142,7 @@ namespace PocsKft.Models
         {
             return Roles.GetRolesForUser(userName).Contains(groupName);
         }
+    
+
     }
 }

@@ -18,7 +18,7 @@
         <nav class="topNavBar">
             <div class="wellPadded">
                 <div id="loginBox">@Html.Partial("_LoginPartial")</div>
-                <h1 style="margin: 0" id="homeLink">{{@Html.ActionLink("Soft Bolz", "Index", "Home")}}</h1>
+                <h1 style="margin: 0" id="homeLink"><a href="/" ng-non-bindable>{{Soft bolz}}</a></h1>
                 <div id="searchBox" ng-controller="SearchController">
                     <table>
                         <tbody>
@@ -52,9 +52,10 @@
         <nav class="bottomNavBar">
             <div class="wellPadded">
                 <span>@Html.ActionLink("Home", "Index", "Home")</span>
-                <span>@Html.ActionLink("About", "About", "Home")</span>
-                <span>@Html.ActionLink("Contact", "Contact", "Home")</span>
-                <span>©Harry Bolz co.</span>
+                <span>Made with: <a href="http://www.angularjs.org">angular</a></span>
+                <span ng-non-bindable> by ©Harry Bolz co., </span>
+                <span>@Html.ActionLink("<%Angyal Levente%>", "About", "Home")</span>
+                <span>, {{@Html.ActionLink("Szabó Alex", "About", "Home")}}</span>
             </div>
         </nav>
 

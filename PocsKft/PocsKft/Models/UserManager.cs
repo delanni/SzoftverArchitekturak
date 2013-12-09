@@ -53,5 +53,15 @@ namespace PocsKft.Models
             //    return "unknown";
             //}
         }
+
+        internal List<UserProfile> GetAllUsers()
+        {
+            List<UserProfile> users = null;
+            using (UsersContext context = new UsersContext())
+            {
+                users= context.UserProfiles.ToList();
+            }
+            return users?? new List<UserProfile>();
+        }
     }
 }

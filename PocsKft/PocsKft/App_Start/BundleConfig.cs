@@ -46,6 +46,8 @@ namespace PocsKft
                 .Include("~/Scripts/Communicator.js")
                 .Include("~/Scripts/PropertiesController.js")
                 .Include("~/Scripts/ActionBarController.js")
+                .Include("~/Scripts/RevertController.js")
+                .Include("~/Scripts/SearchController.js")
                 .Include("~/Scripts/User.js")
                 .Include("~/Scripts/File.js")
                 .Include("~/Scripts/Project.js")

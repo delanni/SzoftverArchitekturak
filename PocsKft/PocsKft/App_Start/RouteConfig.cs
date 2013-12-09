@@ -20,11 +20,21 @@ namespace PocsKft
             );
 
             routes.MapRoute(
+                name: "About",
+                url: "About",
+                defaults: new { controller = "Home", action = "About" }
+            );
+
+            routes.MapRoute(
                 name: "Search",
                 url: "Search",
                 defaults: new { controller = "Home", action = "Search" }
             );
-
+            routes.MapRoute(
+                name: "Groups",
+                url: "Groups/{*path}",
+                defaults: new { controller = "Home", action = "Groups" }
+            );
             routes.MapRoute(
                 name: "Default",
                 url: "Account/{action}/{id}",

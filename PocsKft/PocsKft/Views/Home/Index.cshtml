@@ -87,6 +87,11 @@
     </fieldset>
 </div>
 
+<div id="groupDialog" style="display: none" title="New group...">
+    <div>Name of the group:</div>
+    <input id="groupNameBox" type="text" />
+</div>
+
 <div id="revertDialog" style="display: none" ng-controller="RevertController" title="Revert file...">
     <div>Select a version:</div>
     <select style="width:100%" ng-model="selectedVersion" ng-options="'version '+v.versionNumber group by v.date for v in versions"></select>
@@ -100,3 +105,5 @@
     </form>
     <progress></progress>
 </div>
+
+

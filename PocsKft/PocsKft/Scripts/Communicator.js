@@ -272,6 +272,33 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
         });
     };
 
+    var createGroup = function () {
+        $("#groupDialog").dialog({
+            resizable: false,
+            modal: true,
+            buttons: {
+                "Create": function () {
+                    var groupName = $("#groupNameBox").val();
+                    if (!groupName) $("#groupDialog").dialog("close");
+                    var putUrl = absolute("Groups/") + groupName;
+                    $.ajax({
+                        type: "PUT",
+                        url: putUrl,
+                        beforeSend: function () { },
+                        success: function () { $("#groupDialog").dialog("close"); $("#groupNameBox").val(""); notifyFS(); },
+                        error: function (e) { alert("Error during group creation:\n" + JSON.stringify(e)) },
+                        cache: false,
+                        contentType: false,
+                        processData: false
+                    });
+                },
+                Cancel: function () {
+                    $(this).dialog("close");
+                }
+            }
+        });
+    }
+
     return {
         listFolder: listAsync,
         performSearch: performSearch,
@@ -285,6 +312,7 @@ HBMAIN.factory("Communicator", function ($http, $q, $rootScope) {
         unlock: unlockFile,
         createProject: createProject,
         createFolder: createFolder,
+        createGroup: createGroup,
 
         notifyFS: notifyFS
     };

@@ -15,33 +15,6 @@ HBMAIN.setLoading = function (onOff) {
     }
 };
 
-HBMAIN.controller("RevertController", function ($scope, Communicator, GlobalService) {
-    $scope.$on("fileSelectionChanged", function () { $scope.populateVersions(GlobalService.selectedFile); });
-    $scope.populateVersions = function (file) {
-        if (file && file.versions) {
-            $scope.versions = file.versions;
-            $scope.selectedVersion = file.versions[0];
-        }
-    }
-    $scope.versions = [];
-});
-
-HBMAIN.controller("SearchController", function ($scope, $rootScope, Communicator, GlobalService) {
-    $scope.searchInKey = "";
-    $scope.searchInValue = "";
-    $scope.searchInPath = "";
-    $scope.performSearch = function () {
-        Communicator.performSearch($scope.searchInPath, $scope.searchInKey, $scope.searchInValue).then(
-            function (data) {
-                $rootScope.$broadcast("searchDataArrived", data);
-            }, function (error) {
-                alert("Search error:\n" + JSON.stringify(error));
-            });
-    }
-});
-
-
-
 HBMAIN.directive("file", function () {
     return {
         scope: {

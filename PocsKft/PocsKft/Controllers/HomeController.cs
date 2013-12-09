@@ -36,7 +36,7 @@ namespace PocsKft.Controllers
                     case "PUT":
                         return CreateFolder(path);
                     case "DELETE":
-                        var revertCandidate=Request.QueryString["revertTo"];
+                        var revertCandidate = Request.QueryString["revertTo"];
                         if (revertCandidate == null)
                         {
                             return DeleteResource(path);
@@ -62,12 +62,12 @@ namespace PocsKft.Controllers
                 {
                     if (ex.Message.ToLower().Contains("right")) Response.StatusCode = 503;
                     else Response.StatusCode = 500;
-                    return Json(ex.Message.Substring(0, Math.Min(40, ex.Message.Length)), JsonRequestBehavior.AllowGet);
+                    return Json(ex.Message.Substring(0, Math.Min(70, ex.Message.Length)), JsonRequestBehavior.AllowGet);
                 }
                 else
                 {
                     Response.StatusCode = 500;
-                    return Json(ex.Message.Substring(0, Math.Min(40, ex.Message.Length)), JsonRequestBehavior.AllowGet);
+                    return Json(ex.Message.Substring(0, Math.Min(70, ex.Message.Length)), JsonRequestBehavior.AllowGet);
                 }
             }
         }
@@ -77,7 +77,7 @@ namespace PocsKft.Controllers
         {
             var targetVersion = int.Parse(revertCandidate);
             var success = Assistant.RevertFileTo(path, targetVersion);
-            return Json(success?"Reverting was successful.":"Reverting failed");
+            return Json(success ? "Reverting was successful." : "Reverting failed");
         }
 
         [HttpGet]
@@ -160,6 +160,46 @@ namespace PocsKft.Controllers
             return Json(entitiesToList, JsonRequestBehavior.AllowGet);
 
         }
+
+        public ActionResult Groups(string path)
+        {
+            try
+            {
+                if (Request.RequestType == "PUT" && GroupManager.Instance.GetGroup(path) == null)
+                {
+
+                    var result = Assistant.CreateGroup(path);
+
+                    Request.RequestType = "GET";
+                    return RedirectToAction("Groups", "Home", new { path = result });
+                }
+                else
+                {
+                    var groupVM = new GroupsViewModel();
+                    groupVM.Group = GroupManager.Instance.GetGroup(path);
+                    var users = UserManager.Instance.GetAllUsers();
+                    groupVM.Members = new List<UserProfile>(users.Where(x => GroupManager.Instance.IsUserInGroup(x.UserId, groupVM.Group.Id)));
+                    return View(groupVM);
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ex.GetType().Equals(typeof(Exception)))
+                {
+                    if (ex.Message.ToLower().Contains("right")) Response.StatusCode = 503;
+                    else Response.StatusCode = 500;
+                    return Json(ex.Message.Substring(0, Math.Min(70, ex.Message.Length)), JsonRequestBehavior.AllowGet);
+                }
+                else
+                {
+                    Response.StatusCode = 500;
+                    return Json(ex.Message.Substring(0, Math.Min(70, ex.Message.Length)), JsonRequestBehavior.AllowGet);
+                }
+            }
+
+            return View("Index");
+        }
+
 
         [HttpPut]
         public ActionResult CreateFolder(string path)
